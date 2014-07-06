@@ -1,6 +1,8 @@
 package bugsnag
 
 import (
+	"io/ioutil"
+	"log"
 	"testing"
 )
 
@@ -82,7 +84,7 @@ func TestPanicHandling(t *testing.T) {
 
 	called := false
 
-	stack.Run(nil, nil, func() {
+	stack.Run(nil, &Configuration{Logger: log.New(ioutil.Discard, log.Prefix(), log.Flags())}, func() {
 		called = true
 	})
 

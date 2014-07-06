@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-// Sets the context of the error in Bugsnag. You can pass this in
-// where-ever rawData is expected.
+// Sets the context of the error in Bugsnag. You can pass this to
+// Notify or any other function accepting rawData.
 type Context struct {
 	String string
 }
 
 // Sets the searchable user-data on Bugsnag. The Id is also used
-// to determine the number of users affected by a bug. You can pass
-// this in where-ever rawData is expected.
+// to determine the number of users affected by a bug. You can pass this
+// to Notify or any other function accepting rawData.
 type User struct {
 	Id     string `json:"id,omitempty"`
 	Name   string `json:"name,omitempty"`
@@ -21,7 +21,7 @@ type User struct {
 }
 
 // Tags used to mark the severity of the error in the Bugsnag dashboard.
-// You can pass these tags where-ever rawData is expected.
+// You can pass these to Notify or to any other function accepting rawData.
 var (
 	SeverityError   = severity{"error"}
 	SeverityWarning = severity{"warning"}

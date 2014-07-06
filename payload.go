@@ -16,26 +16,26 @@ type hash map[string]interface{}
 func (p *payload) deliver() {
 
 	if len(p.APIKey) != 32 {
-		p.Logger.Printf("bugsnag/payload.deliver: invalid api key\n")
+		p.log("bugsnag/payload.deliver: invalid api key\n")
 	}
 
 	buf, err := json.Marshal(p)
 
 	if err != nil {
-		p.Logger.Printf("bugsnag/payload.deliver: %s\n", err)
+		p.log("bugsnag/payload.deliver: %s\n", err)
 		return
 	}
 
 	resp, err := http.Post(p.Endpoint, "application/json", bytes.NewBuffer(buf))
 
 	if err != nil {
-		p.Logger.Printf("bugsnag/payload.deliver: %s\n", err)
+		p.log("bugsnag/payload.deliver: %s\n", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		p.Logger.Printf("bugsnag/payload.deliver: Got HTTP %s\n", resp.Status)
+		p.log("bugsnag/payload.deliver: Got HTTP %s\n", resp.Status)
 		return
 	}
 }

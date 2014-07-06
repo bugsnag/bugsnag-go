@@ -12,7 +12,7 @@ import (
 var MaxStackDepth = 50
 
 // A bugsnag.Error is an error with an attached stacktrace. It can be used
-// whereever the builtin error interface is expected.
+// where-ever the builtin error interface is expected.
 type Error struct {
 	Err   error
 	stack []uintptr

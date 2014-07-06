@@ -7,8 +7,8 @@ import (
 )
 
 // MetaData is added to the Bugsnag dashboard in tabs. Each tab is
-// a map of strings -> values. You can add MetaData to an event by
-// passing it whereever rawData is expected (e.g. Notify, AutoNotify)
+// a map of strings -> values. You can pass MetaData to Notify and
+// any other function that accepts RawData
 type MetaData map[string]map[string]interface{}
 
 // Update the meta-data with more information.

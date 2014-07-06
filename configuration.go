@@ -26,6 +26,8 @@ type Configuration struct {
 	ProjectRoot string
 	// packages to consider in-project, default: {"main"}
 	ProjectPackages []string
+	// Release stages to notify in, default nil implies all release stages.
+	NotifyReleaseStages []string
 
 	// The logger to use, defaults to the global logger
 	Logger *log.Logger
@@ -61,6 +63,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Logger != nil {
 		config.Logger = other.Logger
 	}
+	if other.NotifyReleaseStages != nil {
+		config.NotifyReleaseStages = other.NotifyReleaseStages
+	}
 
 	return config
 }
@@ -87,4 +92,25 @@ func (config *Configuration) isProjectPackage(pkg string) bool {
 		}
 	}
 	return false
+}
+
+func (config *Configuration) log(fmt string, args ...interface{}) {
+	if config != nil && config.Logger != nil {
+		config.Logger.Printf(fmt, args...)
+	} else {
+		log.Printf(fmt, args...)
+	}
+}
+
+func (config *Configuration) notifyInReleaseStage() bool {
+	if config.NotifyReleaseStages == nil {
+		return true
+	} else {
+		for _, r := range(config.NotifyReleaseStages) {
+			if r == config.ReleaseStage {
+				return true
+			}
+		}
+		return false
+	}
 }

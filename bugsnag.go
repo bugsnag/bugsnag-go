@@ -57,31 +57,28 @@ func OnBeforeNotify(callback func(event *Event, config *Configuration) bool) {
 // It can be used to modify the event or the config to be used, or to move the request
 // to a different goroutine, etc.
 // It should call next() to actually send the notification, or avoid calling next() to cancel it.
+// Consider using OnBeforeNotify instead for simple cases.
 func OnAroundNotify(callback func(event *Event, config *Configuration, next func())) {
 	middleware.AddMiddleware(callback)
 }
 
-// HandlerFunc wraps the HTTP funtion in bugsnag.AutoNotify(). It includes details about the
-// HTTP request in all error reports.
-func HandlerFunc(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer AutoNotify(r)
-		f(w, r)
-	}
-}
-
 // Handler wraps the HTTP handler in bugsnag.AutoNotify(). It includes details about the
 // HTTP request in all error reports.
-func Handler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer AutoNotify(r)
+func Handler(h http.Handler, rawData ...interface{}) http.Handler {
+	notifier := NewNotifier(rawData...)
+	if h == nil {
+		h = http.DefaultServeMux
+	}
+
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		defer notifier.AutoNotify(r)
 		h.ServeHTTP(w, r)
 	})
 }
 
 func init() {
 	// Set up builtin middlewarez
-	OnBeforeNotify(HttpRequestMiddleware)
+	OnBeforeNotify(httpRequestMiddleware)
 
 	// Default configuration
 	Configure(Configuration{
@@ -92,6 +89,7 @@ func init() {
 		ReleaseStage:    "",
 		ParamsFilters:   []string{"password", "secret"},
 		ProjectPackages: []string{"main"},
+		NotifyReleaseStages: nil,
 		Logger:          log.New(os.Stdout, log.Prefix(), log.Flags()),
 	})
 

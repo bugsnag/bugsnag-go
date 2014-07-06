@@ -53,22 +53,27 @@ func (stack *middlewareStack) Run(event *Event, config *Configuration, next func
 // we wouldn't want to not notify Bugsnag in this case.
 func catchMiddlewarePanic(event *Event, config *Configuration, next func()) {
 	if err := recover(); err != nil {
-		println("TODO: Use a logger!")
+		config.log("bugsnag/middleware: unexpected panic: %v", err)
 		next()
 	}
 }
 
-// HttpRequestMiddleware is added OnBeforeNotify by default. It takes information
+// httpRequestMiddleware is added OnBeforeNotify by default. It takes information
 // from an http.Request passed in as rawData, and adds it to the Event. You can
 // use this as a template for writing your own Middleware.
-func HttpRequestMiddleware (event *Event, config *Configuration) bool {
+func httpRequestMiddleware (event *Event, config *Configuration) bool {
     for _, datum := range event.RawData {
 		if request, ok := datum.(*http.Request); ok {
+			proto := "http://"
+			if request.TLS != nil {
+				proto = "https://"
+			}
+
 			event.MetaData.Update(MetaData{
 				"Request": {
 					"RemoteAddr": request.RemoteAddr,
 					"Method": request.Method,
-					"Url": request.Host + request.RequestURI,
+					"Url": proto + request.Host + request.RequestURI,
 					"Params": request.URL.Query(),
 				},
 			})

@@ -117,8 +117,8 @@ func TestMetaDataSanitize(t *testing.T) {
 			"int":      7,
 			"float":    7.1,
 			"complex":  "[complex128]",
-			"unsafe":   "6",
 			"string":   "string",
+			"unsafe":   "[unsafe.Pointer]",
 			"func":     "[func()]",
 			"password": "[REDACTED]",
 			"array": []interface{}{map[string]interface{}{
