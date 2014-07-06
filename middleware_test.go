@@ -7,11 +7,11 @@ import (
 func TestMiddlewareOrder(t *testing.T) {
 
 	result := make([]int, 0, 7)
-	stack := MiddlewareStack{}
+	stack := middlewareStack{}
 	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
-		result = append(result, 1)
+		result = append(result, 3)
 		next()
-		result = append(result, 7)
+		result = append(result, 5)
 	})
 	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
 		result = append(result, 2)
@@ -19,9 +19,9 @@ func TestMiddlewareOrder(t *testing.T) {
 		result = append(result, 6)
 	})
 	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
-		result = append(result, 3)
+		result = append(result, 1)
 		next()
-		result = append(result, 5)
+		result = append(result, 7)
 	})
 
 	stack.Run(nil, nil, func() {
@@ -36,7 +36,7 @@ func TestMiddlewareOrder(t *testing.T) {
 
 func TestBeforeNotifyReturnFalse(t *testing.T) {
 
-	stack := MiddlewareStack{}
+	stack := middlewareStack{}
 
 	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
 		return false
@@ -55,7 +55,7 @@ func TestBeforeNotifyReturnFalse(t *testing.T) {
 
 func TestBeforeNotifyReturnTrue(t *testing.T) {
 
-	stack := MiddlewareStack{}
+	stack := middlewareStack{}
 
 	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
 		return true
@@ -74,7 +74,7 @@ func TestBeforeNotifyReturnTrue(t *testing.T) {
 
 func TestPanicHandling(t *testing.T) {
 
-	stack := MiddlewareStack{}
+	stack := middlewareStack{}
 
 	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
 		panic("oops")

@@ -33,6 +33,18 @@ func (meta MetaData) Add(tab string, key string, value interface{}) {
 
 	meta[tab][key] = value
 }
+// Add a struct as a tab of Bugsnag meta-data.
+func (meta MetaData) AddStruct(tab string, obj interface{}) {
+	val := sanitizer{}.Sanitize(obj)
+	content, ok := val.(map[string]interface{})
+	if ok {
+		meta[tab] = content
+	} else {
+		// Wasn't a struct
+		meta.Add("Extra data", tab, obj)
+	}
+
+}
 
 // Remove any values from meta-data that have keys matching the filters,
 // and any that are recursive data-structures

@@ -81,7 +81,7 @@ func packageAndName(fn *runtime.Func) (string, string) {
 	// Since the package path might contains dots (e.g. code.google.com/...),
 	// we first remove the path prefix if there is one.
 	if lastslash := strings.LastIndex(name, "/"); lastslash >= 0 {
-		pkg += name[:lastslash]
+		pkg += name[:lastslash] + "/"
 		name = name[lastslash+1:]
 	}
 	if period := strings.Index(name, "."); period >= 0 {

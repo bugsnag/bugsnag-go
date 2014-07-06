@@ -82,6 +82,5 @@ func (err *Error) StackFrames() []StackFrame {
 }
 
 func (err *Error) TypeName() string {
-	fmt.Printf("%#v", err.Err)
 	return reflect.TypeOf(err.Err).String()
 }
