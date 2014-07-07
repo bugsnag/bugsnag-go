@@ -43,7 +43,7 @@ func init() {
 		if packages, ok := revel.Config.String("bugsnag.projectpackages"); ok {
 			projectPackages = strings.Split(packages, ",")
 		} else {
-			projectPackages = []string{revel.ImportPath + "/app/*"}
+			projectPackages = []string{revel.ImportPath + "/app/*", revel.ImportPath + "/app"}
 		}
 
 		bugsnag.Configure(bugsnag.Configuration{
