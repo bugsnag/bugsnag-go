@@ -14,7 +14,7 @@ type _account struct {
 		Premium bool
 	}
 	Password string
-	secret string
+	secret   string
 }
 
 type _broken struct {
@@ -52,7 +52,7 @@ func TestMetaDataAdd(t *testing.T) {
 			"lol": "not really a struct",
 		},
 		"account": {
-			"Id": "",
+			"Id":   "",
 			"Name": "",
 			"Plan": map[string]interface{}{
 				"Premium": false,

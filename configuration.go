@@ -36,7 +36,6 @@ type Configuration struct {
 	// TODO: remember to update the update() function when modifying this struct
 }
 
-
 func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.APIKey != "" {
 		config.APIKey = other.APIKey
@@ -88,9 +87,9 @@ func (config *Configuration) isProjectPackage(pkg string) bool {
 	for _, p := range config.ProjectPackages {
 		if p == pkg {
 			return true
-		} else if len(p) > 2 && p[len(p) - 2] == '/' && p[len(p) - 1] == '*' {
+		} else if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
 			idx := strings.LastIndex(pkg, "/")
-			if idx > -1 && pkg[:idx] == p[:len(p) - 2] {
+			if idx > -1 && pkg[:idx] == p[:len(p)-2] {
 				return true
 			}
 		}
@@ -110,7 +109,7 @@ func (config *Configuration) notifyInReleaseStage() bool {
 	if config.NotifyReleaseStages == nil {
 		return true
 	} else {
-		for _, r := range(config.NotifyReleaseStages) {
+		for _, r := range config.NotifyReleaseStages {
 			if r == config.ReleaseStage {
 				return true
 			}

@@ -3,24 +3,37 @@ package bugsnag
 import (
 	"fmt"
 	"github.com/bitly/go-simplejson"
+	"github.com/mitchellh/osext"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 )
 
-var postedJson = make(chan []byte, 1)
-var testOnce sync.Once
-var testEndpoint string
+func TestConfigure(t *testing.T) {
+	Configure(Configuration{
+		APIKey: testAPIKey,
+	})
 
-func init() {
-	Configure(Configuration{DisablePanicHandler: true})
+	if Config.APIKey != testAPIKey {
+		t.Errorf("Setting APIKey didn't work")
+	}
+
+	if NewNotifier().Config.APIKey != testAPIKey {
+		t.Errorf("Setting APIKey didn't work for new notifiers")
+	}
 }
 
+var postedJson = make(chan []byte, 10)
+var testOnce sync.Once
+var testEndpoint string
+var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
 func startTestServer() {
 	testOnce.Do(func() {
@@ -43,20 +56,6 @@ func startTestServer() {
 	})
 }
 
-func TestConfigure(t *testing.T) {
-	Configure(Configuration{
-		APIKey: "166f5ad3590596f9aa8d601ea89af845",
-	})
-
-	if Config.APIKey != "166f5ad3590596f9aa8d601ea89af845" {
-		t.Errorf("Setting APIKey didn't work")
-	}
-
-	if NewNotifier().Config.APIKey != "166f5ad3590596f9aa8d601ea89af845" {
-		t.Errorf("Setting APIKey didn't work for new notifiers")
-	}
-}
-
 type _recurse struct {
 	*_recurse
 }
@@ -76,7 +75,7 @@ func TestNotify(t *testing.T) {
 
 	Notify(fmt.Errorf("hello world"),
 		Configuration{
-			APIKey:          "166f5ad3590596f9aa8d601ea89af845",
+			APIKey:          testAPIKey,
 			Endpoint:        testEndpoint,
 			ReleaseStage:    "test",
 			AppVersion:      "1.2.3",
@@ -99,7 +98,7 @@ func TestNotify(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if json.Get("apiKey").MustString() != "166f5ad3590596f9aa8d601ea89af845" {
+	if json.Get("apiKey").MustString() != testAPIKey {
 		t.Errorf("Wrong api key in payload")
 	}
 
@@ -174,8 +173,8 @@ func runCrashyServer(rawData ...interface{}) (net.Listener, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", crashyHandler)
 	srv := http.Server{
-		Addr:    l.Addr().String(),
-		Handler: Handler(mux, rawData...),
+		Addr:     l.Addr().String(),
+		Handler:  Handler(mux, rawData...),
 		ErrorLog: log.New(ioutil.Discard, log.Prefix(), log.Flags()),
 	}
 
@@ -187,7 +186,7 @@ func TestHandler(t *testing.T) {
 	startTestServer()
 
 	l, err := runCrashyServer(Configuration{
-		APIKey:          "166f5ad3590596f9aa8d601ea89af845",
+		APIKey:          testAPIKey,
 		Endpoint:        testEndpoint,
 		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
 		Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
@@ -203,7 +202,7 @@ func TestHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if json.Get("apiKey").MustString() != "166f5ad3590596f9aa8d601ea89af845" {
+	if json.Get("apiKey").MustString() != testAPIKey {
 		t.Errorf("Wrong api key in payload")
 	}
 
@@ -267,11 +266,11 @@ func TestAutoNotify(t *testing.T) {
 
 	var panicked interface{}
 
-	func () {
-		defer AutoNotify(Configuration{Endpoint: testEndpoint, APIKey: "166f5ad3590596f9aa8d601ea89af845"})
-		defer func () {
+	func() {
+		defer func() {
 			panicked = recover()
 		}()
+		defer AutoNotify(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
 
 		panic("eggs")
 	}()
@@ -295,6 +294,112 @@ func TestAutoNotify(t *testing.T) {
 	if exception.Get("message").MustString() != "eggs" {
 		t.Errorf("caught wrong panic")
 	}
+}
+
+func TestRecover(t *testing.T) {
+	var panicked interface{}
+
+	func() {
+		defer func() {
+			panicked = recover()
+		}()
+		defer Recover(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
+
+		panic("ham")
+	}()
+
+	if panicked != nil {
+		t.Errorf("re-panick'd")
+	}
+
+	json, err := simplejson.NewJson(<-postedJson)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	event := json.Get("events").GetIndex(0)
+
+	if event.Get("severity").MustString() != "warning" {
+		t.Errorf("severity should be warning")
+	}
+	exception := event.Get("exceptions").GetIndex(0)
+
+	if exception.Get("message").MustString() != "ham" {
+		t.Errorf("caught wrong panic")
+	}
+}
+
+func TestPanicHandler(t *testing.T) {
+	startTestServer()
+
+	exePath, err := osext.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Use the same trick as panicwrap() to re-run ourselves.
+	// In the init() block below, we will then panic.
+	cmd := exec.Command(exePath, os.Args[1:]...)
+	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint)
+
+	for i, _ := range cmd.Env {
+		if cmd.Env[i] == "bugsnag_wrapped=bugsnag_wrapped" {
+			cmd.Env[i] = "please_panic=please_panic"
+		}
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = cmd.Wait(); err.Error() != "exit status 2" {
+		t.Fatal(err)
+	}
+
+	json, err := simplejson.NewJson(<-postedJson)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	event := json.Get("events").GetIndex(0)
+
+	if event.Get("severity").MustString() != "error" {
+		t.Errorf("severity should be error")
+	}
+	exception := event.Get("exceptions").GetIndex(0)
+
+	if exception.Get("message").MustString() != "ruh roh" {
+		t.Errorf("caught wrong panic")
+	}
+
+	if exception.Get("errorClass").MustString() != "panic" {
+		t.Errorf("caught wrong panic")
+	}
+
+	frame := exception.Get("stacktrace").GetIndex(1)
+
+	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
+	if frame.Get("inProject").MustBool() != true ||
+		frame.Get("file").MustString() != "github.com/bugsnag/bugsnag-go/bugsnag_test.go" ||
+		frame.Get("method").MustString() != "panick" ||
+		frame.Get("lineNumber").MustInt() == 0 {
+		t.Errorf("stack trace seemed wrong")
+	}
+}
+
+func init() {
+	if os.Getenv("please_panic") != "" {
+		Configure(Configuration{APIKey: os.Getenv("BUGSNAG_API_KEY"), Endpoint: os.Getenv("BUGSNAG_ENDPOINT"), ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
+		go func() {
+			panick()
+		}()
+		// Plenty of time to crash, it shouldn't need any of it.
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func panick() {
+	panic("ruh roh")
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
@@ -398,15 +503,15 @@ func ExampleNotify_details(userId string) {
 }
 
 type Job struct {
-	Retry bool
-	UserId string
+	Retry     bool
+	UserId    string
 	UserEmail string
-	Name string
-	Params map[string]string
+	Name      string
+	Params    map[string]string
 }
 
 func ExampleOnBeforeNotify() {
-	OnBeforeNotify(func (event *Event, config *Configuration) bool {
+	OnBeforeNotify(func(event *Event, config *Configuration) bool {
 
 		// Search all the RawData for any *Job pointers that we're passed in
 		// to bugsnag.Notify() and friends.
@@ -431,7 +536,7 @@ func ExampleOnBeforeNotify() {
 }
 
 func ExampleOnAroundNotify() {
-	OnAroundNotify(func (event *Event, config *Configuration, next func()) {
+	OnAroundNotify(func(event *Event, config *Configuration, next func()) {
 		start := time.Now()
 		next()
 		config.Logger.Printf("bugsnag.notify took: %v", time.Now().Sub(start))

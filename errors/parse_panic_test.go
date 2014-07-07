@@ -115,7 +115,7 @@ func TestParsePanic(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if Err.TypeName() != "errors.Panic" {
+		if Err.TypeName() != "panic" {
 			t.Errorf("Wrong type: %s", Err.TypeName())
 		}
 

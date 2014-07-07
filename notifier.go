@@ -29,7 +29,7 @@ func NewNotifier(rawData ...interface{}) *Notifier {
 
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
-// or bugsnag.MetaData. 
+// or bugsnag.MetaData.
 func (notifier *Notifier) Notify(err error, rawData ...interface{}) {
 	defer notifier.dontPanic()
 	event, config := newEvent(errors.New(err, 2), rawData, notifier)
@@ -59,7 +59,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 // to have been recovered() and execution proceeds as normal.
 func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
+		rawData = notifier.addDefaultSeverity(rawData, SeverityWarning)
 		notifier.Notify(errors.New(err, 2), rawData...)
 	}
 }

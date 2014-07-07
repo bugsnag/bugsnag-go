@@ -14,8 +14,8 @@ var MaxStackDepth = 50
 // A bugsnag.Error is an error with an attached stacktrace. It can be used
 // where-ever the builtin error interface is expected.
 type Error struct {
-	Err   error
-	stack []uintptr
+	Err    error
+	stack  []uintptr
 	frames []StackFrame
 }
 
@@ -81,7 +81,11 @@ func (err *Error) StackFrames() []StackFrame {
 	return err.frames
 }
 
-// Get the type name of this error.
+// Get the type name of this error. e.g. *errors.stringError.
 func (err *Error) TypeName() string {
-	return reflect.TypeOf(err.Err).String()
+	if _, ok := err.Err.(uncaughtPanic); ok {
+		return "panic"
+	} else {
+		return reflect.TypeOf(err.Err).String()
+	}
 }

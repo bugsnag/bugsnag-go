@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/mitchellh/panicwrap"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +22,11 @@ var defaultNotifier = Notifier{&Config, nil}
 // should be called as early as possible in your program.
 func Configure(config Configuration) {
 	defaultNotifier.Config.update(&config)
+	once.Do(func() {
+		if !config.DisablePanicHandler {
+			handleUncaughtPanics()
+		}
+	})
 }
 
 // Notify sends an error to Bugsnag. The rawData can be anything supported by Bugsnag,
@@ -45,7 +51,7 @@ func AutoNotify(rawData ...interface{}) {
 // crash. The rawData is used to add information to the notification, see Notify for more information.
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
+		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityWarning)
 		defaultNotifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
@@ -75,7 +81,7 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 		h = http.DefaultServeMux
 	}
 
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer notifier.AutoNotify(r)
 		h.ServeHTTP(w, r)
 	})
@@ -87,19 +93,50 @@ func init() {
 
 	// Default configuration
 	Config.update(&Configuration{
-		APIKey:          "",
-		Endpoint:        "https://notify.bugsnag.com/",
-		Hostname:        "",
-		AppVersion:      "",
-		ReleaseStage:    "",
-		ParamsFilters:   []string{"password", "secret"},
-		ProjectPackages: []string{"main"},
+		APIKey:              "",
+		Endpoint:            "https://notify.bugsnag.com/",
+		Hostname:            "",
+		AppVersion:          "",
+		ReleaseStage:        "",
+		ParamsFilters:       []string{"password", "secret"},
+		ProjectPackages:     []string{"main"},
 		NotifyReleaseStages: nil,
-		Logger:          log.New(os.Stdout, log.Prefix(), log.Flags()),
+		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
 	})
 
 	hostname, err := os.Hostname()
 	if err == nil {
 		Config.Hostname = hostname
+	}
+}
+
+// NOTE: this function does not return when you call it, instead it
+// re-exec()s the current process with panic monitoring.
+func handleUncaughtPanics() {
+	defer defaultNotifier.dontPanic()
+
+	exitStatus, err := panicwrap.Wrap(&panicwrap.WrapConfig{
+		CookieKey:   "bugsnag_wrapped",
+		CookieValue: "bugsnag_wrapped",
+		Handler: func(output string) {
+
+			toNotify, err := errors.ParsePanic(output)
+
+			if err != nil {
+				defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+			}
+			Notify(toNotify, SeverityError)
+		},
+	})
+
+	if err != nil {
+		defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+		return
+	}
+
+	if exitStatus >= 0 {
+		os.Exit(exitStatus)
+	} else {
+		return
 	}
 }

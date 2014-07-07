@@ -61,8 +61,8 @@ func catchMiddlewarePanic(event *Event, config *Configuration, next func()) {
 // httpRequestMiddleware is added OnBeforeNotify by default. It takes information
 // from an http.Request passed in as rawData, and adds it to the Event. You can
 // use this as a template for writing your own Middleware.
-func httpRequestMiddleware (event *Event, config *Configuration) bool {
-    for _, datum := range event.RawData {
+func httpRequestMiddleware(event *Event, config *Configuration) bool {
+	for _, datum := range event.RawData {
 		if request, ok := datum.(*http.Request); ok {
 			proto := "http://"
 			if request.TLS != nil {
@@ -72,9 +72,9 @@ func httpRequestMiddleware (event *Event, config *Configuration) bool {
 			event.MetaData.Update(MetaData{
 				"Request": {
 					"RemoteAddr": request.RemoteAddr,
-					"Method": request.Method,
-					"Url": proto + request.Host + request.RequestURI,
-					"Params": request.URL.Query(),
+					"Method":     request.Method,
+					"Url":        proto + request.Host + request.RequestURI,
+					"Params":     request.URL.Query(),
 				},
 			})
 
@@ -87,14 +87,14 @@ func httpRequestMiddleware (event *Event, config *Configuration) bool {
 			}
 
 			// Default user.id to IP so that users-affected works.
-			if event.User == nil{
+			if event.User == nil {
 				ip := request.RemoteAddr
 				if idx := strings.LastIndex(ip, ":"); idx != -1 {
 					ip = ip[:idx]
 				}
 				event.User = &User{Id: ip}
 			}
-        }
-    }
+		}
+	}
 	return true
 }

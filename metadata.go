@@ -33,6 +33,7 @@ func (meta MetaData) Add(tab string, key string, value interface{}) {
 
 	meta[tab][key] = value
 }
+
 // Add a struct as a tab of Bugsnag meta-data.
 func (meta MetaData) AddStruct(tab string, obj interface{}) {
 	val := sanitizer{}.Sanitize(obj)
