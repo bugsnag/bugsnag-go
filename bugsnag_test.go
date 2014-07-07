@@ -141,7 +141,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	frame0 := exception.Get("stacktrace").GetIndex(0)
-	if frame0.Get("file").MustString() != "github.com/bugsnag/bugsnag-go/bugsnag_test.go" ||
+	if frame0.Get("file").MustString() != "bugsnag_test.go" ||
 		frame0.Get("method").MustString() != "TestNotify" ||
 		frame0.Get("inProject").MustBool() != true ||
 		frame0.Get("lineNumber").MustInt() == 0 {
@@ -254,7 +254,7 @@ func TestHandler(t *testing.T) {
 
 	frame3 := exception.Get("stacktrace").GetIndex(3)
 
-	if frame3.Get("file").MustString() != "github.com/bugsnag/bugsnag-go/bugsnag_test.go" ||
+	if frame3.Get("file").MustString() != "bugsnag_test.go" ||
 		frame3.Get("method").MustString() != "crashyHandler" ||
 		frame3.Get("inProject").MustBool() != true ||
 		frame3.Get("lineNumber").MustInt() == 0 {
@@ -380,7 +380,7 @@ func TestPanicHandler(t *testing.T) {
 
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
 	if frame.Get("inProject").MustBool() != true ||
-		frame.Get("file").MustString() != "github.com/bugsnag/bugsnag-go/bugsnag_test.go" ||
+		frame.Get("file").MustString() != "bugsnag_test.go" ||
 		frame.Get("method").MustString() != "panick" ||
 		frame.Get("lineNumber").MustInt() == 0 {
 		t.Errorf("stack trace seemed wrong")

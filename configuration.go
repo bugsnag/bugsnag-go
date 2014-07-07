@@ -11,18 +11,16 @@ type Configuration struct {
 	// The Bugsnag endpoint, default "https://notify.bugsnag.com/"
 	Endpoint string
 
-	// The hostname of the current server
-	Hostname string
-	// The currently running version of the app
-	AppVersion string
 	// The current release stage
 	ReleaseStage string
+	// The currently running version of the app
+	AppVersion string
+	// The hostname of the current server
+	Hostname string
 
 	// keys to filter out of meta-data, default: {"password", "secret"}
 	ParamsFilters []string
 
-	// directory to strip from in-project frames, default: ""
-	ProjectRoot string
 	// packages to consider in-project, default: {"main"}
 	ProjectPackages []string
 	// Release stages to notify in, default nil implies all release stages.
@@ -54,9 +52,6 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.ParamsFilters != nil {
 		config.ParamsFilters = other.ParamsFilters
-	}
-	if other.ProjectRoot != "" {
-		config.ProjectRoot = other.ProjectRoot
 	}
 	if other.ProjectPackages != nil {
 		config.ProjectPackages = other.ProjectPackages
@@ -95,6 +90,21 @@ func (config *Configuration) isProjectPackage(pkg string) bool {
 		}
 	}
 	return false
+}
+
+func (config *Configuration) stripProjectPackages(file string) string {
+	for _, p := range config.ProjectPackages {
+		if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
+			p = p[:len(p) - 1]
+		} else {
+			p = p + "/"
+		}
+		if strings.HasPrefix(file, p) {
+			return strings.TrimPrefix(file, p)
+		}
+	}
+
+	return file
 }
 
 func (config *Configuration) log(fmt string, args ...interface{}) {

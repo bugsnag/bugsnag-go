@@ -107,18 +107,21 @@ func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Ev
 
 	for i, frame := range err.StackFrames() {
 		file := frame.File
-		// make in-project frames really nice.
-		file = strings.TrimPrefix(file, config.ProjectRoot)
+		inProject := config.isProjectPackage(frame.Package)
+
 		// remove $GOROOT and $GOHOME from other frames
 		if idx := strings.Index(file, frame.Package); idx > -1 {
 			file = file[idx:]
+		}
+		if inProject {
+			file = config.stripProjectPackages(file)
 		}
 
 		event.Stacktrace[i] = stackFrame{
 			Method:     frame.Name,
 			File:       file,
 			LineNumber: frame.LineNumber,
-			InProject:  config.isProjectPackage(frame.Package),
+			InProject:  inProject,
 		}
 	}
 

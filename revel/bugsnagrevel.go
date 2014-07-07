@@ -51,7 +51,6 @@ func init() {
 			Endpoint:        revel.Config.StringDefault("bugsnag.endpoint", ""),
 			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
 			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
-			ProjectRoot:     revel.Config.StringDefault("bugsnag.projectroot", revel.BasePath + "/"),
 			ProjectPackages: projectPackages,
 			Logger:          revel.ERROR,
 		})
