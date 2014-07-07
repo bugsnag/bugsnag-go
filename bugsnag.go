@@ -21,12 +21,8 @@ var defaultNotifier = Notifier{&Config, nil}
 // This must be called before any other function on Bugsnag, and
 // should be called as early as possible in your program.
 func Configure(config Configuration) {
-	defaultNotifier.Config.update(&config)
-	once.Do(func() {
-		if !config.DisablePanicHandler {
-			handleUncaughtPanics()
-		}
-	})
+	Config.update(&config)
+	once.Do(Config.PanicHandler)
 }
 
 // Notify sends an error to Bugsnag. The rawData can be anything supported by Bugsnag,
@@ -102,6 +98,7 @@ func init() {
 		ProjectPackages:     []string{"main"},
 		NotifyReleaseStages: nil,
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
+		PanicHandler:        defaultPanicHandler,
 	})
 
 	hostname, err := os.Hostname()
@@ -112,7 +109,7 @@ func init() {
 
 // NOTE: this function does not return when you call it, instead it
 // re-exec()s the current process with panic monitoring.
-func handleUncaughtPanics() {
+func defaultPanicHandler() {
 	defer defaultNotifier.dontPanic()
 
 	exitStatus, err := panicwrap.Wrap(&panicwrap.WrapConfig{

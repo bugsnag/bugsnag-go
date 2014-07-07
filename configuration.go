@@ -18,16 +18,15 @@ type Configuration struct {
 	// The hostname of the current server
 	Hostname string
 
+	// Release stages to notify in, default nil implies all release stages.
+	NotifyReleaseStages []string
+	// packages to consider in-project, default: {"main"}
+	ProjectPackages []string
 	// keys to filter out of meta-data, default: {"password", "secret"}
 	ParamsFilters []string
 
-	// packages to consider in-project, default: {"main"}
-	ProjectPackages []string
-	// Release stages to notify in, default nil implies all release stages.
-	NotifyReleaseStages []string
-
-	// pass true to disable notifications of uncaught panics
-	DisablePanicHandler bool
+	// A function to install a PanicHandler, defaults to panicwrap.
+	PanicHandler func()
 
 	// The logger to use, defaults to the global logger
 	Logger *log.Logger
@@ -62,8 +61,8 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
 	}
-	if other.DisablePanicHandler {
-		config.DisablePanicHandler = other.DisablePanicHandler
+	if other.PanicHandler != nil {
+		config.PanicHandler = other.PanicHandler
 	}
 
 	return config
