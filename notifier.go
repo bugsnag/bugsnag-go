@@ -4,16 +4,6 @@ import (
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
-var backgroundQueue = make(chan func(), 10)
-
-func init() {
-	go func() {
-		for job := range backgroundQueue {
-			job()
-		}
-	}()
-}
-
 type Notifier struct {
 	Config  *Configuration
 	RawData []interface{}
@@ -45,18 +35,12 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) {
 	event, config := newEvent(errors.New(err, 2), rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
-	if len(backgroundQueue) < cap(backgroundQueue) {
-		backgroundQueue <- func() {
-			middleware.Run(event, config, func() {
-				defer notifier.dontPanic()
-				if config.notifyInReleaseStage() {
-					(&payload{event, config}).deliver()
-				}
-			})
+	middleware.Run(event, config, func() {
+		defer notifier.dontPanic()
+		if config.notifyInReleaseStage() {
+			(&payload{event, config}).deliver()
 		}
-	} else {
-		notifier.Config.log("bugsnag/notifier.Notify: discarding error due to long queue")
-	}
+	})
 }
 
 // defer AutoNotify() sends any panics that happen to Bugsnag, along with any
