@@ -36,6 +36,9 @@ func NewStackFrame(pc uintptr) (frame StackFrame) {
 
 // Func returns the function that this stackframe corresponds to
 func (frame *StackFrame) Func() *runtime.Func {
+	if frame.ProgramCounter == 0 {
+		return nil
+	}
 	return runtime.FuncForPC(frame.ProgramCounter)
 }
 

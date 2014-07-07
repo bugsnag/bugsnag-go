@@ -16,7 +16,8 @@ type hash map[string]interface{}
 func (p *payload) deliver() {
 
 	if len(p.APIKey) != 32 {
-		p.log("bugsnag/payload.deliver: invalid api key\n")
+		p.log("bugsnag/payload.deliver: invalid api key: %#v\n", p.APIKey)
+		return
 	}
 
 	buf, err := json.Marshal(p)

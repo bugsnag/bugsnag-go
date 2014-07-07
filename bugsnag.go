@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 )
 
+var once sync.Once
 var middleware middlewareStack
 
 // The configuration for the default bugsnag notifier.
@@ -15,6 +17,8 @@ var Config Configuration
 var defaultNotifier = Notifier{&Config, nil}
 
 // Configure Bugsnag. The most important setting is the APIKey.
+// This must be called before any other function on Bugsnag, and
+// should be called as early as possible in your program.
 func Configure(config Configuration) {
 	defaultNotifier.Config.update(&config)
 }
@@ -31,7 +35,7 @@ func Notify(err error, rawData ...interface{}) {
 // see Notify for more information.
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = append(rawData, SeverityError)
+		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
 		defaultNotifier.Notify(errors.New(err, 2), rawData...)
 		panic(err)
 	}
@@ -41,7 +45,7 @@ func AutoNotify(rawData ...interface{}) {
 // crash. The rawData is used to add information to the notification, see Notify for more information.
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = append(rawData, SeverityError)
+		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
 		defaultNotifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
@@ -63,7 +67,8 @@ func OnAroundNotify(callback func(event *Event, config *Configuration, next func
 }
 
 // Handler wraps the HTTP handler in bugsnag.AutoNotify(). It includes details about the
-// HTTP request in all error reports.
+// HTTP request in all error reports. If you don't pass a handler, the default http handlers
+// will be used.
 func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	notifier := NewNotifier(rawData...)
 	if h == nil {
@@ -81,7 +86,7 @@ func init() {
 	OnBeforeNotify(httpRequestMiddleware)
 
 	// Default configuration
-	Configure(Configuration{
+	Config.update(&Configuration{
 		APIKey:          "",
 		Endpoint:        "https://notify.bugsnag.com/",
 		Hostname:        "",

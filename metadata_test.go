@@ -13,6 +13,7 @@ type _account struct {
 	Plan struct {
 		Premium bool
 	}
+	Password string
 	secret string
 }
 
@@ -35,6 +36,9 @@ func TestMetaDataAdd(t *testing.T) {
 	m.Add("one", "new", "key")
 	m.Add("new", "tab", account)
 
+	m.AddStruct("lol", "not really a struct")
+	m.AddStruct("account", account)
+
 	if !reflect.DeepEqual(m, MetaData{
 		"one": {
 			"key":      "value",
@@ -43,6 +47,17 @@ func TestMetaDataAdd(t *testing.T) {
 		},
 		"new": {
 			"tab": account,
+		},
+		"Extra data": {
+			"lol": "not really a struct",
+		},
+		"account": {
+			"Id": "",
+			"Name": "",
+			"Plan": map[string]interface{}{
+				"Premium": false,
+			},
+			"Password": "",
 		},
 	}) {
 		t.Errorf("metadata.Add didn't work: %#v", m)
@@ -138,6 +153,7 @@ func TestMetaDataSanitize(t *testing.T) {
 				"Plan": map[string]interface{}{
 					"Premium": false,
 				},
+				"Password": "[REDACTED]",
 			},
 		},
 	}) {

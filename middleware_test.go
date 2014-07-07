@@ -32,7 +32,7 @@ func TestMiddlewareOrder(t *testing.T) {
 
 	if !(result[0] == 1 && result[1] == 2 && result[2] == 3 &&
 		result[3] == 4 && result[4] == 5 && result[5] == 6 && result[6] == 7) {
-		t.Errorf("unexpected middleware order %%", result)
+		t.Errorf("unexpected middleware order %v", result)
 	}
 }
 

@@ -17,8 +17,6 @@ var once sync.Once
 // bugsnag.endpoint, bugsnag.releasestage, bugsnag.appversion,
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
-	// Run configure on the first request, to ensure that revel.Config is loaded
-	once.Do(configure)
 	defer bugsnag.AutoNotify(c)
 	fc[0](c, fc[1:])
 }
@@ -37,23 +35,25 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) bool {
 	return true
 }
 
-func configure() {
-	bugsnag.OnBeforeNotify(middleware)
+func init() {
+	revel.OnAppStart(func () {
+		bugsnag.OnBeforeNotify(middleware)
 
-	var projectPackages []string
-	if packages, ok := revel.Config.String("bugsnag.projectpackages"); ok {
-		projectPackages = strings.Split(packages, ",")
-	} else {
-		projectPackages = []string{revel.ImportPath + "/app/*"}
-	}
+		var projectPackages []string
+		if packages, ok := revel.Config.String("bugsnag.projectpackages"); ok {
+			projectPackages = strings.Split(packages, ",")
+		} else {
+			projectPackages = []string{revel.ImportPath + "/app/*"}
+		}
 
-	bugsnag.Configure(bugsnag.Configuration{
-		APIKey:          revel.Config.StringDefault("bugsnag.apikey", ""),
-		Endpoint:        revel.Config.StringDefault("bugsnag.endpoint", ""),
-		AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
-		ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
-		ProjectRoot:     revel.Config.StringDefault("bugsnag.projectroot", revel.BasePath + "/"),
-		ProjectPackages: projectPackages,
-		Logger:          revel.ERROR,
+		bugsnag.Configure(bugsnag.Configuration{
+			APIKey:          revel.Config.StringDefault("bugsnag.apikey", ""),
+			Endpoint:        revel.Config.StringDefault("bugsnag.endpoint", ""),
+			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
+			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
+			ProjectRoot:     revel.Config.StringDefault("bugsnag.projectroot", revel.BasePath + "/"),
+			ProjectPackages: projectPackages,
+			Logger:          revel.ERROR,
+		})
 	})
 }

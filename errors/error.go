@@ -81,6 +81,7 @@ func (err *Error) StackFrames() []StackFrame {
 	return err.frames
 }
 
+// Get the type name of this error.
 func (err *Error) TypeName() string {
 	return reflect.TypeOf(err.Err).String()
 }

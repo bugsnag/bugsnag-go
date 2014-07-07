@@ -13,7 +13,7 @@ func TestStackFormatMatches(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != 'a' {
-			panic(err)
+			t.Fatal(err)
 		}
 
 		bs := [][]byte{Errorf("hi").Stack(), debug.Stack()}
@@ -37,7 +37,7 @@ func TestSkipWorks(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != 'a' {
-			panic(err)
+			t.Fatal(err)
 		}
 
 		bs := [][]byte{New("hi", 2).Stack(), debug.Stack()}

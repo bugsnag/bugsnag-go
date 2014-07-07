@@ -13,12 +13,17 @@ import (
 	"time"
 )
 
-var postedJson = make(chan []byte)
-var once sync.Once
+var postedJson = make(chan []byte, 1)
+var testOnce sync.Once
 var testEndpoint string
 
+func init() {
+	Configure(Configuration{DisablePanicHandler: true})
+}
+
+
 func startTestServer() {
-	once.Do(func() {
+	testOnce.Do(func() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			body, err := ioutil.ReadAll(r.Body)
@@ -78,7 +83,6 @@ func TestNotify(t *testing.T) {
 			Hostname:        "web1",
 			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
 		},
-		SeverityInfo,
 		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Context{"testing"},
 		MetaData{"test": {
@@ -107,7 +111,7 @@ func TestNotify(t *testing.T) {
 
 	for k, value := range map[string]string{
 		"payloadVersion":                 "2",
-		"severity":                       "info",
+		"severity":                       "warning",
 		"context":                        "testing",
 		"groupingHash":                   "lol",
 		"app.releaseStage":               "test",
@@ -187,7 +191,7 @@ func TestHandler(t *testing.T) {
 		Endpoint:        testEndpoint,
 		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
 		Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
-	})
+	}, SeverityInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +215,7 @@ func TestHandler(t *testing.T) {
 
 	for k, value := range map[string]string{
 		"payloadVersion":          "2",
-		"severity":                "error",
+		"severity":                "info",
 		"user.id":                 "127.0.0.1",
 		"metaData.Request.Url":    "http://" + l.Addr().String() + "/ok?foo=bar",
 		"metaData.Request.Method": "GET",
@@ -256,6 +260,40 @@ func TestHandler(t *testing.T) {
 		frame3.Get("inProject").MustBool() != true ||
 		frame3.Get("lineNumber").MustInt() == 0 {
 		t.Errorf("Wrong frame3: %v", frame3)
+	}
+}
+
+func TestAutoNotify(t *testing.T) {
+
+	var panicked interface{}
+
+	func () {
+		defer AutoNotify(Configuration{Endpoint: testEndpoint, APIKey: "166f5ad3590596f9aa8d601ea89af845"})
+		defer func () {
+			panicked = recover()
+		}()
+
+		panic("eggs")
+	}()
+
+	if panicked.(string) != "eggs" {
+		t.Errorf("didn't re-panic")
+	}
+
+	json, err := simplejson.NewJson(<-postedJson)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	event := json.Get("events").GetIndex(0)
+
+	if event.Get("severity").MustString() != "error" {
+		t.Errorf("severity should be error")
+	}
+	exception := event.Get("exceptions").GetIndex(0)
+
+	if exception.Get("message").MustString() != "eggs" {
+		t.Errorf("caught wrong panic")
 	}
 }
 

@@ -48,7 +48,7 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) {
 // with the same error so that the panic() bubbles out.
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = append(rawData, SeverityError)
+		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
 		notifier.Notify(errors.New(err, 2), rawData...)
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 // to have been recovered() and execution proceeds as normal.
 func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = append(rawData, SeverityError)
+		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
 		notifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
@@ -68,4 +68,16 @@ func (notifier *Notifier) dontPanic() {
 	if err := recover(); err != nil {
 		notifier.Config.log("bugsnag/notifier.Notify: panic! %s", err)
 	}
+}
+
+// Add a severity to raw data only if the default is not set.
+func (notifier *Notifier) addDefaultSeverity(rawData []interface{}, s severity) []interface{} {
+
+	for _, datum := range append(notifier.RawData, rawData...) {
+		if _, ok := datum.(severity); ok {
+			return rawData
+		}
+	}
+
+	return append(rawData, s)
 }

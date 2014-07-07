@@ -1,7 +1,6 @@
 package bugsnag
 
 import (
-	"fmt"
 	"log"
 	"strings"
 )
@@ -28,6 +27,9 @@ type Configuration struct {
 	ProjectPackages []string
 	// Release stages to notify in, default nil implies all release stages.
 	NotifyReleaseStages []string
+
+	// pass true to disable notifications of uncaught panics
+	DisablePanicHandler bool
 
 	// The logger to use, defaults to the global logger
 	Logger *log.Logger
@@ -66,6 +68,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
 	}
+	if other.DisablePanicHandler {
+		config.DisablePanicHandler = other.DisablePanicHandler
+	}
 
 	return config
 }
@@ -84,7 +89,6 @@ func (config *Configuration) isProjectPackage(pkg string) bool {
 		if p == pkg {
 			return true
 		} else if len(p) > 2 && p[len(p) - 2] == '/' && p[len(p) - 1] == '*' {
-			fmt.Println(p, pkg)
 			idx := strings.LastIndex(pkg, "/")
 			if idx > -1 && pkg[:idx] == p[:len(p) - 2] {
 				return true
