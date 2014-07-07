@@ -49,7 +49,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 		"notifier": hash{
 			"name":    "Bugsnag Go",
 			"url":     "https://github.com/bugsnag/bugsnag-go",
-			"version": "0.1",
+			"version": VERSION,
 		},
 
 		"events": []hash{

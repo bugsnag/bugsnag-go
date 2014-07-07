@@ -9,6 +9,9 @@ import (
 	"sync"
 )
 
+// The current version of the notifier
+const VERSION = "0.1"
+
 var once sync.Once
 var middleware middlewareStack
 
