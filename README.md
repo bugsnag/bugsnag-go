@@ -95,11 +95,11 @@ be notified of any panics() that happen while processing a request.
 Sometimes however it's useful to manually notify Bugsnag of a problem. To do this,
 call [`bugsnag.Notify()`](https://godoc.org/github.com/bugsnag/bugsnag-go/#Notify)
 
-    ```go
-    if err != nil {
-        bugsnag.Notify(err)
-    }
-    ```
+```go
+if err != nil {
+    bugsnag.Notify(err)
+}
+```
 
 ### Manual panic handling
 
@@ -109,13 +109,13 @@ to stop a panic from unwinding the stack any further. When `Recover()` is hit,
 it will send any current panic to Bugsnag and then stop panicking. This is
 most useful at the start of a goroutine:
 
-    ```go
-        go func() {
-            defer bugsnag.Recover()
+```go
+go func() {
+    defer bugsnag.Recover()
 
-            // ...
-        }()
-    ```
+    // ...
+}()
+```
 
 Alternatively you can use
 [`bugsnag.AutoNotify()`](https://godoc.org/github.com/bugsnag/bugsnag-go/#Recover)
@@ -123,9 +123,9 @@ to notify bugsnag of a panic while letting the program continue to panic. This
 is useful if you're using a Framework that already has some handling of panics
 and you are retrofitting bugsnag support.
 
-    ```go
-        defer bugsnag.AutoNotify()
-    ```
+```go
+defer bugsnag.AutoNotify()
+```
 
 Sending Custom Data
 ===================
@@ -139,15 +139,15 @@ Custom metaData appears as tabs on Bugsnag.com. You can set it by passing
 a [`bugsnag.MetaData`](https://godoc.org/github.com/bugsnag/bugsnag-go/#MetaData)
 object as rawData.
 
-    ```go
-    bugsnag.Notify(err,
-        bugsnag.MetaData{
-            "Account": {
-                "Name": Account.Name,
-                "Paying": Account.Plan.Premium,
-            },
-        })
-    ```
+```go
+bugsnag.Notify(err,
+    bugsnag.MetaData{
+        "Account": {
+            "Name": Account.Name,
+            "Paying": Account.Plan.Premium,
+        },
+    })
+```
 
 Alternatively, you can use an
 [OnBeforeNotify](https://godoc.org/github.com/bugsnag/bugsnag-go/#OnBeforeNotify)
@@ -161,11 +161,11 @@ Bugsnag can extract interesting data from
 objects. These are automatically passed in when handling panics, and you can
 pass them yourself.
 
-    ```go
-        func (w http.ResponseWriter, r *http.Request) {
-            bugsnag.Notify(err, r)
-        }
-    ```
+```go
+func (w http.ResponseWriter, r *http.Request) {
+    bugsnag.Notify(err, r)
+}
+```
 
 ### User data
 
@@ -174,10 +174,10 @@ can set which user an error affects by passing a
 [`bugsnag.User`](https://godoc.org/github.com/bugsnag/bugsnag-go/#User) object as
 rawData.
 
-    ```go
-    bugsnag.Notify(err,
-        bugsnag.User{Id: "1234", Name: "Conrad", Email: "me@cirw.in"})
-    ```
+```go
+bugsnag.Notify(err,
+    bugsnag.User{Id: "1234", Name: "Conrad", Email: "me@cirw.in"})
+```
 
 ### Context
 
@@ -186,18 +186,18 @@ of where a problem occurred. You can set it by passing a
 [`bugsnag.Context`](https://godoc.org/github.com/bugsnag/bugsnag-go/#Context)
 object as rawData.
 
-    ```go
-    bugsnag.Notify(err, bugsnag.Context{"backgroundJob"})
-    ```
+```go
+bugsnag.Notify(err, bugsnag.Context{"backgroundJob"})
+```
 
 ### Severity
 
 Bugsnag supports three severities, `SeverityError`, `SeverityWarning`, and `SeverityInfo`.
 You can set the severity of an error by passing one of these objects as rawData.
 
-    ```go
-    bugsnag.Notify(err, bugsnag.SeverityInfo)
-    ```
+```go
+bugsnag.Notify(err, bugsnag.SeverityInfo)
+```
 
 Configuration
 =============
@@ -210,54 +210,55 @@ containing any of the following values.
 
 The Bugsnag API key can be found on your [Bugsnag dashboard](https://bugsnag.com) under "Settings".
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        APIKey: "YOUR_API_KEY_HERE",
-    })
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    APIKey: "YOUR_API_KEY_HERE",
+})
+```
 
 ### `Endpoint`
 
 The Bugsnag endpoint defaults to `https://notify.bugsnag.com/`. If you're using Bugsnag enterprise,
 you should set this to the endpoint of your local instance.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        Endpoint: "http://bugsnag.internal:49000/",
-    })
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    Endpoint: "http://bugsnag.internal:49000/",
+})
+```
 
 ### `ReleaseStage`
 
 The ReleaseStage tracks where your app is deployed. You should set this to `production`, `staging`,
 `development` or similar as appropriate.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        ReleaseStage: "development",
-    })
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    ReleaseStage: "development",
+})
+```
 
 ### `NotifyReleaseStages`
 
 The list of ReleaseStages to notify in. By default Bugsnag will notify you in all release stages, but
 you can use this to silence development errors.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        NotifyReleaseStages: []string{"production", "staging"},
-    })
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    NotifyReleaseStages: []string{"production", "staging"},
+})
+```
 
 ### `AppVersion`
 
 If you use a versioning scheme for deploys of your app, Bugsnag can use the `AppVersion` to only
 re-open errors if they occur in later version of the app.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        AppVersion: "1.2.3",
-    })
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    AppVersion: "1.2.3",
+})
+```
 
 ### `Hostname`
 
@@ -270,11 +271,11 @@ In order to determine where a crash happens Bugsnag needs to know which packages
 be part of your app (as opposed to a library). By default this is set to `[]string{"main"}`. Each
 string can either be a fully-qualified package name, or a directory with a wildcard at the end.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        ProjectPackages: []string{"main", "github.com/domain/myapp/*"},
-    }
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    ProjectPackages: []string{"main", "github.com/domain/myapp/*"},
+}
+```
 
 ### `ParamsFilters`
 
@@ -283,21 +284,21 @@ setting `ParamsFilters`. Any key in the `MetaData` that includes any string in t
 will be redacted. The default is `[]string{"password", "secret"}`, which prevents fields like
 `password`, `password_confirmation` and `secret_answer` from being sent.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        ParamsFilters: []string{"password", "secret"},
-    }
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    ParamsFilters: []string{"password", "secret"},
+}
+```
 
 ### `Logger`
 
 The Logger to write to in case of an error inside Bugsnag. This defaults to the global logger.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        Logger: app.Logger,
-    }
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    Logger: app.Logger,
+}
+```
 
 ### `PanicHandler`
 
@@ -307,11 +308,11 @@ prevent this, set `PanicHandler` to `func() {}` the first time you call
 `bugsnag.Configure`. This will stop bugsnag from being able to notify you about
 unhandled panics.
 
-    ```go
-    bugsnag.Configure(bugsnag.Configuration{
-        PanicHandler: func() {},
-    })
-    ```
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    PanicHandler: func() {},
+})
+```
 
 Custom data with OnBeforeNotify
 ===============================
@@ -324,49 +325,49 @@ be used.  A better idea is to pass raw data in to these functions, and add an
 
 For example, lets say our system processes jobs:
 
-    ```go
-    type Job struct{
-        Retry     bool
-        UserId    string
-        UserEmail string
-        Name      string
-        Params    map[string]string
-    }
-    ```
+```go
+type Job struct{
+    Retry     bool
+    UserId    string
+    UserEmail string
+    Name      string
+    Params    map[string]string
+}
+```
 
 You can pass a job directly into Bugsnag.notify:
 
-    ```go
-    bugsnag.Notify(err, job)
-    ```
+```go
+bugsnag.Notify(err, job)
+```
 
 And then add a filter to extract information from that job and attach it to the
 Bugsnag event:
 
-    ```go
-    OnBeforeNotify(func(event *Event, config *Configuration) bool {
+```go
+OnBeforeNotify(func(event *Event, config *Configuration) bool {
 
-        // Search all the RawData for any *Job pointers that we're passed in
-        // to bugsnag.Notify() and friends.
-        for _, datum := range event.RawData {
-            if job, ok := datum.(*Job); ok {
-                // don't notify bugsnag about errors in retries
-                if job.Retry {
-                    return false
-                }
-
-                // add the job as a tab on Bugsnag.com
-                event.MetaData.AddStruct("Job", job)
-
-                // set the user correctly
-                event.User = &User{Id: job.UserId, Email: job.UserEmail}
+    // Search all the RawData for any *Job pointers that we're passed in
+    // to bugsnag.Notify() and friends.
+    for _, datum := range event.RawData {
+        if job, ok := datum.(*Job); ok {
+            // don't notify bugsnag about errors in retries
+            if job.Retry {
+                return false
             }
-        }
 
-        // continue notifying as normal
-        return true
-    })
-    ```
+            // add the job as a tab on Bugsnag.com
+            event.MetaData.AddStruct("Job", job)
+
+            // set the user correctly
+            event.User = &User{Id: job.UserId, Email: job.UserEmail}
+        }
+    }
+
+    // continue notifying as normal
+    return true
+})
+```
 
 Advanced Usage
 ==============
@@ -377,15 +378,15 @@ Bugsnag. You can use these without calling `bugsnag.Configure()`, but bear in
 mind that until you call `bugsnag.Configure()` unhandled panics will not be
 sent to bugsnag.
 
-    ```go
-    notifier := bugsnag.NewNotifier(bugsnag.Configuration{
-        APIKey: "YOUR_OTHER_API_KEY",
-    })
-    ```
+```go
+notifier := bugsnag.NewNotifier(bugsnag.Configuration{
+    APIKey: "YOUR_OTHER_API_KEY",
+})
+```
 
 In fact any place that lets you pass in `rawData` also allows you to pass in configuration.
 For example to send http errors to one bugsnag project, you could do:
 
-    ```go
-    bugsnag.Handler(nil, bugsnag.Configuration{APIKey: "YOUR_OTHER_API_KEY"})
-    ```
+```go
+bugsnag.Handler(nil, bugsnag.Configuration{APIKey: "YOUR_OTHER_API_KEY"})
+```
