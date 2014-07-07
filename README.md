@@ -130,8 +130,10 @@ defer bugsnag.AutoNotify()
 Sending Custom Data
 ===================
 
-Most functions in the Bugsnag API let you attach custom data to notifications.
-This shows up in the Bugsnag dashboard to help you debug problems.
+Most functions in the Bugsnag API, including `bugsnag.Notify()`,
+`bugsnag.Recover()`, `bugsnag.AutoNotify()`, and `bugsnag.Handler()` let you
+attach custom data to the notifications that they send. This shows up in the
+Bugsnag dashboard to help you debug problems.
 
 ### Custom MetaData
 
