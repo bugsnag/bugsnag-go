@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type payload struct {
@@ -27,7 +28,12 @@ func (p *payload) deliver() {
 		return
 	}
 
-	resp, err := http.Post(p.Endpoint, "application/json", bytes.NewBuffer(buf))
+	client := http.Client{
+		Transport: p.Transport,
+		Timeout:   10 * time.Second,
+	}
+
+	resp, err := client.Post(p.Endpoint, "application/json", bytes.NewBuffer(buf))
 
 	if err != nil {
 		p.log("bugsnag/payload.deliver: %s\n", err)

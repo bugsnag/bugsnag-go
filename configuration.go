@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -30,6 +31,8 @@ type Configuration struct {
 
 	// The logger to use, defaults to the global logger
 	Logger *log.Logger
+	// The http Transport to use, defaults to the default http Transport
+	Transport http.RoundTripper
 	// TODO: remember to update the update() function when modifying this struct
 }
 
@@ -64,6 +67,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.PanicHandler != nil {
 		config.PanicHandler = other.PanicHandler
 	}
+	if other.Transport != nil {
+		config.Transport = other.Transport
+	}
 
 	return config
 }
@@ -94,7 +100,7 @@ func (config *Configuration) isProjectPackage(pkg string) bool {
 func (config *Configuration) stripProjectPackages(file string) string {
 	for _, p := range config.ProjectPackages {
 		if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
-			p = p[:len(p) - 1]
+			p = p[:len(p)-1]
 		} else {
 			p = p + "/"
 		}
