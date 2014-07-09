@@ -85,6 +85,18 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	})
 }
 
+// HandlerFunc wraps a HTTP handler in bugsnag.AutoNotify(). It includes details about the
+// HTTP request in all error reports. If you've wrapped your server in an http.Handler,
+// you don't also need to wrap each function.
+func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
+	notifier := NewNotifier(rawData...)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer notifier.AutoNotify(r)
+		h(w, r)
+	}
+}
+
 func init() {
 	// Set up builtin middlewarez
 	OnBeforeNotify(httpRequestMiddleware)
