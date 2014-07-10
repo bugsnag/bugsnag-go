@@ -31,7 +31,7 @@ func Configure(config Configuration) {
 // e.g. User, Context, SeverityError, MetaData, Configuration,
 // or anything supported by your custom middleware. Unsupported values will be silently ignored.
 func Notify(err error, rawData ...interface{}) error {
-	return defaultNotifier.Notify(err, rawData...)
+	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
 }
 
 // defer AutoNotify notifies Bugsnag about any panic()s. It then re-panics() so that existing

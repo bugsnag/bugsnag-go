@@ -32,7 +32,7 @@ func New(rawData ...interface{}) *Notifier {
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
 func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
-	event, config := newEvent(errors.New(err, 2), rawData, notifier)
+	event, config := newEvent(errors.New(err, 1), rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
