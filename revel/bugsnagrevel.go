@@ -22,7 +22,7 @@ func Filter(c *revel.Controller, fc []revel.Filter) {
 }
 
 // Add support to bugsnag for reading data out of *revel.Controllers
-func middleware(event *bugsnag.Event, config *bugsnag.Configuration) bool {
+func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	for _, datum := range event.RawData {
 		if controller, ok := datum.(*revel.Controller); ok {
 			// make the request visible to the builtin HttpMIddleware
@@ -32,7 +32,7 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) bool {
 		}
 	}
 
-	return true
+	return nil
 }
 
 func init() {
