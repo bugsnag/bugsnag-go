@@ -1,3 +1,5 @@
+// Package bugsnag lets you monitor unhandled panics and expected errors in your golang code.
+// For more information see https://github.com/bugsnag/bugsnag-go/
 package bugsnag
 
 import (

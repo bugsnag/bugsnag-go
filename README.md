@@ -85,6 +85,55 @@ There are two steps to get panic handling in [revel](https://revel.github.io) ap
     [dev]
     ```
 
+### Using with Google App Engine
+
+1. Configure bugsnag at the start of your `init()` function:
+
+    ```go
+    func init() {
+        bugsnag.Configure(bugsnag.Configuration{
+            APIKey: "YOUR_API_KEY_HERE",
+            ReleaseStage: "production",
+            // more configuration options
+        })
+
+        // ...
+    }
+    ```
+
+2. Wrap *every* http.Handler or http.HandlerFunc with Bugsnag:
+
+    ```go
+    // a. If you're using HandlerFuncs
+    http.HandleFunc("/", bugsnag.HandlerFunc(
+        func (w http.ResponseWriter, r *http.Request) {
+            // ...
+        }))
+
+    // b. If you're using Handlers
+    http.Handle("/", bugsnag.Handler(myHttpHandler))
+    ```
+
+3. In order to use Bugsnag, you must provide the current
+[`appengine.Context`](https://developers.google.com/appengine/docs/go/reference#Context), or
+current `*http.Request` as rawData. The easiest way to do this is to create a new notifier.
+
+    ```go
+    c := appengine.NewContext(r)
+    notifier := bugsnag.New(c)
+
+    if err != nil {
+        notifier.Notify(err)
+    }
+
+    go func () {
+        defer notifier.Recover()
+
+        // ...
+    }()
+    ```
+
+
 Notifying Bugsnag manually
 ==========================
 
@@ -132,8 +181,9 @@ Sending Custom Data
 
 Most functions in the Bugsnag API, including `bugsnag.Notify()`,
 `bugsnag.Recover()`, `bugsnag.AutoNotify()`, and `bugsnag.Handler()` let you
-attach custom data to the notifications that they send. This shows up in the
-Bugsnag dashboard to help you debug problems.
+attach data to the notifications that they send. To do this you pass in rawData,
+which can be any of the supported types listed here. To add support for more
+types of rawData see [OnBeforeNotify](#custom-data-with-onbeforenotify).
 
 ### Custom MetaData
 
@@ -150,10 +200,6 @@ bugsnag.Notify(err,
         },
     })
 ```
-
-Alternatively, you can use an
-[OnBeforeNotify](https://godoc.org/github.com/bugsnag/bugsnag-go/#OnBeforeNotify)
-hook to populate the MetaData and pass your own rawData in.
 
 ### Request data
 
@@ -200,6 +246,14 @@ You can set the severity of an error by passing one of these objects as rawData.
 ```go
 bugsnag.Notify(err, bugsnag.SeverityInfo)
 ```
+
+### `*http.Request`
+
+Bugsnag supports sending request data. Pass a
+[`*http.Request`](https://godoc.org/net/http#Request) in as rawData, and it
+will populate the Request and Headers tab in the Bugsnag dashboard. It will
+also default the User.Id to the ip address so that counting users affected
+works.
 
 Configuration
 =============
@@ -267,11 +321,16 @@ bugsnag.Configure(bugsnag.Configuration{
 The hostname is used to track where exceptions are coming from in the Bugsnag dashboard. The
 default value is obtained from `os.Hostname()` so you won't often need to change this.
 
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    Hostname: "go1",
+})
+
 ### `ProjectPackages`
 
 In order to determine where a crash happens Bugsnag needs to know which packages you consider to
-be part of your app (as opposed to a library). By default this is set to `[]string{"main"}`. Each
-string can either be a fully-qualified package name, or a directory with a wildcard at the end.
+be part of your app (as opposed to a library). By default this is set to `[]string{"main*"}`. Strings
+are matched to package names using [`filepath.Match`](http://godoc.org/path/filepath#Match).
 
 ```go
 bugsnag.Configure(bugsnag.Configuration{
@@ -316,6 +375,18 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
+### `Transport`
+
+The transport configures how Bugsnag makes http requests. By default we use
+[`http.DefaultTransport`](http://godoc.org/net/http#RoundTripper) which handles
+HTTP proxies automatically using the `$HTTP_PROXY` environment variable.
+
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    Transport: http.DefaultTransport,
+})
+```
+
 Custom data with OnBeforeNotify
 ===============================
 
@@ -347,41 +418,42 @@ And then add a filter to extract information from that job and attach it to the
 Bugsnag event:
 
 ```go
-OnBeforeNotify(func(event *Event, config *Configuration) bool {
+bugsnag.OnBeforeNotify(
+    func(event *bugsnag.Event, config *bugsnag.Configuration) error {
 
-    // Search all the RawData for any *Job pointers that we're passed in
-    // to bugsnag.Notify() and friends.
-    for _, datum := range event.RawData {
-        if job, ok := datum.(*Job); ok {
-            // don't notify bugsnag about errors in retries
-            if job.Retry {
-                return false
+        // Search all the RawData for any *Job pointers that we're passed in
+        // to bugsnag.Notify() and friends.
+        for _, datum := range event.RawData {
+            if job, ok := datum.(*Job); ok {
+                // don't notify bugsnag about errors in retries
+                if job.Retry {
+                    return fmt.Errorf("not notifying about retried jobs")
+                }
+
+                // add the job as a tab on Bugsnag.com
+                event.MetaData.AddStruct("Job", job)
+
+                // set the user correctly
+                event.User = &User{Id: job.UserId, Email: job.UserEmail}
             }
-
-            // add the job as a tab on Bugsnag.com
-            event.MetaData.AddStruct("Job", job)
-
-            // set the user correctly
-            event.User = &User{Id: job.UserId, Email: job.UserEmail}
         }
-    }
 
-    // continue notifying as normal
-    return true
-})
+        // continue notifying as normal
+        return nil
+    })
 ```
 
 Advanced Usage
 ==============
 
 If you want to have multiple different configurations around in one program,
-you can use `bugsnag.NewNotifier()` to create multiple independent instances of
+you can use `bugsnag.New()` to create multiple independent instances of
 Bugsnag. You can use these without calling `bugsnag.Configure()`, but bear in
 mind that until you call `bugsnag.Configure()` unhandled panics will not be
 sent to bugsnag.
 
 ```go
-notifier := bugsnag.NewNotifier(bugsnag.Configuration{
+notifier := bugsnag.New(bugsnag.Configuration{
     APIKey: "YOUR_OTHER_API_KEY",
 })
 ```
