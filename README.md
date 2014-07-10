@@ -29,6 +29,8 @@ the [gorilla toolkit](http://www.gorillatoolkit.org/), or the
 1. Configure bugsnag at the start of your `main()` function:
 
     ```go
+    import "github.com/bugsnag/bugsnag-go"
+
     func main() {
         bugsnag.Configure(bugsnag.Configuration{
             APIKey: "YOUR_API_KEY_HERE",
@@ -90,6 +92,8 @@ There are two steps to get panic handling in [revel](https://revel.github.io) ap
 1. Configure bugsnag at the start of your `init()` function:
 
     ```go
+    import "github.com/bugsnag/bugsnag-go"
+
     func init() {
         bugsnag.Configure(bugsnag.Configuration{
             APIKey: "YOUR_API_KEY_HERE",
@@ -245,14 +249,6 @@ You can set the severity of an error by passing one of these objects as rawData.
 bugsnag.Notify(err, bugsnag.SeverityInfo)
 ```
 
-### `*http.Request`
-
-Bugsnag supports sending request data. Pass a
-[`*http.Request`](https://godoc.org/net/http#Request) in as rawData, and it
-will populate the Request and Headers tab in the Bugsnag dashboard. It will
-also default the User.Id to the ip address so that counting users affected
-works.
-
 Configuration
 =============
 
@@ -323,6 +319,7 @@ default value is obtained from `os.Hostname()` so you won't often need to change
 bugsnag.Configure(bugsnag.Configuration{
     Hostname: "go1",
 })
+```
 
 ### `ProjectPackages`
 
