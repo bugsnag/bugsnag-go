@@ -23,7 +23,7 @@ type _broken struct {
 }
 
 var account = _account{}
-var notifier = NewNotifier(Configuration{})
+var notifier = New(Configuration{})
 
 func TestMetaDataAdd(t *testing.T) {
 	m := MetaData{

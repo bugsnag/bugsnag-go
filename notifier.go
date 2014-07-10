@@ -13,7 +13,7 @@ type Notifier struct {
 // Creates a new notifier. You can pass an instance of bugsnag.Configuration
 // in rawData to change the configuration. Other values of rawData will be
 // passed to Notify.
-func NewNotifier(rawData ...interface{}) *Notifier {
+func New(rawData ...interface{}) *Notifier {
 	config := Config.clone()
 	for i, datum := range rawData {
 		if c, ok := datum.(Configuration); ok {

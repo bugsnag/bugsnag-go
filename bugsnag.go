@@ -56,7 +56,7 @@ func Recover(rawData ...interface{}) {
 
 // OnBeforeNotify adds a callback to be run before a notification is sent to Bugsnag.
 // It can be used to modify the event or the config to be used.
-// If you want to prevent the error from being sent to bugsnag, return an error that
+// If you want to prevent the event from being sent to bugsnag, return an error that
 // explains why the notification was cancelled.
 func OnBeforeNotify(callback func(event *Event, config *Configuration) error) {
 	middleware.OnBeforeNotify(callback)
@@ -66,7 +66,7 @@ func OnBeforeNotify(callback func(event *Event, config *Configuration) error) {
 // HTTP request in all error reports. If you don't pass a handler, the default http handlers
 // will be used.
 func Handler(h http.Handler, rawData ...interface{}) http.Handler {
-	notifier := NewNotifier(rawData...)
+	notifier := New(rawData...)
 	if h == nil {
 		h = http.DefaultServeMux
 	}
@@ -81,7 +81,7 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 // HTTP request in all error reports. If you've wrapped your server in an http.Handler,
 // you don't also need to wrap each function.
 func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
-	notifier := NewNotifier(rawData...)
+	notifier := New(rawData...)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer notifier.AutoNotify(r)

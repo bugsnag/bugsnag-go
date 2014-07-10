@@ -22,7 +22,7 @@ func TestConfigure(t *testing.T) {
 		t.Errorf("Setting APIKey didn't work")
 	}
 
-	if NewNotifier().Config.APIKey != testAPIKey {
+	if New().Config.APIKey != testAPIKey {
 		t.Errorf("Setting APIKey didn't work for new notifiers")
 	}
 }
