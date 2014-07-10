@@ -100,6 +100,9 @@ var result = []StackFrame{
 	StackFrame{File: "/0/c/go/src/pkg/net/http/server.go", LineNumber: 1698, Name: "(*Server).Serve", Package: "net/http"},
 }
 
+var resultCreatedBy = append(result,
+	StackFrame{File:"/0/go/src/github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers/app.go", LineNumber:14, Name:"App.Index", Package:"github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers", ProgramCounter:0x0})
+
 func TestParsePanic(t *testing.T) {
 
 	todo := map[string]string{
@@ -125,6 +128,11 @@ func TestParsePanic(t *testing.T) {
 
 		if Err.StackFrames()[0].Func() != nil {
 			t.Errorf("Somehow managed to find a func...")
+		}
+
+		result := result
+		if key == "createdBy" {
+			result = resultCreatedBy
 		}
 
 		if !reflect.DeepEqual(Err.StackFrames(), result) {

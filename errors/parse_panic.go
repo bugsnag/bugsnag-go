@@ -38,9 +38,14 @@ func ParsePanic(text string) (*Error, error) {
 			}
 
 		} else if state == "parsing" {
-			if line == "" || strings.HasPrefix(line, "created by ") {
+			if line == "" {
 				state = "done"
 				break
+			}
+			createdBy := false
+			if strings.HasPrefix(line, "created by ") {
+				line = strings.TrimPrefix(line, "created by ")
+				createdBy = true
 			}
 
 			i += 1
@@ -49,12 +54,16 @@ func ParsePanic(text string) (*Error, error) {
 				return nil, Errorf("bugsnag.panicParser: Invalid line (unpaired): %s", line)
 			}
 
-			frame, err := parsePanicFrame(line, lines[i])
+			frame, err := parsePanicFrame(line, lines[i], createdBy)
 			if err != nil {
 				return nil, err
 			}
 
 			stack = append(stack, *frame)
+			if createdBy {
+				state = "done"
+				break
+			}
 		}
 	}
 
@@ -69,12 +78,14 @@ func ParsePanic(text string) (*Error, error) {
 //
 //     main.(*foo).destruct(0xc208067e98)
 //             /0/go/src/github.com/bugsnag/bugsnag-go/pan/main.go:22 +0x151
-func parsePanicFrame(name string, line string) (*StackFrame, error) {
+func parsePanicFrame(name string, line string, createdBy bool) (*StackFrame, error) {
 	idx := strings.LastIndex(name, "(")
-	if idx == -1 {
+	if idx == -1 && !createdBy {
 		return nil, Errorf("bugsnag.panicParser: Invalid line (no call): %s", name)
 	}
-	name = name[:idx]
+	if idx != -1 {
+		name = name[:idx]
+	}
 	pkg := ""
 
 	if lastslash := strings.LastIndex(name, "/"); lastslash >= 0 {
