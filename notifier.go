@@ -36,6 +36,7 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
+		config.log("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
 			return (&payload{event, config}).deliver()
 		} else {
