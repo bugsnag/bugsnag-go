@@ -3,8 +3,8 @@ package bugsnag
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 )
 
 type payload struct {
@@ -14,37 +14,34 @@ type payload struct {
 
 type hash map[string]interface{}
 
-func (p *payload) deliver() {
+func (p *payload) deliver() error {
 
 	if len(p.APIKey) != 32 {
-		p.log("bugsnag/payload.deliver: invalid api key: %#v\n", p.APIKey)
-		return
+		return fmt.Errorf("bugsnag/payload.deliver: invalid api key")
 	}
 
 	buf, err := json.Marshal(p)
 
 	if err != nil {
-		p.log("bugsnag/payload.deliver: %s\n", err)
-		return
+		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
 	}
 
 	client := http.Client{
 		Transport: p.Transport,
-		Timeout:   10 * time.Second,
 	}
 
 	resp, err := client.Post(p.Endpoint, "application/json", bytes.NewBuffer(buf))
 
 	if err != nil {
-		p.log("bugsnag/payload.deliver: %s\n", err)
-		return
+		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		p.log("bugsnag/payload.deliver: Got HTTP %s\n", resp.Status)
-		return
+		return fmt.Errorf("bugsnag/payload.deliver: Got HTTP %s\n", resp.Status)
 	}
+
+	return nil
 }
 
 func (p *payload) MarshalJSON() ([]byte, error) {
