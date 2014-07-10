@@ -11,7 +11,7 @@ import (
 )
 
 // The current version of the notifier
-const VERSION = "0.1"
+const VERSION = "0.2"
 
 var once sync.Once
 var middleware middlewareStack
