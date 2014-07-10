@@ -93,8 +93,6 @@ There are two steps to get panic handling in [revel](https://revel.github.io) ap
     func init() {
         bugsnag.Configure(bugsnag.Configuration{
             APIKey: "YOUR_API_KEY_HERE",
-            ReleaseStage: "production",
-            // more configuration options
         })
 
         // ...
