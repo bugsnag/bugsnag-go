@@ -30,8 +30,8 @@ func Configure(config Configuration) {
 // Notify sends an error to Bugsnag. The rawData can be anything supported by Bugsnag,
 // e.g. User, Context, SeverityError, MetaData, Configuration,
 // or anything supported by your custom middleware. Unsupported values will be silently ignored.
-func Notify(err error, rawData ...interface{}) {
-	defaultNotifier.Notify(err, rawData...)
+func Notify(err error, rawData ...interface{}) error {
+	return defaultNotifier.Notify(err, rawData...)
 }
 
 // defer AutoNotify notifies Bugsnag about any panic()s. It then re-panics() so that existing
@@ -55,19 +55,11 @@ func Recover(rawData ...interface{}) {
 }
 
 // OnBeforeNotify adds a callback to be run before a notification is sent to Bugsnag.
-// It can be used to modify the event or the config to be used, or to completely cancel
-// the notification by returning false. You should return true to continue processing.
-func OnBeforeNotify(callback func(event *Event, config *Configuration) bool) {
-	middleware.BeforeNotify(callback)
-}
-
-// OnAroundNotify adds a callback to be run before a notification is sent to Bugsnag.
-// It can be used to modify the event or the config to be used, or to move the request
-// to a different goroutine, etc.
-// It should call next() to actually send the notification, or avoid calling next() to cancel it.
-// Consider using OnBeforeNotify instead for simple cases.
-func OnAroundNotify(callback func(event *Event, config *Configuration, next func())) {
-	middleware.AddMiddleware(callback)
+// It can be used to modify the event or the config to be used.
+// If you want to prevent the error from being sent to bugsnag, return an error that
+// explains why the notification was cancelled.
+func OnBeforeNotify(callback func(event *Event, config *Configuration) error) {
+	middleware.OnBeforeNotify(callback)
 }
 
 // Handler wraps the HTTP handler in bugsnag.AutoNotify(). It includes details about the

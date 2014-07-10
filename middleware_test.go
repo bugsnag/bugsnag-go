@@ -1,8 +1,10 @@
 package bugsnag
 
 import (
-	"io/ioutil"
+	"bytes"
+	"fmt"
 	"log"
+	"reflect"
 	"testing"
 )
 
@@ -10,83 +12,75 @@ func TestMiddlewareOrder(t *testing.T) {
 
 	result := make([]int, 0, 7)
 	stack := middlewareStack{}
-	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
-		result = append(result, 3)
-		next()
-		result = append(result, 5)
-	})
-	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
+	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		result = append(result, 2)
-		next()
-		result = append(result, 6)
+		return nil
 	})
-	stack.AddMiddleware(func(e *Event, c *Configuration, next func()) {
+	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		result = append(result, 1)
-		next()
-		result = append(result, 7)
+		return nil
+	})
+	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
+		result = append(result, 0)
+		return nil
 	})
 
-	stack.Run(nil, nil, func() {
-		result = append(result, 4)
+	stack.Run(nil, nil, func() error {
+		result = append(result, 3)
+		return nil
 	})
 
-	if !(result[0] == 1 && result[1] == 2 && result[2] == 3 &&
-		result[3] == 4 && result[4] == 5 && result[5] == 6 && result[6] == 7) {
+	if !reflect.DeepEqual(result, []int{0, 1, 2, 3}) {
 		t.Errorf("unexpected middleware order %v", result)
 	}
 }
 
-func TestBeforeNotifyReturnFalse(t *testing.T) {
+func TestBeforeNotifyReturnErr(t *testing.T) {
 
 	stack := middlewareStack{}
+	err := fmt.Errorf("test")
 
-	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
-		return false
+	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
+		return err
 	})
 
 	called := false
 
-	stack.Run(nil, nil, func() {
+	e := stack.Run(nil, nil, func() error {
 		called = true
+		return nil
 	})
+
+	if e != err {
+		t.Errorf("Middleware didn't return the error")
+	}
 
 	if called == true {
 		t.Errorf("Notify was called when BeforeNotify returned False")
 	}
 }
 
-func TestBeforeNotifyReturnTrue(t *testing.T) {
+func TestBeforeNotifyPanic(t *testing.T) {
 
 	stack := middlewareStack{}
 
-	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
-		return true
-	})
-
-	called := false
-
-	stack.Run(nil, nil, func() {
-		called = true
-	})
-
-	if called == false {
-		t.Errorf("Notify was not called when BeforeNotify returned True")
-	}
-}
-
-func TestPanicHandling(t *testing.T) {
-
-	stack := middlewareStack{}
-
-	stack.BeforeNotify(func(e *Event, c *Configuration) bool {
+	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		panic("oops")
 	})
 
 	called := false
+	b := &bytes.Buffer{}
 
-	stack.Run(nil, &Configuration{Logger: log.New(ioutil.Discard, log.Prefix(), log.Flags())}, func() {
+	stack.Run(nil, &Configuration{Logger: log.New(b, log.Prefix(), 0)}, func() error {
 		called = true
+		return nil
 	})
+
+	logged := b.String()
+
+	if logged != "bugsnag/middleware: unexpected panic: oops\n" {
+		t.Errorf("Logged: %s", logged)
+	}
 
 	if called == false {
 		t.Errorf("Notify was not called when BeforeNotify panicked")

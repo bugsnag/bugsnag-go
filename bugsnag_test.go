@@ -63,11 +63,11 @@ func TestNotify(t *testing.T) {
 	recurse := _recurse{}
 	recurse._recurse = &recurse
 
-	OnBeforeNotify(func(event *Event, config *Configuration) bool {
+	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		if event.Context == "testing" {
 			event.GroupingHash = "lol"
 		}
-		return true
+		return nil
 	})
 
 	Notify(fmt.Errorf("hello world"),
@@ -172,7 +172,7 @@ func runCrashyServer(rawData ...interface{}) (net.Listener, error) {
 	srv := http.Server{
 		Addr:     l.Addr().String(),
 		Handler:  Handler(mux, rawData...),
-		ErrorLog: log.New(ioutil.Discard, log.Prefix(), log.Flags()),
+		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
 	}
 
 	go srv.Serve(l)
@@ -435,7 +435,7 @@ type Job struct {
 }
 
 func ExampleOnBeforeNotify() {
-	OnBeforeNotify(func(event *Event, config *Configuration) bool {
+	OnBeforeNotify(func(event *Event, config *Configuration) error {
 
 		// Search all the RawData for any *Job pointers that we're passed in
 		// to bugsnag.Notify() and friends.
@@ -443,7 +443,7 @@ func ExampleOnBeforeNotify() {
 			if job, ok := datum.(*Job); ok {
 				// don't notify bugsnag about errors in retries
 				if job.Retry {
-					return false
+					return fmt.Errorf("bugsnag middleware: not notifying about job retry")
 				}
 
 				// add the job as a tab on Bugsnag.com
@@ -455,14 +455,6 @@ func ExampleOnBeforeNotify() {
 		}
 
 		// continue notifying as normal
-		return true
-	})
-}
-
-func ExampleOnAroundNotify() {
-	OnAroundNotify(func(event *Event, config *Configuration, next func()) {
-		start := time.Now()
-		next()
-		config.Logger.Printf("bugsnag.notify took: %v", time.Now().Sub(start))
+		return nil
 	})
 }

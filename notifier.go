@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"fmt"
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
@@ -30,17 +31,22 @@ func NewNotifier(rawData ...interface{}) *Notifier {
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
-func (notifier *Notifier) Notify(err error, rawData ...interface{}) {
-	defer notifier.dontPanic()
+func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 	event, config := newEvent(errors.New(err, 2), rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
-	middleware.Run(event, config, func() {
-		defer notifier.dontPanic()
+	e = middleware.Run(event, config, func() error {
 		if config.notifyInReleaseStage() {
-			(&payload{event, config}).deliver()
+			return (&payload{event, config}).deliver()
+		} else {
+			return fmt.Errorf("not notifying in %s", config.ReleaseStage)
 		}
 	})
+
+	if e != nil {
+		config.log("bugsnag.Notify: %v", e)
+	}
+	return e
 }
 
 // defer AutoNotify() sends any panics that happen to Bugsnag, along with any
