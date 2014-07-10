@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,7 +22,7 @@ type Configuration struct {
 
 	// Release stages to notify in, default nil implies all release stages.
 	NotifyReleaseStages []string
-	// packages to consider in-project, default: {"main"}
+	// packages to consider in-project, default: {"main*"}
 	ProjectPackages []string
 	// keys to filter out of meta-data, default: {"password", "secret"}
 	ParamsFilters []string
@@ -85,13 +86,8 @@ func (config *Configuration) clone() *Configuration {
 
 func (config *Configuration) isProjectPackage(pkg string) bool {
 	for _, p := range config.ProjectPackages {
-		if p == pkg {
+		if match, _ := filepath.Match(p, pkg); match {
 			return true
-		} else if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
-			idx := strings.LastIndex(pkg, "/")
-			if idx > -1 && pkg[:idx] == p[:len(p)-2] {
-				return true
-			}
 		}
 	}
 	return false

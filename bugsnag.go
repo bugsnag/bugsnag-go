@@ -95,13 +95,14 @@ func init() {
 
 	// Default configuration
 	Config.update(&Configuration{
-		APIKey:              "",
-		Endpoint:            "https://notify.bugsnag.com/",
-		Hostname:            "",
-		AppVersion:          "",
-		ReleaseStage:        "",
-		ParamsFilters:       []string{"password", "secret"},
-		ProjectPackages:     []string{"main"},
+		APIKey:        "",
+		Endpoint:      "https://notify.bugsnag.com/",
+		Hostname:      "",
+		AppVersion:    "",
+		ReleaseStage:  "",
+		ParamsFilters: []string{"password", "secret"},
+		// * for app-engine
+		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
 		PanicHandler:        defaultPanicHandler,
