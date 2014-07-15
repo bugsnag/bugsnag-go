@@ -370,6 +370,25 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
+### Synchronous
+
+Bugsnag usually starts a new goroutine before sending notifications. This means
+that notifications can be lost if you do a bugsnag.Notify and then immediately
+os.Exit. To avoid this problem, set Bugsnag to Synchronous (or just `panic()`
+instead ;).
+
+```go
+bugsnag.Configure(bugsnag.Configuration{
+    Synchronous: true
+})
+```
+
+Or just for one error:
+
+```go
+bugsnag.Notify(err, bugsnag.Configuration{Synchronous: true})
+```
+
 ### `Transport`
 
 The transport configures how Bugsnag makes http requests. By default we use
@@ -453,9 +472,23 @@ notifier := bugsnag.New(bugsnag.Configuration{
 })
 ```
 
-In fact any place that lets you pass in `rawData` also allows you to pass in configuration.
-For example to send http errors to one bugsnag project, you could do:
+In fact any place that lets you pass in `rawData` also allows you to pass in
+configuration.  For example to send http errors to one bugsnag project, you
+could do:
 
 ```go
 bugsnag.Handler(nil, bugsnag.Configuration{APIKey: "YOUR_OTHER_API_KEY"})
+```
+
+### GroupingHash
+
+If you need to override Bugsnag's grouping algorithm, you can set the
+`GroupingHash` in an `OnBeforeNotify`:
+
+```go
+bugsnag.OnBeforeNotify(
+    func (event *bugsnag.Event, config *bugsnag.Configuration) error {
+        event.GroupingHash = calculateGroupingHash(event)
+        return nil
+    })
 ```

@@ -38,7 +38,12 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 	e = middleware.Run(event, config, func() error {
 		config.log("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
-			return (&payload{event, config}).deliver()
+			if config.Synchronous {
+				return (&payload{event, config}).deliver()
+			} else {
+				go (&payload{event, config}).deliver()
+				return nil
+			}
 		} else {
 			return fmt.Errorf("not notifying in %s", config.ReleaseStage)
 		}

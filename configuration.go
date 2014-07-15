@@ -34,6 +34,8 @@ type Configuration struct {
 	Logger *log.Logger
 	// The http Transport to use, defaults to the default http Transport
 	Transport http.RoundTripper
+	// Whether bugsnag should notify synchronously, default: false
+	Synchronous bool
 	// TODO: remember to update the update() function when modifying this struct
 }
 
@@ -70,6 +72,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.Transport != nil {
 		config.Transport = other.Transport
+	}
+	if other.Synchronous {
+		config.Synchronous = true
 	}
 
 	return config
