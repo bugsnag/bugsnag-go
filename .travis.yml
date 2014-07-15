@@ -6,3 +6,8 @@ go:
   - 1.2
   - 1.3
   - tip
+
+install:
+  - go get github.com/mitchellh/panicwrap
+  - go get github.com/mitchellh/osext
+  - go get github.com/bitly/go-simplejson
