@@ -24,7 +24,7 @@ func TestPanicHandler(t *testing.T) {
 	cmd := exec.Command(exePath, os.Args[1:]...)
 	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint)
 
-	for i, _ := range cmd.Env {
+	for i := range cmd.Env {
 		if cmd.Env[i] == "bugsnag_wrapped=bugsnag_wrapped" {
 			cmd.Env[i] = "please_panic=please_panic"
 		}
@@ -38,7 +38,7 @@ func TestPanicHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	json, err := simplejson.NewJson(<-postedJson)
+	json, err := simplejson.NewJson(<-postedJSON)
 	if err != nil {
 		t.Fatal(err)
 	}

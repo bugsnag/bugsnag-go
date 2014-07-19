@@ -1,17 +1,19 @@
-// bugsnagrevel adds Bugsnag to revel. It lets you pass *revel.Controller into bugsnag.Notify(),
+// Package bugsnagrevel adds Bugsnag to revel.
+// It lets you pass *revel.Controller into bugsnag.Notify(),
 // and provides a Filter to catch errors.
 package bugsnagrevel
 
 import (
-	"github.com/bugsnag/bugsnag-go"
-	"github.com/revel/revel"
 	"strings"
 	"sync"
+
+	"github.com/bugsnag/bugsnag-go"
+	"github.com/revel/revel"
 )
 
 var once sync.Once
 
-// This Filter should be added to the filter chain just after the PanicFilter.
+// Filter should be added to the filter chain just after the PanicFilter.
 // It sends errors to Bugsnag automatically. Configuration is read out of
 // conf/app.conf, you should set bugsnag.apikey, and can also set
 // bugsnag.endpoint, bugsnag.releasestage, bugsnag.appversion,
@@ -36,7 +38,7 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 }
 
 func init() {
-	revel.OnAppStart(func () {
+	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
 
 		var projectPackages []string

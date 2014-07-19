@@ -1,17 +1,18 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/bugsnag-go/errors"
 	"strings"
+
+	"github.com/bugsnag/bugsnag-go/errors"
 )
 
-// Sets the context of the error in Bugsnag. This can be passed
-// to Notify, Recover or AutoNotify as rawData.
+// Context is the context of the error in Bugsnag.
+// This can be passed to Notify, Recover or AutoNotify as rawData.
 type Context struct {
 	String string
 }
 
-// Sets the searchable user-data on Bugsnag. The Id is also used
+// User represents the searchable user-data on Bugsnag. The Id is also used
 // to determine the number of users affected by a bug. This can be
 // passed to Notify, Recover or AutoNotify as rawData.
 type User struct {
@@ -41,7 +42,8 @@ type stackFrame struct {
 	InProject  bool   `json:"inProject,omitempty"`
 }
 
-// An event to send to Bugsnag. This is passed to each OnBeforeNotify hook.
+// Event represents a payload of data that gets sent to Bugsnag.
+// This is passed to each OnBeforeNotify hook.
 type Event struct {
 
 	// The original error that caused this event, not sent to Bugsnag.

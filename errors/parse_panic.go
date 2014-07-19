@@ -21,7 +21,7 @@ func ParsePanic(text string) (*Error, error) {
 	var message string
 	var stack []StackFrame
 
-	for i := 0; i < len(lines); i += 1 {
+	for i := 0; i < len(lines); i++ {
 		line := lines[i]
 
 		if state == "start" {
@@ -48,7 +48,7 @@ func ParsePanic(text string) (*Error, error) {
 				createdBy = true
 			}
 
-			i += 1
+			i++
 
 			if i >= len(lines) {
 				return nil, Errorf("bugsnag.panicParser: Invalid line (unpaired): %s", line)
@@ -69,9 +69,8 @@ func ParsePanic(text string) (*Error, error) {
 
 	if state == "done" || state == "parsing" {
 		return &Error{Err: uncaughtPanic{message}, frames: stack}, nil
-	} else {
-		return nil, Errorf("could not parse panic: %v", text)
 	}
+	return nil, Errorf("could not parse panic: %v", text)
 }
 
 // The lines we're passing look like this:

@@ -27,9 +27,9 @@ func (meta MetaData) Update(other MetaData) {
 	}
 }
 
-// Add a key-value pair to a tab of Bugsnag meta-data. If the tab doesn't
-// yet exist it will be created, if they key already exists, it will be
-// overwritten.
+// Add creates a tab of Bugsnag meta-data.
+// If the tab doesn't yet exist it will be created.
+// If the key already exists, it will be overwritten.
 func (meta MetaData) Add(tab string, key string, value interface{}) {
 	if meta[tab] == nil {
 		meta[tab] = make(map[string]interface{})
@@ -38,9 +38,10 @@ func (meta MetaData) Add(tab string, key string, value interface{}) {
 	meta[tab][key] = value
 }
 
-// Add a struct as a tab of Bugsnag meta-data. The struct will be converted to
-// an Object using the reflect library so any private fields will not be
-// exported. As a safety measure, if you pass a non-struct the value will be
+// AddStruct creates a tab of Bugsnag meta-data.
+// The struct will be converted to an Object using the
+// reflect library so any private fields will not be exported.
+// As a safety measure, if you pass a non-struct the value will be
 // sent to Bugsnag under the "Extra data" tab.
 func (meta MetaData) AddStruct(tab string, obj interface{}) {
 	val := sanitizer{}.Sanitize(obj)

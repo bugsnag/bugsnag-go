@@ -2,7 +2,6 @@ package bugsnag
 
 import (
 	"fmt"
-	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"net"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bitly/go-simplejson"
 )
 
 func TestConfigure(t *testing.T) {
@@ -27,7 +28,7 @@ func TestConfigure(t *testing.T) {
 	}
 }
 
-var postedJson = make(chan []byte, 10)
+var postedJSON = make(chan []byte, 10)
 var testOnce sync.Once
 var testEndpoint string
 var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
@@ -40,7 +41,7 @@ func startTestServer() {
 			if err != nil {
 				panic(err)
 			}
-			postedJson <- body
+			postedJSON <- body
 		})
 
 		l, err := net.Listen("tcp", "127.0.0.1:0")
@@ -89,7 +90,7 @@ func TestNotify(t *testing.T) {
 		}},
 	)
 
-	json, err := simplejson.NewJson(<-postedJson)
+	json, err := simplejson.NewJson(<-postedJSON)
 
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +195,7 @@ func TestHandler(t *testing.T) {
 	http.Get("http://" + l.Addr().String() + "/ok?foo=bar")
 	l.Close()
 
-	json, err := simplejson.NewJson(<-postedJson)
+	json, err := simplejson.NewJson(<-postedJSON)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,7 +277,7 @@ func TestAutoNotify(t *testing.T) {
 		t.Errorf("didn't re-panic")
 	}
 
-	json, err := simplejson.NewJson(<-postedJson)
+	json, err := simplejson.NewJson(<-postedJSON)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -309,7 +310,7 @@ func TestRecover(t *testing.T) {
 		t.Errorf("re-panick'd")
 	}
 
-	json, err := simplejson.NewJson(<-postedJson)
+	json, err := simplejson.NewJson(<-postedJSON)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -403,7 +404,7 @@ func ExampleNotify() {
 	}
 }
 
-func ExampleNotify_details(userId string) {
+func ExampleNotify_details(userID string) {
 	_, err := net.Listen("tcp", ":80")
 
 	if err != nil {
@@ -413,7 +414,7 @@ func ExampleNotify_details(userId string) {
 			// set the context
 			Context{"createlistener"},
 			// pass the user id in to count users affected.
-			User{Id: userId},
+			User{Id: userID},
 			// custom meta-data tab
 			MetaData{
 				"Listen": {

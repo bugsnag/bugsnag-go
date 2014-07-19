@@ -101,7 +101,7 @@ var result = []StackFrame{
 }
 
 var resultCreatedBy = append(result,
-	StackFrame{File:"/0/go/src/github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers/app.go", LineNumber:14, Name:"App.Index", Package:"github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers", ProgramCounter:0x0})
+	StackFrame{File: "/0/go/src/github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers/app.go", LineNumber: 14, Name: "App.Index", Package: "github.com/loopj/bugsnag-example-apps/go/revelapp/app/controllers", ProgramCounter: 0x0})
 
 func TestParsePanic(t *testing.T) {
 

@@ -2,17 +2,19 @@ package bugsnag
 
 import (
 	"fmt"
+
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
+// Notifier sends errors to Bugsnag.
 type Notifier struct {
 	Config  *Configuration
 	RawData []interface{}
 }
 
-// Creates a new notifier. You can pass an instance of bugsnag.Configuration
-// in rawData to change the configuration. Other values of rawData will be
-// passed to Notify.
+// New creates a new notifier.
+// You can pass an instance of bugsnag.Configuration in rawData to change the configuration.
+// Other values of rawData will be passed to Notify.
 func New(rawData ...interface{}) *Notifier {
 	config := Config.clone()
 	for i, datum := range rawData {
@@ -40,13 +42,11 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 		if config.notifyInReleaseStage() {
 			if config.Synchronous {
 				return (&payload{event, config}).deliver()
-			} else {
-				go (&payload{event, config}).deliver()
-				return nil
 			}
-		} else {
-			return fmt.Errorf("not notifying in %s", config.ReleaseStage)
+			go (&payload{event, config}).deliver()
+			return nil
 		}
+		return fmt.Errorf("not notifying in %s", config.ReleaseStage)
 	})
 
 	if e != nil {
@@ -55,9 +55,9 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 	return e
 }
 
-// defer AutoNotify() sends any panics that happen to Bugsnag, along with any
-// rawData you set here. After the notification is sent, panic() is called again
-// with the same error so that the panic() bubbles out.
+// AutoNotify notifies Bugsnag of any panics, then repanics.
+// It sends along any rawData that gets passed in.
+// Usage: defer AutoNotify()
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
@@ -66,9 +66,9 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	}
 }
 
-// defer AutoNotify() sends any panics that happen to Bugsnag, along with any
-// rawData you set here. After the notification is sent, the panic() is considered
-// to have been recovered() and execution proceeds as normal.
+// Recover logs any panics, then recovers.
+// It sends along any rawData that gets passed in.
+// Usage: defer AutoNotify()
 func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = notifier.addDefaultSeverity(rawData, SeverityWarning)

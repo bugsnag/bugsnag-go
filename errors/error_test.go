@@ -81,9 +81,8 @@ func TestNewError(t *testing.T) {
 func ExampleErrorf(x int) (int, error) {
 	if x%2 == 1 {
 		return 0, Errorf("can only halve even numbers, got %i", x)
-	} else {
-		return x / 2, nil
 	}
+	return x / 2, nil
 }
 
 func ExampleNewError() (error, error) {
