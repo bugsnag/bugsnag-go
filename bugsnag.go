@@ -1,5 +1,3 @@
-// Package bugsnag lets you monitor unhandled panics and expected errors in your golang code.
-// For more information see https://github.com/bugsnag/bugsnag-go/
 package bugsnag
 
 import (
@@ -10,8 +8,8 @@ import (
 	"sync"
 )
 
-// The current version of the notifier
-const VERSION = "1.0"
+// The current version of bugsnag-go.
+const VERSION = "1.0.1"
 
 var once sync.Once
 var middleware middlewareStack
@@ -21,24 +19,28 @@ var Config Configuration
 
 var defaultNotifier = Notifier{&Config, nil}
 
-// Configure Bugsnag. The most important setting is the APIKey.
-// This must be called before any other function on Bugsnag, and
-// should be called as early as possible in your program.
+// Configure Bugsnag. The only required setting is the APIKey, which can be
+// obtained by clicking on "Settings" in your Bugsnag dashboard. This function
+// is also responsible for installing the global panic handler, so it should be
+// called as early as possible in your initialization process.
 func Configure(config Configuration) {
 	Config.update(&config)
 	once.Do(Config.PanicHandler)
 }
 
-// Notify sends an error to Bugsnag. The rawData can be anything supported by Bugsnag,
-// e.g. User, Context, SeverityError, MetaData, Configuration,
-// or anything supported by your custom middleware. Unsupported values will be silently ignored.
+// Notify sends an error to Bugsnag along with the current stack trace. The
+// rawData is used to send extra information along with the error. For example
+// you can pass the current http.Request to Bugsnag to see information about it
+// in the dashboard, or set the severity of the notification.
 func Notify(err error, rawData ...interface{}) error {
 	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
 }
 
-// defer AutoNotify notifies Bugsnag about any panic()s. It then re-panics() so that existing
-// error handling continues to work. The rawData is used to add information to the notification,
-// see Notify for more information.
+// defer bugsnag.AutoNotify() to notify Bugsnag about any panics that happen on
+// this goroutine.  After notifying Bugsnag AutoNotify continues panicking, so
+// it should only be used in places that have existing panic handlers further
+// up the stack. See bugsnag.Recover().  The rawData is used to send extra
+// information along with any panics that are handled this way.
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
@@ -47,8 +49,10 @@ func AutoNotify(rawData ...interface{}) {
 	}
 }
 
-// defer Recover notifies Bugsnag about any panic()s, and stops panicking so that your program doesn't
-// crash. The rawData is used to add information to the notification, see Notify for more information.
+// defer bugsnag.Recover() to notify Bugsnag about any panics that happen on
+// this goroutine. bugsnag.Recover() logs the panic and stops your program
+// from panicking so that it doesn't crash. The rawData is used to send extra
+// information along with any panics that are handled this way
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityWarning)
@@ -56,17 +60,19 @@ func Recover(rawData ...interface{}) {
 	}
 }
 
-// OnBeforeNotify adds a callback to be run before a notification is sent to Bugsnag.
-// It can be used to modify the event or the config to be used.
-// If you want to prevent the event from being sent to bugsnag, return an error that
-// explains why the notification was cancelled.
+// OnBeforeNotify adds a callback to be run before a notification is sent to
+// Bugsnag.  It can be used to modify the event or its MetaData. Changes made
+// to the configuration are local to notifying about this event. To prevent the
+// event from being sent to Bugsnag return an error, this error will be
+// returned from bugsnag.Notify() and the event will not be sent.
 func OnBeforeNotify(callback func(event *Event, config *Configuration) error) {
 	middleware.OnBeforeNotify(callback)
 }
 
-// Handler wraps the HTTP handler in bugsnag.AutoNotify(). It includes details about the
-// HTTP request in all error reports. If you don't pass a handler, the default http handlers
-// will be used.
+// Handler creates an http Handler that notifies Bugsnag any panics that
+// happen. It then repanics so that the default http Server panic handler can
+// handle the panic too. The rawData is used to send extra information along
+// with any panics that are handled this way.
 func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	notifier := New(rawData...)
 	if h == nil {
@@ -79,9 +85,12 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	})
 }
 
-// HandlerFunc wraps a HTTP handler in bugsnag.AutoNotify(). It includes details about the
-// HTTP request in all error reports. If you've wrapped your server in an http.Handler,
-// you don't also need to wrap each function.
+// HandlerFunc creates an http HandlerFunc that notifies Bugsnag about any
+// panics that happen. It then repanics so that the default http Server panic
+// handler can handle the panic too. The rawData is used to send extra
+// information along with any panics that are handled this way. If you have
+// already wrapped your http server using bugsnag.Handler() you don't also need
+// to wrap each HandlerFunc.
 func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 	notifier := New(rawData...)
 

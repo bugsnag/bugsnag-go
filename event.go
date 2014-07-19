@@ -5,23 +5,23 @@ import (
 	"strings"
 )
 
-// Sets the context of the error in Bugsnag. You can pass this to
-// Notify or any other function accepting rawData.
+// Sets the context of the error in Bugsnag. This can be passed
+// to Notify, Recover or AutoNotify as rawData.
 type Context struct {
 	String string
 }
 
 // Sets the searchable user-data on Bugsnag. The Id is also used
-// to determine the number of users affected by a bug. You can pass this
-// to Notify or any other function accepting rawData.
+// to determine the number of users affected by a bug. This can be
+// passed to Notify, Recover or AutoNotify as rawData.
 type User struct {
 	Id    string `json:"id,omitempty"`
 	Name  string `json:"name,omitempty"`
 	Email string `json:"email,omitempty"`
 }
 
-// Tags used to mark the severity of the error in the Bugsnag dashboard.
-// You can pass these to Notify or to any other function accepting rawData.
+// Sets the severity of the error on Bugsnag. These values can be
+// passed to Notify, Recover or AutoNotify as rawData.
 var (
 	SeverityError   = severity{"error"}
 	SeverityWarning = severity{"warning"}
@@ -41,14 +41,17 @@ type stackFrame struct {
 	InProject  bool   `json:"inProject,omitempty"`
 }
 
-// An event to send to Bugsnag. This is passed through the middleware stack.
+// An event to send to Bugsnag. This is passed to each OnBeforeNotify hook.
 type Event struct {
-	// The original error that caused this event, not sent to Bugsnag
+
+	// The original error that caused this event, not sent to Bugsnag.
 	Error *errors.Error
-	// The rawData affecting this error, not sent to Bugsnag
+
+	// The rawData affecting this error, not sent to Bugsnag.
 	RawData []interface{}
 
-	// The error class to be sent to Bugsnag. This defaults to the type name of the Error
+	// The error class to be sent to Bugsnag. This defaults to the type name of the Error, for
+	// example *error.String
 	ErrorClass string
 	// The error message to be sent to Bugsnag. This defaults to the return value of Error.Error()
 	Message string
@@ -58,15 +61,15 @@ type Event struct {
 	// The context to be sent to Bugsnag. This should be set to the part of the app that was running,
 	// e.g. for http requests, set it to the path.
 	Context string
-	// The severity of the error. Can be SeverityError, SeverityWarning or SeverityInfo
+	// The severity of the error. Can be SeverityError, SeverityWarning or SeverityInfo.
 	Severity severity
 	// The grouping hash is used to override Bugsnag's grouping. Set this if you'd like all errors with
 	// the same grouping hash to group together in the dashboard.
 	GroupingHash string
 
-	// The searchable user data to send to Bugsnag.
+	// User data to send to Bugsnag. This is searchable on the dashboard.
 	User *User
-	// Other meta-data to send to Bugsnag. Appears as a set of tabbed tables in the dashboard.
+	// Other MetaData to send to Bugsnag. Appears as a set of tabbed tables in the dashboard.
 	MetaData MetaData
 }
 
