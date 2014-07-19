@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Configuration sets up and customizes communication with the Bugsnag API.
 type Configuration struct {
 	// The API key, e.g. "c9d60ae4c7e70c4b6c4ebd3e8056d2b8"
 	APIKey string
