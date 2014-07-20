@@ -19,6 +19,12 @@ How to Install
     go get github.com/bugsnag/bugsnag-go
     ```
 
+2. Install dependencies with
+
+    ```shell
+    go get ./...
+    ```
+
 ### Using with net/http apps
 
 For a golang app based on [net/http](https://godoc.org/net/http), integrating
