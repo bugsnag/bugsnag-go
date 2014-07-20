@@ -27,7 +27,7 @@ func (stack *middlewareStack) OnBeforeNotify(middleware beforeFunc) {
 // will be called with all the middleware on the stack.
 func (stack *middlewareStack) Run(event *Event, config *Configuration, next func() error) error {
 	// run all the before filters in reverse order
-	for i, _ := range stack.before {
+	for i := range stack.before {
 		before := stack.before[len(stack.before)-i-1]
 
 		err := stack.runBeforeFilter(before, event, config)

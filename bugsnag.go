@@ -36,11 +36,11 @@ func Notify(err error, rawData ...interface{}) error {
 	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
 }
 
-// defer bugsnag.AutoNotify() to notify Bugsnag about any panics that happen on
-// this goroutine.  After notifying Bugsnag AutoNotify continues panicking, so
-// it should only be used in places that have existing panic handlers further
+// AutoNotify logs a panic on a goroutine and then repanics.
+// It should only be used in places that have existing panic handlers further
 // up the stack. See bugsnag.Recover().  The rawData is used to send extra
 // information along with any panics that are handled this way.
+// Usage: defer bugsnag.AutoNotify()
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
@@ -49,10 +49,10 @@ func AutoNotify(rawData ...interface{}) {
 	}
 }
 
-// defer bugsnag.Recover() to notify Bugsnag about any panics that happen on
-// this goroutine. bugsnag.Recover() logs the panic and stops your program
-// from panicking so that it doesn't crash. The rawData is used to send extra
-// information along with any panics that are handled this way
+// Recover logs a panic on a goroutine and then recovers.
+// The rawData is used to send extra information along with
+// any panics that are handled this way
+// Usage: defer bugsnag.Recover()
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityWarning)

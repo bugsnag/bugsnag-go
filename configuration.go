@@ -149,12 +149,11 @@ func (config *Configuration) log(fmt string, args ...interface{}) {
 func (config *Configuration) notifyInReleaseStage() bool {
 	if config.NotifyReleaseStages == nil {
 		return true
-	} else {
-		for _, r := range config.NotifyReleaseStages {
-			if r == config.ReleaseStage {
-				return true
-			}
-		}
-		return false
 	}
+	for _, r := range config.NotifyReleaseStages {
+		if r == config.ReleaseStage {
+			return true
+		}
+	}
+	return false
 }

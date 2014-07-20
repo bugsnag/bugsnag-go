@@ -1,14 +1,15 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/bugsnag-go/errors"
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/bugsnag/bugsnag-go/errors"
 )
 
 type _account struct {
-	Id   string
+	ID   string
 	Name string
 	Plan struct {
 		Premium bool
@@ -52,7 +53,7 @@ func TestMetaDataAdd(t *testing.T) {
 			"lol": "not really a struct",
 		},
 		"account": {
-			"Id":   "",
+			"ID":   "",
 			"Name": "",
 			"Plan": map[string]interface{}{
 				"Premium": false,
@@ -102,7 +103,7 @@ func TestMetaDataSanitize(t *testing.T) {
 	broken.Me = &broken
 	broken.Data = "ohai"
 	account.Name = "test"
-	account.Id = "test"
+	account.ID = "test"
 	account.secret = "hush"
 
 	m := MetaData{
@@ -148,7 +149,7 @@ func TestMetaDataSanitize(t *testing.T) {
 				"Data": "ohai",
 			},
 			"account": map[string]interface{}{
-				"Id":   "test",
+				"ID":   "test",
 				"Name": "test",
 				"Plan": map[string]interface{}{
 					"Premium": false,
@@ -165,7 +166,7 @@ func TestMetaDataSanitize(t *testing.T) {
 func ExampleMetaData() {
 	notifier.Notify(errors.Errorf("hi world"),
 		MetaData{"Account": {
-			"id":      account.Id,
+			"id":      account.ID,
 			"name":    account.Name,
 			"paying?": account.Plan.Premium,
 		}})

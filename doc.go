@@ -1,5 +1,5 @@
 /*
-The bugsnag-go package captures errors in real-time and reports them to Bugsnag (http://bugsnag.com).
+Package bugsnag captures errors in real-time and reports them to Bugsnag (http://bugsnag.com).
 
 Using bugsnag-go is a three-step process.
 
