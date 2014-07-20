@@ -68,7 +68,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 
 // Recover logs any panics, then recovers.
 // It sends along any rawData that gets passed in.
-// Usage: defer AutoNotify()
+// Usage: defer Recover()
 func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = notifier.addDefaultSeverity(rawData, SeverityWarning)
