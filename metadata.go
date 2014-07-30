@@ -87,7 +87,7 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 	v := reflect.ValueOf(data)
 
 	switch t.Kind() {
-	case reflect.Bool,
+		case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
 		reflect.Float32, reflect.Float64:
@@ -113,7 +113,7 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		return s.sanitizeStruct(v, t)
 
 		// Things JSON can't serialize:
-	// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
+		// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
 	default:
 		return "[" + t.String() + "]"
 
@@ -138,8 +138,10 @@ func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	return ret
 }
 
-// TODO: it might be nice to support JSON tags.
 func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
+	var name string
+	var opts tagOptions
+
 	ret := make(map[string]interface{})
 
 	for i := 0; i < v.NumField(); i++ {
@@ -150,12 +152,20 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 			continue
 		}
 
-		name := t.Field(i).Name
+		// Parse JSON tags. Supports name and "omitempty"
+		if jsonTag := t.Field(i).Tag.Get("json"); len(jsonTag) != 0 {
+			name, opts = parseTag(jsonTag)
+		} else {
+			name = t.Field(i).Name
+		}
 
 		if s.shouldRedact(name) {
 			ret[name] = "[REDACTED]"
 		} else {
-			ret[name] = s.Sanitize(val.Interface())
+			if opts != "omitempty" {
+				ret[name] = s.Sanitize(val.Interface())
+			}
+
 		}
 	}
 
@@ -167,6 +177,41 @@ func (s sanitizer) shouldRedact(key string) bool {
 		if strings.Contains(strings.ToLower(filter), strings.ToLower(key)) {
 			return true
 		}
+	}
+	return false
+}
+
+// tagOptions is the string following a comma in a struct field's "json"
+// tag, or the empty string. It does not include the leading comma.
+type tagOptions string
+
+// parseTag splits a struct field's json tag into its name and
+// comma-separated options.
+func parseTag(tag string) (string, tagOptions) {
+	if idx := strings.Index(tag, ","); idx != -1 {
+		return tag[:idx], tagOptions(tag[idx+1:])
+	}
+	return tag, tagOptions("")
+}
+
+// Contains reports whether a comma-separated list of options
+// contains a particular substr flag. substr must be surrounded by a
+// string boundary or commas.
+func (o tagOptions) Contains(optionName string) bool {
+	if len(o) == 0 {
+		return false
+	}
+	s := string(o)
+	for s != "" {
+		var next string
+		i := strings.Index(s, ",")
+		if i >= 0 {
+			s, next = s[:i], s[i+1:]
+		}
+		if s == optionName {
+			return true
+		}
+		s = next
 	}
 	return false
 }
