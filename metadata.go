@@ -139,9 +139,6 @@ func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
 }
 
 func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
-	var name string
-	var opts tagOptions
-
 	ret := make(map[string]interface{})
 
 	for i := 0; i < v.NumField(); i++ {
@@ -152,11 +149,12 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 			continue
 		}
 
+		name := t.Field(i).Name
+		var opts tagOptions
+
 		// Parse JSON tags. Supports name and "omitempty"
 		if jsonTag := t.Field(i).Tag.Get("json"); len(jsonTag) != 0 {
 			name, opts = parseTag(jsonTag)
-		} else {
-			name = t.Field(i).Name
 		}
 
 		if s.shouldRedact(name) {
