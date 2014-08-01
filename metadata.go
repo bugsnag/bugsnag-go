@@ -113,7 +113,7 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		return s.sanitizeStruct(v, t)
 
 		// Things JSON can't serialize:
-	// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
+		// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
 	default:
 		return "[" + t.String() + "]"
 
@@ -138,7 +138,6 @@ func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	return ret
 }
 
-// TODO: it might be nice to support JSON tags.
 func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 	ret := make(map[string]interface{})
 
@@ -151,11 +150,26 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 		}
 
 		name := t.Field(i).Name
+		var opts tagOptions
+
+		// Parse JSON tags. Supports name and "omitempty"
+		if jsonTag := t.Field(i).Tag.Get("json"); len(jsonTag) != 0 {
+			name, opts = parseTag(jsonTag)
+		}
 
 		if s.shouldRedact(name) {
 			ret[name] = "[REDACTED]"
 		} else {
-			ret[name] = s.Sanitize(val.Interface())
+			sanitized := s.Sanitize(val.Interface())
+			if str, ok := sanitized.(string); ok {
+				if !(opts.Contains("omitempty") && len(str) == 0) {
+					ret[name] = str
+				}
+			} else {
+				ret[name] = sanitized
+			}
+
+
 		}
 	}
 

@@ -14,8 +14,11 @@ type _account struct {
 	Plan struct {
 		Premium bool
 	}
-	Password string
-	secret   string
+	Password      string
+	secret        string
+	Email         string `json:"email"`
+	EmptyEmail    string `json:"emptyemail,omitempty"`
+	NotEmptyEmail string `json:"not_empty_email,omitempty"`
 }
 
 type _broken struct {
@@ -59,6 +62,7 @@ func TestMetaDataAdd(t *testing.T) {
 				"Premium": false,
 			},
 			"Password": "",
+			"email": "",
 		},
 	}) {
 		t.Errorf("metadata.Add didn't work: %#v", m)
@@ -105,6 +109,9 @@ func TestMetaDataSanitize(t *testing.T) {
 	account.Name = "test"
 	account.ID = "test"
 	account.secret = "hush"
+	account.Email = "example@example.com"
+	account.EmptyEmail = ""
+	account.NotEmptyEmail = "not_empty_email@example.com"
 
 	m := MetaData{
 		"one": {
@@ -155,6 +162,8 @@ func TestMetaDataSanitize(t *testing.T) {
 					"Premium": false,
 				},
 				"Password": "[REDACTED]",
+				"email": "example@example.com",
+			 	"not_empty_email": "not_empty_email@example.com",
 			},
 		},
 	}) {
