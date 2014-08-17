@@ -22,13 +22,7 @@ func TestPanicHandler(t *testing.T) {
 	// Use the same trick as panicwrap() to re-run ourselves.
 	// In the init() block below, we will then panic.
 	cmd := exec.Command(exePath, os.Args[1:]...)
-	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint)
-
-	for i := range cmd.Env {
-		if cmd.Env[i] == "bugsnag_wrapped=bugsnag_wrapped" {
-			cmd.Env[i] = "please_panic=please_panic"
-		}
-	}
+	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint, "please_panic=please_panic")
 
 	if err = cmd.Start(); err != nil {
 		t.Fatal(err)
