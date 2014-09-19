@@ -7,7 +7,7 @@ go:
   - tip
 
 install:
-  - go get github.com/mitchellh/panicwrap
+  - go get github.com/ConradIrwin/panicwrap
   - go get github.com/mitchellh/osext
   - go get github.com/bitly/go-simplejson
   - go get github.com/revel/revel
