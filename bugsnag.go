@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"os"
 	"sync"
+
+	// Fixes a bug with SHA-384 intermediate certs on some platforms.
+	// - https://github.com/bugsnag/bugsnag-go/issues/9
+	_ "crypto/sha512"
 )
 
 // The current version of bugsnag-go.
