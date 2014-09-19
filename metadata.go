@@ -169,7 +169,6 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 				ret[name] = sanitized
 			}
 
-
 		}
 	}
 

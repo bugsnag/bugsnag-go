@@ -62,7 +62,7 @@ func TestMetaDataAdd(t *testing.T) {
 				"Premium": false,
 			},
 			"Password": "",
-			"email": "",
+			"email":    "",
 		},
 	}) {
 		t.Errorf("metadata.Add didn't work: %#v", m)
@@ -161,9 +161,9 @@ func TestMetaDataSanitize(t *testing.T) {
 				"Plan": map[string]interface{}{
 					"Premium": false,
 				},
-				"Password": "[REDACTED]",
-				"email": "example@example.com",
-			 	"not_empty_email": "not_empty_email@example.com",
+				"Password":        "[REDACTED]",
+				"email":           "example@example.com",
+				"not_empty_email": "not_empty_email@example.com",
 			},
 		},
 	}) {
