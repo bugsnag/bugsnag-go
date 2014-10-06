@@ -256,7 +256,7 @@ You must call `bugsnag.Configure()` at the start of your program to use Bugsnag,
 a [`bugsnag.Configuration`](https://godoc.org/github.com/bugsnag/bugsnag-go/#Configuration) object
 containing any of the following values.
 
-### `APIKey`
+### APIKey
 
 The Bugsnag API key can be found on your [Bugsnag dashboard](https://bugsnag.com) under "Settings".
 
@@ -266,7 +266,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `Endpoint`
+### Endpoint
 
 The Bugsnag endpoint defaults to `https://notify.bugsnag.com/`. If you're using Bugsnag enterprise,
 you should set this to the endpoint of your local instance.
@@ -277,7 +277,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `ReleaseStage`
+### ReleaseStage
 
 The ReleaseStage tracks where your app is deployed. You should set this to `production`, `staging`,
 `development` or similar as appropriate.
@@ -288,7 +288,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `NotifyReleaseStages`
+### NotifyReleaseStages
 
 The list of ReleaseStages to notify in. By default Bugsnag will notify you in all release stages, but
 you can use this to silence development errors.
@@ -299,7 +299,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `AppVersion`
+### AppVersion
 
 If you use a versioning scheme for deploys of your app, Bugsnag can use the `AppVersion` to only
 re-open errors if they occur in later version of the app.
@@ -310,7 +310,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `Hostname`
+### Hostname
 
 The hostname is used to track where exceptions are coming from in the Bugsnag dashboard. The
 default value is obtained from `os.Hostname()` so you won't often need to change this.
@@ -321,7 +321,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-### `ProjectPackages`
+### ProjectPackages
 
 In order to determine where a crash happens Bugsnag needs to know which packages you consider to
 be part of your app (as opposed to a library). By default this is set to `[]string{"main*"}`. Strings
@@ -333,7 +333,7 @@ bugsnag.Configure(bugsnag.Configuration{
 }
 ```
 
-### `ParamsFilters`
+### ParamsFilters
 
 Sometimes sensitive data is accidentally included in Bugsnag MetaData. You can remove it by
 setting `ParamsFilters`. Any key in the `MetaData` that includes any string in the filters
@@ -346,7 +346,7 @@ bugsnag.Configure(bugsnag.Configuration{
 }
 ```
 
-### `Logger`
+### Logger
 
 The Logger to write to in case of an error inside Bugsnag. This defaults to the global logger.
 
@@ -356,7 +356,7 @@ bugsnag.Configure(bugsnag.Configuration{
 }
 ```
 
-### `PanicHandler`
+### PanicHandler
 
 The first time Bugsnag is configured, it wraps the running program in a panic
 handler using [panicwrap](http://godoc.org/github.com/mitchellh/panicwrap). To
@@ -389,7 +389,7 @@ Or just for one error:
 bugsnag.Notify(err, bugsnag.Configuration{Synchronous: true})
 ```
 
-### `Transport`
+### Transport
 
 The transport configures how Bugsnag makes http requests. By default we use
 [`http.DefaultTransport`](http://godoc.org/net/http#RoundTripper) which handles
