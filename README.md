@@ -10,8 +10,7 @@ mobile and desktop applications, helping you to understand and resolve them
 as fast as possible. [Create a free account](http://bugsnag.com) to start
 capturing exceptions from your applications.
 
-How to Install
-==============
+## How to Install
 
 1. Download the code
 
@@ -136,8 +135,7 @@ current `*http.Request` as rawData. The easiest way to do this is to create a ne
     ```
 
 
-Notifying Bugsnag manually
-==========================
+## Notifying Bugsnag manually
 
 Bugsnag will automatically handle any panics that crash your program and notify
 you of them. If you've integrated with `revel` or `net/http`, then you'll also
@@ -178,8 +176,7 @@ and you are retrofitting bugsnag support.
 defer bugsnag.AutoNotify()
 ```
 
-Sending Custom Data
-===================
+## Sending Custom Data
 
 Most functions in the Bugsnag API, including `bugsnag.Notify()`,
 `bugsnag.Recover()`, `bugsnag.AutoNotify()`, and `bugsnag.Handler()` let you
@@ -249,8 +246,7 @@ You can set the severity of an error by passing one of these objects as rawData.
 bugsnag.Notify(err, bugsnag.SeverityInfo)
 ```
 
-Configuration
-=============
+## Configuration
 
 You must call `bugsnag.Configure()` at the start of your program to use Bugsnag, you pass it
 a [`bugsnag.Configuration`](https://godoc.org/github.com/bugsnag/bugsnag-go/#Configuration) object
@@ -401,8 +397,7 @@ bugsnag.Configure(bugsnag.Configuration{
 })
 ```
 
-Custom data with OnBeforeNotify
-===============================
+## Custom data with OnBeforeNotify
 
 While it's nice that you can pass `MetaData` directly into `bugsnag.Notify`,
 `bugsnag.AutoNotify`, and `bugsnag.Recover`, this can be a bit cumbersome and
@@ -457,8 +452,7 @@ bugsnag.OnBeforeNotify(
     })
 ```
 
-Advanced Usage
-==============
+## Advanced Usage
 
 If you want to have multiple different configurations around in one program,
 you can use `bugsnag.New()` to create multiple independent instances of
