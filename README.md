@@ -355,9 +355,10 @@ bugsnag.Configure(bugsnag.Configuration{
 ### PanicHandler
 
 The first time Bugsnag is configured, it wraps the running program in a panic
-handler using [panicwrap](http://godoc.org/github.com/mitchellh/panicwrap). To
-prevent this, set `PanicHandler` to `func() {}` the first time you call
-`bugsnag.Configure`. This will stop bugsnag from being able to notify you about
+handler using [panicwrap](http://godoc.org/github.com/ConradIrwin/panicwrap). This
+forks a sub-process which monitors unhandled panics. To prevent this, set
+`PanicHandler` to `func() {}` the first time you call
+`bugsnag.Configure`. This will prevent bugsnag from being able to notify you about
 unhandled panics.
 
 ```go
