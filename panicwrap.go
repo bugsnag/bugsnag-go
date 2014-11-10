@@ -3,7 +3,7 @@
 package bugsnag
 
 import (
-	"github.com/ConradIrwin/panicwrap"
+	"github.com/bugsnag/panicwrap"
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
