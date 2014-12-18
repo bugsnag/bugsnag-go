@@ -1,7 +1,11 @@
 package bugsnag
 
 import (
+	"log"
+	"os"
 	"testing"
+
+	"github.com/juju/loggo"
 )
 
 func TestNotifyReleaseStages(t *testing.T) {
@@ -55,4 +59,44 @@ func TestProjectPackages(t *testing.T) {
 		t.Error("wrong packges being marked in project")
 	}
 
+}
+
+type LoggoWrapper struct {
+	loggo.Logger
+}
+
+func (lw *LoggoWrapper) Printf(format string, v ...interface{}) {
+	lw.Logger.Warningf(format, v...)
+}
+
+func TestConfiguringCustomLogger(t *testing.T) {
+
+	l1 := log.New(os.Stdout, "", log.Lshortfile)
+
+	l2 := &LoggoWrapper{loggo.GetLogger("test")}
+
+	var testCases = []struct {
+		config Configuration
+		notify bool
+		msg    string
+	}{
+		{
+			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l1},
+			notify: true,
+			msg:    "Failed to assign log.Logger",
+		},
+		{
+			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l2},
+			notify: true,
+			msg:    "Failed to assign LoggoWrapper",
+		},
+	}
+
+	for _, testCase := range testCases {
+		Configure(testCase.config)
+
+		// call printf just to illustrate it is present as the compiler does most of the hard work
+		testCase.config.Logger.Printf("hello %s", "bugsnag")
+
+	}
 }
