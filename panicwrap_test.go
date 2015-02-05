@@ -57,9 +57,8 @@ func TestPanicHandler(t *testing.T) {
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
 	if frame.Get("inProject").MustBool() != true ||
 		frame.Get("file").MustString() != "panicwrap_test.go" ||
-		frame.Get("method").MustString() != "panick" ||
 		frame.Get("lineNumber").MustInt() == 0 {
-		t.Errorf("stack trace seemed wrong")
+		t.Errorf("stack trace seemed wrong: %v", frame)
 	}
 }
 

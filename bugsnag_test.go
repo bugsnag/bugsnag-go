@@ -233,20 +233,20 @@ func TestHandler(t *testing.T) {
 
 	exception := event.Get("exceptions").GetIndex(0)
 
-	if exception.Get("message").MustString() != "runtime error: send on closed channel" {
-		t.Errorf("Wrong message in payload: %v", exception.Get("message").MustString())
+	if !strings.Contains(exception.Get("message").MustString(), "send on closed channel") {
+		t.Errorf("Wrong message in payload: %v '%v'", exception.Get("message").MustString(), "runtime error: send on closed channel")
 	}
 
-	if exception.Get("errorClass").MustString() != "runtime.errorCString" {
-		t.Errorf("Wrong errorClass in payload: %v", exception.Get("errorClass").MustString())
+	errorClass := exception.Get("errorClass").MustString()
+	if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" {
+		t.Errorf("Wrong errorClass in payload: %v, '%v'", exception.Get("errorClass").MustString(), "runtime.errorCString")
 	}
 
-	// TODO:CI these are probably dependent on go version.
 	frame0 := exception.Get("stacktrace").GetIndex(0)
-	if frame0.Get("file").MustString() != "runtime/panic.c" ||
-		frame0.Get("method").MustString() != "panicstring" ||
-		frame0.Get("inProject").MustBool() != false ||
-		frame0.Get("lineNumber").MustInt() == 0 {
+
+	file0 := frame0.Get("file").MustString()
+	if !strings.HasPrefix(file0, "runtime/panic") ||
+		frame0.Get("inProject").MustBool() != false {
 		t.Errorf("Wrong frame0: %v", frame0)
 	}
 
