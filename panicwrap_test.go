@@ -4,7 +4,7 @@ package bugsnag
 
 import (
 	"github.com/bitly/go-simplejson"
-	"github.com/mitchellh/osext"
+	"github.com/bugsnag/osext"
 	"os"
 	"os/exec"
 	"testing"
