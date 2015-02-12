@@ -53,7 +53,9 @@ type Configuration struct {
 	// The logger that Bugsnag should log to. Uses the same defaults as go's
 	// builtin logging package. bugsnag-go logs whenever it notifies Bugsnag
 	// of an error, and when any error occurs inside the library itself.
-	Logger *log.Logger
+	Logger interface {
+		Printf(format string, v ...interface{}) // limited to the functions used
+	}
 	// The http Transport to use, defaults to the default http Transport. This
 	// can be configured if you are in an environment like Google App Engine
 	// that has stringent conditions on making http requests.

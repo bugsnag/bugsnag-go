@@ -10,3 +10,4 @@ install:
   - go get github.com/bugsnag/osext
   - go get github.com/bitly/go-simplejson
   - go get github.com/revel/revel
+  - go get github.com/juju/loggo
