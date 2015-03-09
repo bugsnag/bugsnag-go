@@ -487,3 +487,24 @@ bugsnag.OnBeforeNotify(
         return nil
     })
 ```
+
+### Skipping lines in stacktrace
+
+If you have your own logging wrapper all of your errors will appear to
+originate from inside it. You can avoid this problem by constructing
+an error with a stacktrace manually, and then passing that to Bugsnag.notify:
+
+```go
+import (
+    "github.com/bugsnag/bugsnag-go"
+    "github.com/bugsnag/bugsnag-go/errors"
+)
+
+func LogError(e error) {
+    // 1 removes one line of stacktrace, so the caller of LogError
+    // will be at the top.
+    e = errors.New(e, 1)
+    bugsnag.Notify(e)
+}
+```
+
