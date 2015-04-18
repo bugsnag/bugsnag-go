@@ -228,13 +228,13 @@ bugsnag.Notify(err,
 
 ### Error Class
 
-Errors in your Bugsnag dashboard are grouped by their "error class".
+Errors in your Bugsnag dashboard are grouped by their "error class" and by line number.
 You can override the error class by passing a
 [`bugsnag.ErrorClass`](https://godoc.org/github.com/bugsnag/bugsnag-go/#ErrorClass) object as
 rawData.
 
 ```go
-bugsnag.Notify(err, bugsnag.ErrorClass{Name: "I/O Timeout"})
+bugsnag.Notify(err, bugsnag.ErrorClass{"I/O Timeout"})
 ```
 
 ### Context
