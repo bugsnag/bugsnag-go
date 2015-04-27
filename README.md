@@ -226,6 +226,17 @@ bugsnag.Notify(err,
     bugsnag.User{Id: "1234", Name: "Conrad", Email: "me@cirw.in"})
 ```
 
+### Error Class
+
+Errors in your Bugsnag dashboard are grouped by their "error class" and by line number.
+You can override the error class by passing a
+[`bugsnag.ErrorClass`](https://godoc.org/github.com/bugsnag/bugsnag-go/#ErrorClass) object as
+rawData.
+
+```go
+bugsnag.Notify(err, bugsnag.ErrorClass{"I/O Timeout"})
+```
+
 ### Context
 
 The context shows up prominently in the list view so that you can get an idea

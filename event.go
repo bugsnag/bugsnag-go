@@ -21,6 +21,12 @@ type User struct {
 	Email string `json:"email,omitempty"`
 }
 
+// ErrorClass overrides the error class in Bugsnag.
+// This struct enables you to group errors as you like.
+type ErrorClass struct {
+	Name string
+}
+
 // Sets the severity of the error on Bugsnag. These values can be
 // passed to Notify, Recover or AutoNotify as rawData.
 var (
@@ -107,6 +113,9 @@ func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Ev
 
 		case User:
 			event.User = &datum
+
+		case ErrorClass:
+			event.ErrorClass = datum.Name
 		}
 	}
 
