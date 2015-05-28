@@ -30,6 +30,11 @@ Installing the go development environment
     export PATH=$PATH:$GOPATH/bin
     ```
 
+Installing the appengine development environment
+------------------------------------------------
+
+1. Follow the [Google instructions](https://cloud.google.com/appengine/downloads).
+
 Downloading the code
 --------------------
 
@@ -47,14 +52,17 @@ Then install depend
 Running Tests
 -------------
 
-Running the test suite requires a connected android device or emulator.
-
-You can run the test suite on a device/emulator as follows:
+You can run the tests with
 
 ```shell
 go test
 ```
 
+If you've made significant changes, please also test the appengine integration with
+
+```shell
+goapp test
+```
 
 Releasing a New Version
 -----------------------

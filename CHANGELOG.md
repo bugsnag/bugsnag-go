@@ -1,3 +1,8 @@
+1.0.4
+-----
+
+- Fix appengine integration broken by 1.0.3
+
 1.0.3
 -----
 

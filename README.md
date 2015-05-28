@@ -117,7 +117,8 @@ There are two steps to get panic handling in [revel](https://revel.github.io) ap
 
 3. In order to use Bugsnag, you must provide the current
 [`appengine.Context`](https://developers.google.com/appengine/docs/go/reference#Context), or
-current `*http.Request` as rawData. The easiest way to do this is to create a new notifier.
+current `*http.Request` as rawData (This is done automatically for `bugsnag.Handler` and `bugsnag.HandlerFunc`).
+The easiest way to do this is to create a new instance of the notifier.
 
     ```go
     c := appengine.NewContext(r)
