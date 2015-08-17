@@ -47,7 +47,7 @@ func (p *payload) deliver() error {
 func (p *payload) deliverOrLog() {
 	err := p.deliver()
 	if err != nil {
-		fmt.Println(err)
+		p.log("bugsnag.deliver: %v", err)
 	}
 }
 
