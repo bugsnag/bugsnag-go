@@ -44,6 +44,13 @@ func (p *payload) deliver() error {
 	return nil
 }
 
+func (p *payload) deliverOrLog() {
+	err := p.deliver()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func (p *payload) MarshalJSON() ([]byte, error) {
 
 	data := hash{

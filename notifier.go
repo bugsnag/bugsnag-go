@@ -43,7 +43,8 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 			if config.Synchronous {
 				return (&payload{event, config}).deliver()
 			}
-			go (&payload{event, config}).deliver()
+			// Ensure that any errors are logged if they occur in a goroutine.
+			go (&payload{event, config}).deliverOrLog()
 			return nil
 		}
 		return fmt.Errorf("not notifying in %s", config.ReleaseStage)
