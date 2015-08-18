@@ -44,7 +44,13 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 				return (&payload{event, config}).deliver()
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.
-			go (&payload{event, config}).deliverOrLog()
+			go func(event *Event, config *Configuration) {
+				err := (&payload{event, config}).deliver()
+				if err != nil {
+					config.log("bugsnag.Notify: %v", err)
+				}
+			}(event, config)
+
 			return nil
 		}
 		return fmt.Errorf("not notifying in %s", config.ReleaseStage)

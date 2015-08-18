@@ -44,13 +44,6 @@ func (p *payload) deliver() error {
 	return nil
 }
 
-func (p *payload) deliverOrLog() {
-	err := p.deliver()
-	if err != nil {
-		p.log("bugsnag.deliver: %v", err)
-	}
-}
-
 func (p *payload) MarshalJSON() ([]byte, error) {
 
 	data := hash{
