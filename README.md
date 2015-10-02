@@ -86,6 +86,33 @@ There are two steps to get panic handling in [revel](https://revel.github.io) ap
     [dev]
     ```
 
+### Using with martini apps
+
+1. Add `bugsnagmartini.AutoNotify` immediately after the `martini.Recovery` middleware in `main.go`.
+This causes unhandled panics to notify bugsnag.
+
+    ```go
+
+    import "github.com/bugsnag/bugsnag-go/martini"
+
+    func main() {
+
+        m.Use(martini.Recover()
+
+        m.Use(bugsnagmartini.AutoNotify(bugsnag.Configuration{
+            APIKey: "YOUR_API_KEY_HERE",
+        }))
+    }
+    ```
+
+2. Use `bugsnag` from the context injection if you need to notify about non-fatal errors.
+
+    ```
+    func MyHandler(r *http.Request, bugsnag *bugsnag.Notifier) string {
+        bugsnag.Notify(err);
+    }
+    ```
+
 ### Using with Google App Engine
 
 1. Configure bugsnag at the start of your `init()` function:
