@@ -45,20 +45,24 @@ func TestNotifyReleaseStages(t *testing.T) {
 }
 
 func TestProjectPackages(t *testing.T) {
+
 	Configure(Configuration{ProjectPackages: []string{"main", "github.com/ConradIrwin/*"}})
-	if !Config.isProjectPackage("main") {
-		t.Error("literal project package doesn't work")
-	}
-	if !Config.isProjectPackage("github.com/ConradIrwin/foo") {
-		t.Error("wildcard project package doesn't work")
-	}
-	if Config.isProjectPackage("runtime") {
-		t.Error("wrong packges being marked in project")
-	}
-	if Config.isProjectPackage("github.com/ConradIrwin/foo/bar") {
-		t.Error("wrong packges being marked in project")
+
+	var testCases = []struct {
+		Path     string
+		Included bool
+	}{
+		{"main", true},
+		{"github.com/ConradIrwin/foo", true},
+		{"github.com/ConradIrwin/foo/bar", false},
+		{"runtime", false},
 	}
 
+	for _, s := range testCases {
+		if Config.isProjectPackage(s.Path) != s.Included {
+			t.Error("literal project package doesn't work")
+		}
+	}
 }
 
 type LoggoWrapper struct {
