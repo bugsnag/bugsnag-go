@@ -135,6 +135,8 @@ func (config *Configuration) stripProjectPackages(file string) string {
 	for _, p := range config.ProjectPackages {
 		if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
 			p = p[:len(p)-1]
+		} else if p[len(p)-1] == '*' && p[len(p)-2] == '*' {
+			p = p[:len(p)-2]
 		} else {
 			p = p + "/"
 		}
