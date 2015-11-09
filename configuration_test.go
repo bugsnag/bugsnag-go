@@ -99,7 +99,7 @@ func TestStripProjectPackage(t *testing.T) {
 		"star*",
 		"example.com/a",
 		"example.com/b/*",
-		"example.com/c/*/*",
+		"example.com/c/**",
 	}})
 
 	var testCases = []struct {
@@ -116,6 +116,8 @@ func TestStripProjectPackage(t *testing.T) {
 		{"example.com/b/foo.go", "foo.go"},
 
 		{"example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
+
+		{"example.com/c/a/b/foo.go", "a/b/foo.go"},
 	}
 
 	for _, tc := range testCases {
