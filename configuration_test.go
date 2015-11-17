@@ -44,21 +44,87 @@ func TestNotifyReleaseStages(t *testing.T) {
 	}
 }
 
-func TestProjectPackages(t *testing.T) {
-	Configure(Configuration{ProjectPackages: []string{"main", "github.com/ConradIrwin/*"}})
-	if !Config.isProjectPackage("main") {
-		t.Error("literal project package doesn't work")
-	}
-	if !Config.isProjectPackage("github.com/ConradIrwin/foo") {
-		t.Error("wildcard project package doesn't work")
-	}
-	if Config.isProjectPackage("runtime") {
-		t.Error("wrong packges being marked in project")
-	}
-	if Config.isProjectPackage("github.com/ConradIrwin/foo/bar") {
-		t.Error("wrong packges being marked in project")
+func TestIsProjectPackage(t *testing.T) {
+
+	Configure(Configuration{ProjectPackages: []string{
+		"main",
+		"star*",
+		"example.com/a",
+		"example.com/b/*",
+		"example.com/c/*/*",
+		"example.com/d/**",
+		"example.com/e",
+	}})
+
+	var testCases = []struct {
+		Path     string
+		Included bool
+	}{
+		{"", false},
+		{"main", true},
+		{"runtime", false},
+
+		{"star", true},
+		{"sta", false},
+		{"starred", true},
+		{"star/foo", false},
+
+		{"example.com/a", true},
+
+		{"example.com/b", false},
+		{"example.com/b/", true},
+		{"example.com/b/foo", true},
+		{"example.com/b/foo/bar", false},
+
+		{"example.com/c/foo/bar", true},
+		{"example.com/c/foo/bar/baz", false},
+
+		{"example.com/d/foo/bar", true},
+		{"example.com/d/foo/bar/baz", true},
+
+		{"example.com/e", true},
 	}
 
+	for _, s := range testCases {
+		if Config.isProjectPackage(s.Path) != s.Included {
+			t.Error("literal project package doesn't work:", s.Path, s.Included)
+		}
+	}
+}
+
+func TestStripProjectPackage(t *testing.T) {
+
+	Configure(Configuration{ProjectPackages: []string{
+		"main",
+		"star*",
+		"example.com/a",
+		"example.com/b/*",
+		"example.com/c/**",
+	}})
+
+	var testCases = []struct {
+		File     string
+		Stripped string
+	}{
+		{"main.go", "main.go"},
+		{"runtime.go", "runtime.go"},
+		{"star.go", "star.go"},
+
+		{"example.com/a/foo.go", "foo.go"},
+
+		{"example.com/b/foo/bar.go", "foo/bar.go"},
+		{"example.com/b/foo.go", "foo.go"},
+
+		{"example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
+
+		{"example.com/c/a/b/foo.go", "a/b/foo.go"},
+	}
+
+	for _, tc := range testCases {
+		if s := Config.stripProjectPackages(tc.File); s != tc.Stripped {
+			t.Error("stripProjectPackage did not remove expected path:", tc.File, tc.Stripped, "was:", s)
+		}
+	}
 }
 
 type LoggoWrapper struct {

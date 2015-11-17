@@ -362,6 +362,8 @@ In order to determine where a crash happens Bugsnag needs to know which packages
 be part of your app (as opposed to a library). By default this is set to `[]string{"main*"}`. Strings
 are matched to package names using [`filepath.Match`](http://godoc.org/path/filepath#Match).
 
+For matching subpackages within a package you may use the `**` notation. For example, `github.com/domain/package/**` will match all subpackages under `package/`.
+
 ```go
 bugsnag.Configure(bugsnag.Configuration{
     ProjectPackages: []string{"main", "github.com/domain/myapp/*"},
