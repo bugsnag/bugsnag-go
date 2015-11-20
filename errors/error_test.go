@@ -75,19 +75,26 @@ func TestNewError(t *testing.T) {
 	}
 }
 
-func ExampleErrorf(x int) (int, error) {
-	if x%2 == 1 {
-		return 0, Errorf("can only halve even numbers, got %d", x)
+func ExampleErrorf() {
+	for i := 1; i <= 2; i++ {
+		if i%2 == 1 {
+			e := Errorf("can only halve even numbers, got %d", i)
+			fmt.Printf("Error: %+v", e)
+		}
 	}
-	return x / 2, nil
+	// Output:
+	// Error: can only halve even numbers, got 1
 }
 
-func ExampleNewError() (error, error) {
+func ExampleNew() {
 	// Wrap io.EOF with the current stack-trace and return it
-	return nil, New(io.EOF, 0)
+	e := New(io.EOF, 0)
+	fmt.Printf("%+v", e)
+	// Output:
+	// EOF
 }
 
-func ExampleNewError_skip() {
+func ExampleNew_skip() {
 	defer func() {
 		if err := recover(); err != nil {
 			// skip 1 frame (the deferred function) and then return the wrapped err
@@ -96,8 +103,13 @@ func ExampleNewError_skip() {
 	}()
 }
 
-func ExampleError_Stack(err Error) {
-	fmt.Printf("Error: %s\n%s", err.Error(), err.Stack())
+func ExampleError_Stack() {
+	e := New("Oh noes!", 1)
+	fmt.Printf("Error: %s\n", e.Error())
+	fmt.Printf("Stack is %d bytes", len(e.Stack()))
+	// Output:
+	// Error: Oh noes!
+	// Stack is 589 bytes
 }
 
 func a() error {

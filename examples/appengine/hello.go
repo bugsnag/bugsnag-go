@@ -2,10 +2,10 @@ package mellow
 
 import (
 	"fmt"
-	"github.com/bugsnag/bugsnag-go"
-	"github.com/bugsnag/bugsnag-go/errors"
 	"net/http"
 	"os"
+
+	"github.com/bugsnag/bugsnag-go"
 )
 
 func init() {
@@ -27,6 +27,4 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "welcome\n")
 
 	panic("zoomg")
-
-	fmt.Fprintf(w, "%#v", errors.Errorf("oahi").StackFrames())
 }

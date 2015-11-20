@@ -16,12 +16,12 @@ func defaultPanicHandler() {
 		toNotify, err := errors.ParsePanic(output)
 
 		if err != nil {
-			defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+			defaultNotifier.Config.logf("bugsnag.handleUncaughtPanic: %v", err)
 		}
 		Notify(toNotify, SeverityError, Configuration{Synchronous: true})
 	})
 
 	if err != nil {
-		defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+		defaultNotifier.Config.logf("bugsnag.handleUncaughtPanic: %v", err)
 	}
 }

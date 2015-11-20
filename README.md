@@ -1,5 +1,7 @@
-Bugsnag Notifier for Golang
-===========================
+# Bugsnag Notifier for Golang
+[![Latest Version](http://img.shields.io/github/release/bugsnag/bugsnag-go.svg?style=flat-square)](https://github.com/bugsnag/bugsnag-go/releases)
+[![Build Status](https://travis-ci.org/bugsnag/bugsnag-go.svg)](https://travis-ci.org/bugsnag/bugsnag-go)
+[![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
 The Bugsnag Notifier for Golang gives you instant notification of panics, or
 unexpected errors, in your golang app. Any unhandled panics will trigger a

@@ -148,7 +148,7 @@ func (config *Configuration) stripProjectPackages(file string) string {
 	return file
 }
 
-func (config *Configuration) log(fmt string, args ...interface{}) {
+func (config *Configuration) logf(fmt string, args ...interface{}) {
 	if config != nil && config.Logger != nil {
 		config.Logger.Printf(fmt, args...)
 	} else {

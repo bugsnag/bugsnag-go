@@ -328,7 +328,7 @@ func TestRecover(t *testing.T) {
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("Handling GET")
 }
 
 var createAccount = handleGet
@@ -338,20 +338,36 @@ type _job struct {
 	Process func()
 }
 
-func ExampleAutoNotify() interface{} {
-	return func(w http.ResponseWriter, request *http.Request) {
+func ExampleAutoNotify() {
+	f := func(w http.ResponseWriter, request *http.Request) {
 		defer AutoNotify(request, Context{"createAccount"})
 
 		createAccount(w, request)
 	}
+	var w http.ResponseWriter
+	var request *http.Request
+	f(w, request)
+	// Output:
+	// Handling GET
 }
 
-func ExampleRecover(job _job) {
-	go func() {
-		defer Recover(Context{job.Name}, SeverityWarning)
+func ExampleRecover() {
+	job := _job{
+		Name: "Example",
+		Process: func() {
+			fmt.Println("About to panic")
+			panic("Oh noes")
+		},
+	}
 
+	func() {
+		defer Recover(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
 		job.Process()
 	}()
+	fmt.Println("Panic recovered")
+	// Output:
+	// About to panic
+	// Panic recovered
 }
 
 func ExampleConfigure() {
@@ -404,8 +420,9 @@ func ExampleNotify() {
 	}
 }
 
-func ExampleNotify_details(userID string) {
+func ExampleNotify_details() {
 	_, err := net.Listen("tcp", ":80")
+	userID := "123456789"
 
 	if err != nil {
 		Notify(err,
