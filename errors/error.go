@@ -19,6 +19,13 @@ type Error struct {
 	frames []StackFrame
 }
 
+// stackFramesError allows callers to create their own errors which
+// provide stackframes.
+type stackFramesError interface {
+	error
+	StackFrames() []StackFrame
+}
+
 // New makes an Error from the given value. If that value is already an
 // error then it will be used directly, if not, it will be passed to
 // fmt.Errorf("%v"). The skip parameter indicates how far up the stack
@@ -29,6 +36,11 @@ func New(e interface{}, skip int) *Error {
 	switch e := e.(type) {
 	case *Error:
 		return e
+	case stackFramesError:
+		return &Error{
+			Err:    e.(error),
+			frames: e.StackFrames(),
+		}
 	case error:
 		err = e
 	default:
