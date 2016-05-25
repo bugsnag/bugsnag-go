@@ -214,8 +214,8 @@ func TestHandler(t *testing.T) {
 		"payloadVersion":          "2",
 		"severity":                "info",
 		"user.id":                 "127.0.0.1",
-		"metaData.Request.Url":    "http://" + l.Addr().String() + "/ok?foo=bar",
-		"metaData.Request.Method": "GET",
+		"metaData.request.url":    "http://" + l.Addr().String() + "/ok?foo=bar",
+		"metaData.request.method": "GET",
 	} {
 		key := strings.Split(k, ".")
 		if event.GetPath(key...).MustString() != value {
@@ -223,7 +223,7 @@ func TestHandler(t *testing.T) {
 		}
 	}
 
-	if event.GetPath("metaData", "Request", "Params", "foo").GetIndex(0).MustString() != "bar" {
+	if event.GetPath("metaData", "request", "params", "foo").GetIndex(0).MustString() != "bar" {
 		t.Errorf("missing GET params in request metadata")
 	}
 
