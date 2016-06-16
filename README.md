@@ -3,13 +3,13 @@
 [![Build Status](https://travis-ci.org/bugsnag/bugsnag-go.svg)](https://travis-ci.org/bugsnag/bugsnag-go)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
-Automatically detect crashes in your apps, collect diagnostic information and 
+Automatically detect crashes in your apps, collect diagnostic information and
 immediately notify your development team. Understand and resolve issues as fast as possible.
 
 ## Features
 
 * Automatically report unhandled errors and panics
-* Report handled errors 
+* Report handled errors
 * Attach user information to determine how many people are affected by a crash
 * Send customized diagnostic data
 
@@ -19,6 +19,7 @@ immediately notify your development team. Understand and resolve issues as fast 
 2. Complete the instructions in the integration guide for your framework:
     * [Google App Engine](http://docs.bugsnag.com/platforms/go/app-engine/)
     * [Martini](http://docs.bugsnag.com/platforms/go/martini)
+    * [Negroni](http://docs.bugsnag.com/platforms/go/negroni)
     * [net/http](http://docs.bugsnag.com/platforms/go/net-http)
     * [Revel](http://docs.bugsnag.com/platforms/go/revel)
     * [Other Go apps](http://docs.bugsnag.com/platforms/go/other)
@@ -29,6 +30,7 @@ immediately notify your development team. Understand and resolve issues as fast 
 * Read the configuration reference:
     * [Google App Engine](http://docs.bugsnag.com/platforms/go/app-engine/configuration-options/)
     * [Martini](http://docs.bugsnag.com/platforms/go/martini/configuration-options/)
+    * [Negroni](http://docs.bugsnag.com/platforms/go/negroni/configuration-options/)
     * [net/http](http://docs.bugsnag.com/platforms/go/net-http/configuration-options/)
     * [Revel](http://docs.bugsnag.com/platforms/go/revel/configuration-options/)
     * [Other Go apps](http://docs.bugsnag.com/platforms/go/other/configuration-options/)
