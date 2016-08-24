@@ -67,8 +67,8 @@ func httpRequestMiddleware(event *Event, config *Configuration) error {
 
 			event.MetaData.Update(MetaData{
 				"request": {
-					"remoteAddr": request.RemoteAddr,
-					"method":     request.Method,
+					"clientIp":   request.RemoteAddr,
+					"httpMethod": request.Method,
 					"url":        proto + request.Host + request.RequestURI,
 					"params":     request.URL.Query(),
 				},
