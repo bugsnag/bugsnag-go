@@ -211,11 +211,11 @@ func TestHandler(t *testing.T) {
 	event := json.Get("events").GetIndex(0)
 
 	for k, value := range map[string]string{
-		"payloadVersion":          "2",
-		"severity":                "info",
-		"user.id":                 "127.0.0.1",
-		"metaData.request.url":    "http://" + l.Addr().String() + "/ok?foo=bar",
-		"metaData.request.method": "GET",
+		"payloadVersion":              "2",
+		"severity":                    "info",
+		"user.id":                     "127.0.0.1",
+		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
+		"metaData.request.httpMethod": "GET",
 	} {
 		key := strings.Split(k, ".")
 		if event.GetPath(key...).MustString() != value {
