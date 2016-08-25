@@ -227,8 +227,8 @@ func TestHandler(t *testing.T) {
 		t.Errorf("missing GET params in request metadata")
 	}
 
-	if event.GetPath("metaData", "Headers", "Accept-Encoding").GetIndex(0).MustString() != "gzip" {
-		t.Errorf("missing GET params in request metadata: %v", event.GetPath("metaData", "Headers"))
+	if event.GetPath("metaData", "Request", "headers", "Accept-Encoding").GetIndex(0).MustString() != "gzip" {
+		t.Errorf("missing GET params in request metadata: %v", event.GetPath("metaData", "Request", "headers"))
 	}
 
 	exception := event.Get("exceptions").GetIndex(0)
