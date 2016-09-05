@@ -6,12 +6,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/blang/semver"
 )
 
 func TestConfigure(t *testing.T) {
@@ -238,8 +240,16 @@ func TestHandler(t *testing.T) {
 	}
 
 	errorClass := exception.Get("errorClass").MustString()
-	if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" {
-		t.Errorf("Wrong errorClass in payload: %v, '%v'", exception.Get("errorClass").MustString(), "runtime.errorCString")
+	goVersion := runtime.Version()
+	plainErrVersion, _ := semver.Make("1.7.0")
+	semVersionString := fmt.Sprintf("%s.0", goVersion[2:len(goVersion)])
+	semVersion, _ := semver.Make(semVersionString)
+	if semVersion.GTE(plainErrVersion) {
+		if errorClass != "runtime.plainError" {
+			t.Errorf("Wrong errorClass in payload: %v, '%v'", exception.Get("errorClass").MustString(), "runtime.plainError")
+		}
+	} else if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" {
+		t.Errorf("%s Wrong errorClass in payload: %v, '%v'", semVersion.String(), exception.Get("errorClass").MustString(), "runtime.errorCString")
 	}
 
 	frame0 := exception.Get("stacktrace").GetIndex(0)
