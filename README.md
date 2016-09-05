@@ -3,8 +3,7 @@
 [![Build Status](https://travis-ci.org/bugsnag/bugsnag-go.svg)](https://travis-ci.org/bugsnag/bugsnag-go)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
-Automatically detect crashes in your apps, collect diagnostic information and
-immediately notify your development team. Understand and resolve issues as fast as possible.
+Automatically detect crashes in your apps, collect diagnostic information and immediately notify your development team. Understand and resolve issues as fast as possible.
 
 ## Features
 
@@ -39,14 +38,9 @@ immediately notify your development team. Understand and resolve issues as fast 
 
 ## Contributing
 
-All contributors are welcome! For information on how to build, test
-and release `bugsnag-go`, see our
-[contributing guide](https://github.com/bugsnag/bugsnag-go/blob/master/CONTRIBUTING.md).
+All contributors are welcome! For information on how to build, test and release `bugsnag-go`, see our [contributing guide](CONTRIBUTING.md).
 
 
 ## License
 
-The Bugsnag exception reporter for Go is free software released under the MIT License.
-See [LICENSE.txt](https://github.com/bugsnag/bugsnag-go/blob/master/LICENSE.txt)
-for details.
-
+The Bugsnag exception reporter for Go is free software released under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
