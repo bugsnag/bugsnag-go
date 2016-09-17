@@ -242,7 +242,10 @@ func TestHandler(t *testing.T) {
 	errorClass := exception.Get("errorClass").MustString()
 	goVersion := runtime.Version()
 	plainErrVersion, _ := semver.Make("1.7.0")
-	semVersionString := fmt.Sprintf("%s.0", goVersion[2:len(goVersion)])
+	semVersionString := goVersion[2:len(goVersion)]
+	if len(semVersionString) == 3 {
+		semVersionString = fmt.Sprintf("%s.0", semVersionString)
+	}
 	semVersion, _ := semver.Make(semVersionString)
 	if semVersion.GTE(plainErrVersion) {
 		if errorClass != "runtime.plainError" {
