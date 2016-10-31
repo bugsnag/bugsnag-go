@@ -12,7 +12,7 @@ import (
 // you'll pass a bugsnag.Configuration object.
 func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
   return func(c *gin.Context) {
-    r := c.Request
+    r := c.Copy().Request
 
     // create a notifier that has the current request bound to it
     notifier := bugsnag.New(append(rawData, r)...)
