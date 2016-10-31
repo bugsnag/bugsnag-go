@@ -8,20 +8,13 @@ import (
   "os"
 )
 
-type App struct {
-  errorHandlerConfig bugsnag.Configuration
-}
-
-var app = App{
-  bugsnag.Configuration{
-    APIKey: "YOUR API KEY",
-}}
-
 func main() {
 
     g := gin.Default()
 
-    g.Use(bugsnaggin.AutoNotify(app.errorHandlerConfig))
+    g.Use(bugsnaggin.AutoNotify(bugsnag.Configuration{
+      APIKey: "YOUR API KEY",
+    }))
 
     g.GET("/crash", performUnhandledCrash)
     g.GET("/handled", performHandledCrash)
@@ -38,7 +31,7 @@ func performUnhandledCrash(c *gin.Context) {
 func performHandledCrash(c *gin.Context) {
   _, err := os.Open("some_nonexistent_file.txt")
   if err != nil {
-    bugsnag.Notify(err, app.errorHandlerConfig)
+    bugsnag.Notify(err)
   }
   c.String(http.StatusOK, "OK")
 }
