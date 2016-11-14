@@ -213,11 +213,11 @@ func TestHandler(t *testing.T) {
 	event := json.Get("events").GetIndex(0)
 
 	for k, value := range map[string]string{
-		"payloadVersion":          "2",
-		"severity":                "info",
-		"user.id":                 "127.0.0.1",
-		"metaData.request.url":    "http://" + l.Addr().String() + "/ok?foo=bar",
-		"metaData.request.method": "GET",
+		"payloadVersion":              "2",
+		"severity":                    "info",
+		"user.id":                     "127.0.0.1",
+		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
+		"metaData.request.httpMethod": "GET",
 	} {
 		key := strings.Split(k, ".")
 		if event.GetPath(key...).MustString() != value {
@@ -229,8 +229,8 @@ func TestHandler(t *testing.T) {
 		t.Errorf("missing GET params in request metadata")
 	}
 
-	if event.GetPath("metaData", "Headers", "Accept-Encoding").GetIndex(0).MustString() != "gzip" {
-		t.Errorf("missing GET params in request metadata: %v", event.GetPath("metaData", "Headers"))
+	if event.GetPath("metaData", "request", "headers", "Accept-Encoding").GetIndex(0).MustString() != "gzip" {
+		t.Errorf("missing GET params in request metadata: %v", event.GetPath("metaData", "request", "headers"))
 	}
 
 	exception := event.Get("exceptions").GetIndex(0)
