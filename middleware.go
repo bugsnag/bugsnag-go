@@ -71,7 +71,7 @@ func httpRequestMiddleware(event *Event, config *Configuration) error {
 					"httpMethod": request.Method,
 					"url":        proto + request.Host + request.RequestURI,
 					"params":     request.URL.Query(),
-					"headers",    request.Header,
+					"headers":    request.Header,
 				},
 			})
 
