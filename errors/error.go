@@ -4,9 +4,9 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	GoErrors "github.com/go-errors/errors"
 	"reflect"
 	"runtime"
-	GoErrors "github.com/go-errors/errors"
 )
 
 // The maximum number of stackframes on any error.

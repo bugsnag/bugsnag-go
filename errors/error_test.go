@@ -3,6 +3,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	GoErrors "github.com/go-errors/errors"
 	"io"
 	"runtime/debug"
 	"testing"
@@ -75,6 +76,19 @@ func TestNewError(t *testing.T) {
 	}
 }
 
+func TestNewGoError(t *testing.T) {
+	goError := goError()
+	bugsnagError := New(goError, 0)
+
+	goErrorStack := goError.(*GoErrors.Error).Stack()
+	bugsnagErrorStack := bugsnagError.Stack()
+	if bytes.Compare(goErrorStack, bugsnagErrorStack) != 0 {
+		t.Errorf("Stack didn't match")
+		t.Errorf("%s", goErrorStack)
+		t.Errorf("%s", bugsnagErrorStack)
+	}
+}
+
 func ExampleErrorf() {
 	for i := 1; i <= 2; i++ {
 		if i%2 == 1 {
@@ -123,4 +137,12 @@ func b(i int) {
 
 func c() {
 	panic('a')
+}
+
+func goError() error {
+	return getGoError()
+}
+
+func getGoError() error {
+	return GoErrors.New(GoErrors.Errorf("oh dear"))
 }
