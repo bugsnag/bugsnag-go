@@ -103,5 +103,9 @@ func (err *Error) TypeName() string {
 	if _, ok := err.Err.(uncaughtPanic); ok {
 		return "panic"
 	}
-	return reflect.TypeOf(err.Err).String()
+	name := reflect.TypeOf(err.Err).String()
+	if len(name) > 0 {
+		return name
+	}
+	return "error"
 }
