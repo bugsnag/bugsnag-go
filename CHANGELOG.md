@@ -1,3 +1,9 @@
+## 1.1.1 (2016-12-16)
+
+### Bug fixes
+
+* Replace empty error class property in reports with "error"
+
 ## 1.1.0 (2016-11-07)
 
 ### Enhancements
