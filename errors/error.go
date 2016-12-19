@@ -26,6 +26,13 @@ type ErrorWithCallers interface {
 	Callers() []uintptr
 }
 
+// ErrorWithStackFrames allows the stack to be rebuilt from the stack frames, thus
+// allowing to use the Error type when the program counter is not available.
+type ErrorWithStackFrames interface {
+	Error() string
+	StackFrames() []StackFrame
+}
+
 // New makes an Error from the given value. If that value is already an
 // error then it will be used directly, if not, it will be passed to
 // fmt.Errorf("%v"). The skip parameter indicates how far up the stack
@@ -40,6 +47,16 @@ func New(e interface{}, skip int) *Error {
 		return &Error{
 			Err:   e,
 			stack: e.Callers(),
+		}
+	case ErrorWithStackFrames:
+		stack := make([]uintptr, len(e.StackFrames()))
+		for i, frame := range e.StackFrames() {
+			stack[i] = frame.ProgramCounter
+		}
+		return &Error{
+			Err:    e,
+			stack:  stack,
+			frames: e.StackFrames(),
 		}
 	case error:
 		err = e

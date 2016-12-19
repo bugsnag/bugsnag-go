@@ -52,6 +52,18 @@ func TestSkipWorks(t *testing.T) {
 	a()
 }
 
+type testErrorWithStackFrames struct {
+	Err *Error
+}
+
+func (tews *testErrorWithStackFrames) StackFrames() []StackFrame {
+	return tews.Err.StackFrames()
+}
+
+func (tews *testErrorWithStackFrames) Error() string {
+	return tews.Err.Error()
+}
+
 func TestNewError(t *testing.T) {
 
 	e := func() error {
@@ -72,6 +84,15 @@ func TestNewError(t *testing.T) {
 
 	if New(nil, 0).Error() != "<nil>" {
 		t.Errorf("Constructor with nil failed")
+	}
+
+	err := New("foo", 0)
+	tews := &testErrorWithStackFrames{
+		Err: err,
+	}
+
+	if bytes.Compare(New(tews, 0).Stack(), err.Stack()) != 0 {
+		t.Errorf("Constructor with ErrorWithStackFrames failed")
 	}
 }
 
