@@ -172,6 +172,26 @@ func TestMetaDataSanitize(t *testing.T) {
 
 }
 
+func TestSanitizerSanitize(t *testing.T) {
+	var (
+		nilPointer *int
+	)
+
+	for n, tc := range []struct {
+		input interface{}
+		want  interface{}
+	}{
+		{nilPointer, "<nil>"},
+	} {
+		s := &sanitizer{}
+		gotValue := s.Sanitize(tc.input)
+
+		if got, want := gotValue, tc.want; got != want {
+			t.Errorf("[%d] got %v, want %v", n, got, want)
+		}
+	}
+}
+
 func ExampleMetaData() {
 	notifier.Notify(errors.Errorf("hi world"),
 		MetaData{"Account": {
