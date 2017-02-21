@@ -174,7 +174,8 @@ func TestMetaDataSanitize(t *testing.T) {
 
 func TestSanitizerSanitize(t *testing.T) {
 	var (
-		nilPointer *int
+		nilPointer   *int
+		nilInterface = interface{}(nil)
 	)
 
 	for n, tc := range []struct {
@@ -182,6 +183,7 @@ func TestSanitizerSanitize(t *testing.T) {
 		want  interface{}
 	}{
 		{nilPointer, "<nil>"},
+		{nilInterface, "<nil>"},
 	} {
 		s := &sanitizer{}
 		gotValue := s.Sanitize(tc.input)
