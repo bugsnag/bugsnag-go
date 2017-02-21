@@ -101,6 +101,9 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		return data
 
 	case reflect.Interface, reflect.Ptr:
+		if v.IsNil() {
+			return "<nil>"
+		}
 		return s.Sanitize(v.Elem().Interface())
 
 	case reflect.Array, reflect.Slice:
