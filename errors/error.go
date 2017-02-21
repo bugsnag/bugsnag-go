@@ -4,6 +4,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	GoErrors "github.com/go-errors/errors"
 	"reflect"
 	"runtime"
 )
@@ -43,6 +44,17 @@ func New(e interface{}, skip int) *Error {
 	switch e := e.(type) {
 	case *Error:
 		return e
+	case *GoErrors.Error:
+		stackframes := e.StackFrames()
+		stack := make([]uintptr, len(stackframes))
+		for i, stackframe := range stackframes {
+			stack[i] = stackframe.ProgramCounter
+		}
+
+		return &Error{
+			Err:   e,
+			stack: stack,
+		}
 	case ErrorWithCallers:
 		return &Error{
 			Err:   e,
