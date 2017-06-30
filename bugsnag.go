@@ -113,6 +113,7 @@ func init() {
 		APIKey:        "",
 		Endpoint:      "https://notify.bugsnag.com/",
 		Hostname:      "",
+		AppType:       "",
 		AppVersion:    "",
 		ReleaseStage:  "",
 		ParamsFilters: []string{"password", "secret"},
