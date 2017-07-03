@@ -88,6 +88,9 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 			"hostname": p.Hostname,
 		}
 	}
+	if p.AppType != "" {
+		event["app"].(hash)["type"] = p.AppType
+	}
 	if p.AppVersion != "" {
 		event["app"].(hash)["version"] = p.AppVersion
 	}

@@ -20,6 +20,9 @@ type Configuration struct {
 	// The current release stage. This defaults to "production" and is used to
 	// filter errors in the Bugsnag dashboard.
 	ReleaseStage string
+	// A specialized type of the application, such as the worker queue or web
+	// framework used, like "rails", "mailman", or "celery"
+	AppType string
 	// The currently running version of the app. This is used to filter errors
 	// in the Bugsnag dasboard. If you set this then Bugsnag will only re-open
 	// resolved errors if they happen in different app versions.
@@ -75,6 +78,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.Hostname != "" {
 		config.Hostname = other.Hostname
+	}
+	if other.AppType != "" {
+		config.AppType = other.AppType
 	}
 	if other.AppVersion != "" {
 		config.AppVersion = other.AppVersion
