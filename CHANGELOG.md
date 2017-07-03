@@ -1,3 +1,21 @@
+## 1.2.0 (2017-07-03)
+
+### Enhancements
+
+* Support custom stack frame implementations
+  [alexanderwilling](https://github.com/alexanderwilling)
+  [#43](https://github.com/bugsnag/bugsnag-go/issues/43)
+
+* Support app.type in error reports
+  [Jascha Ephraim](https://github.com/jaschaephraim)
+  [#51](https://github.com/bugsnag/bugsnag-go/pull/51)
+
+### Bug fixes
+
+* Mend nil pointer panic in metadata
+  [Johan Sageryd](https://github.com/jsageryd)
+  [#46](https://github.com/bugsnag/bugsnag-go/pull/46)
+
 ## 1.1.1 (2016-12-16)
 
 ### Bug fixes
