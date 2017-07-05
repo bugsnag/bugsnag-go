@@ -73,7 +73,11 @@ func (notifier *Notifier) NotifySync(err error, synchronous bool, rawData ...int
 
 // AutoNotify notifies Bugsnag of any panics, then repanics.
 // It sends along any rawData that gets passed in.
-// Usage: defer AutoNotify()
+// Usage:
+//  go func() {
+//		defer AutoNotify()
+//      // (possibly crashy code)
+//  }()
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
