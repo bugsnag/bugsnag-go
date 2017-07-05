@@ -48,7 +48,7 @@ func Notify(err error, rawData ...interface{}) error {
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
-		defaultNotifier.Notify(errors.New(err, 2), rawData...)
+		defaultNotifier.NotifySync(errors.New(err, 2), true, rawData...)
 		panic(err)
 	}
 }
