@@ -1,10 +1,14 @@
 This is an example google app-engine app.
 
-To use it you will need to install the [App Engine
-SDK](https://cloud.google.com/appengine/downloads) for Go.
+## Configuration
+
+1. Install the [App Engine SDK](https://cloud.google.com/appengine/downloads)
+   for Go.
+2. Insert your Bugsnag API key in `hello.go`
 
 Then run:
 
     goapp deploy
 
-Then open: https://bugsnag-test.appspot.com/ in your web-browser.
+Open https://bugsnag-test.appspot.com/ in your web-browser to create error
+reports.

@@ -2,10 +2,9 @@ package mellow
 
 import (
 	"fmt"
+	"github.com/bugsnag/bugsnag-go"
 	"net/http"
 	"os"
-
-	"github.com/bugsnag/bugsnag-go"
 )
 
 func init() {
@@ -13,8 +12,10 @@ func init() {
 		event.MetaData.AddStruct("original", event.Error.StackFrames())
 		return nil
 	})
+
+	// Insert your API key
 	bugsnag.Configure(bugsnag.Configuration{
-		APIKey: "066f5ad3590596f9aa8d601ea89af845",
+		APIKey: "YOUR-API-KEY-HERE",
 	})
 
 	http.HandleFunc("/", bugsnag.HandlerFunc(handler))
