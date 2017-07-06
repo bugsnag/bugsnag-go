@@ -44,21 +44,24 @@ func TestPanicHandler(t *testing.T) {
 	}
 	exception := event.Get("exceptions").GetIndex(0)
 
-	if exception.Get("message").MustString() != "ruh roh" {
-		t.Errorf("caught wrong panic")
+	message := exception.Get("message").MustString()
+	if message != "ruh roh" {
+		t.Errorf("caught wrong panic message: '%s'", message)
 	}
 
-	if exception.Get("errorClass").MustString() != "panic" {
-		t.Errorf("caught wrong panic")
+	errorClass := exception.Get("errorClass").MustString()
+	if errorClass != "*errors.errorString" {
+		t.Errorf("caught wrong panic errorClass: '%s'", errorClass)
 	}
 
-	frame := exception.Get("stacktrace").GetIndex(1)
+	stacktrace := exception.Get("stacktrace")
 
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
+	frame := stacktrace.GetIndex(1)
 	if frame.Get("inProject").MustBool() != true ||
 		frame.Get("file").MustString() != "panicwrap_test.go" ||
 		frame.Get("lineNumber").MustInt() == 0 {
-		t.Errorf("stack trace seemed wrong: %v", frame)
+		t.Errorf("stack frame seems wrong at index 1: %v", frame)
 	}
 }
 
@@ -66,6 +69,8 @@ func init() {
 	if os.Getenv("please_panic") != "" {
 		Configure(Configuration{APIKey: os.Getenv("BUGSNAG_API_KEY"), Endpoint: os.Getenv("BUGSNAG_ENDPOINT"), ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		go func() {
+			defer AutoNotify()
+
 			panick()
 		}()
 		// Plenty of time to crash, it shouldn't need any of it.
