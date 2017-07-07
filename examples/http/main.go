@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-
 	http.HandleFunc("/", Get)
 
+	// Insert your API key
 	bugsnag.Configure(bugsnag.Configuration{
-		APIKey: "066f5ad3590596f9aa8d601ea89af845",
+		APIKey: "YOUR-API-KEY-HERE",
 	})
 
 	log.Println("Serving on 9001")
