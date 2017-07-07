@@ -34,13 +34,22 @@ func New(rawData ...interface{}) *Notifier {
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
 func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
+	config := notifier.Config
+	return notifier.NotifySync(err, config.Synchronous, rawData...)
+}
+
+// NotifySync sends an error to Bugsnag. The synchronous parameter specifies
+// whether to send the report in the current context. Any rawData you pass here
+// will be sent to Bugsnag after being converted to JSON. e.g.
+// bugsnag.SeverityError,  bugsnag.Context, or bugsnag.MetaData.
+func (notifier *Notifier) NotifySync(err error, synchronous bool, rawData ...interface{}) (e error) {
 	event, config := newEvent(errors.New(err, 1), rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
 		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
-			if config.Synchronous {
+			if synchronous {
 				return (&payload{event, config}).deliver()
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.
@@ -64,7 +73,11 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 
 // AutoNotify notifies Bugsnag of any panics, then repanics.
 // It sends along any rawData that gets passed in.
-// Usage: defer AutoNotify()
+// Usage:
+//  go func() {
+//		defer AutoNotify()
+//      // (possibly crashy code)
+//  }()
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
