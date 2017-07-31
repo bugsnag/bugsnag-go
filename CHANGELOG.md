@@ -1,3 +1,11 @@
+## 1.2.1 (2017-07-31)
+
+### Bug fixes
+
+* Improve goroutine panic reporting by sending reports synchronously in the
+  case that a goroutine is about to be cleaned up
+  [#52](https://github.com/bugsnag/bugsnag-go/pull/52)
+
 ## 1.2.0 (2017-07-03)
 
 ### Enhancements
