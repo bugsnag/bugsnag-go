@@ -1,3 +1,9 @@
+## 1.2.2 (2017-08-25)
+
+### Bug fixes
+
+* Point osext dependency at upstream, update with fixes
+
 ## 1.2.1 (2017-07-31)
 
 ### Bug fixes
