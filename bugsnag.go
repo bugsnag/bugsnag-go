@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"sync"
 
 	// Fixes a bug with SHA-384 intermediate certs on some platforms.
@@ -114,6 +116,12 @@ func init() {
 	OnBeforeNotify(httpRequestMiddleware)
 
 	// Default configuration
+	sourceRoot := ""
+	if gopath := os.Getenv("GOPATH"); len(gopath) > 0 {
+		sourceRoot = filepath.Join(gopath, "src") + "/"
+	} else {
+		sourceRoot = filepath.Join(runtime.GOROOT(), "src") + "/"
+	}
 	Config.update(&Configuration{
 		APIKey:        "",
 		Endpoint:      "https://notify.bugsnag.com/",
@@ -122,6 +130,7 @@ func init() {
 		AppVersion:    "",
 		ReleaseStage:  "",
 		ParamsFilters: []string{"password", "secret"},
+		SourceRoot:    sourceRoot,
 		// * for app-engine
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
