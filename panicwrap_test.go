@@ -11,26 +11,11 @@ import (
 	"time"
 )
 
-func TestPanicHandler(t *testing.T) {
+// Test the panic handler by launching a new process which runs the init()
+// method in this file and causing a handled panic
+func TestPanicHandlerHandledPanic(t *testing.T) {
 	startTestServer()
-
-	exePath, err := osext.Executable()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Use the same trick as panicwrap() to re-run ourselves.
-	// In the init() block below, we will then panic.
-	cmd := exec.Command(exePath, os.Args[1:]...)
-	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint, "please_panic=please_panic")
-
-	if err = cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = cmd.Wait(); err.Error() != "exit status 2" {
-		t.Fatal(err)
-	}
+	startPanickingProcess(t, "handled")
 
 	json, err := simplejson.NewJson(<-postedJSON)
 	if err != nil {
@@ -39,9 +24,6 @@ func TestPanicHandler(t *testing.T) {
 
 	event := json.Get("events").GetIndex(0)
 
-	if event.Get("severity").MustString() != "error" {
-		t.Errorf("severity should be error")
-	}
 	exception := event.Get("exceptions").GetIndex(0)
 
 	message := exception.Get("message").MustString()
@@ -53,6 +35,7 @@ func TestPanicHandler(t *testing.T) {
 	if errorClass != "*errors.errorString" {
 		t.Errorf("caught wrong panic errorClass: '%s'", errorClass)
 	}
+	assertSeverityReasonEqual(t, json, "error", "handledPanic", true)
 
 	stacktrace := exception.Get("stacktrace")
 
@@ -65,9 +48,44 @@ func TestPanicHandler(t *testing.T) {
 	}
 }
 
+// Test the panic handler by launching a new process which runs the init()
+// method in this file and causing a handled panic
+func TestPanicHandlerUnhandledPanic(t *testing.T) {
+	startTestServer()
+	startPanickingProcess(t, "unhandled")
+	json, err := simplejson.NewJson(<-postedJSON)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertSeverityReasonEqual(t, json, "error", "unhandledPanic", true)
+}
+
+func startPanickingProcess(t *testing.T, variant string) {
+	exePath, err := osext.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Use the same trick as panicwrap() to re-run ourselves.
+	// In the init() block below, we will then panic.
+	cmd := exec.Command(exePath, os.Args[1:]...)
+	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint, "please_panic="+variant)
+
+	if err = cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = cmd.Wait(); err.Error() != "exit status 2" {
+		t.Fatal(err)
+	}
+}
+
 func init() {
-	if os.Getenv("please_panic") != "" {
-		Configure(Configuration{APIKey: os.Getenv("BUGSNAG_API_KEY"), Endpoint: os.Getenv("BUGSNAG_ENDPOINT"), ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
+	if os.Getenv("please_panic") == "handled" {
+		Configure(Configuration{
+			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
+			Endpoint:        os.Getenv("BUGSNAG_ENDPOINT"),
+			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		go func() {
 			defer AutoNotify()
 
@@ -75,6 +93,13 @@ func init() {
 		}()
 		// Plenty of time to crash, it shouldn't need any of it.
 		time.Sleep(1 * time.Second)
+	} else if os.Getenv("please_panic") == "unhandled" {
+		Configure(Configuration{
+			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
+			Endpoint:        os.Getenv("BUGSNAG_ENDPOINT"),
+			Synchronous:     true,
+			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
+		panick()
 	}
 }
 

@@ -80,7 +80,9 @@ func (notifier *Notifier) NotifySync(err error, synchronous bool, rawData ...int
 //  }()
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = notifier.addDefaultSeverity(rawData, SeverityError)
+		severity := notifier.getDefaultSeverity(rawData, SeverityError)
+		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
+		notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(errors.New(err, 2), rawData...)
 		panic(err)
 	}
@@ -91,7 +93,9 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 // Usage: defer Recover()
 func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = notifier.addDefaultSeverity(rawData, SeverityWarning)
+		severity := notifier.getDefaultSeverity(rawData, SeverityWarning)
+		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
+		notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
@@ -102,14 +106,31 @@ func (notifier *Notifier) dontPanic() {
 	}
 }
 
-// Add a severity to raw data only if the default is not set.
-func (notifier *Notifier) addDefaultSeverity(rawData []interface{}, s severity) []interface{} {
+// Get defined severity from raw data or a fallback value
+func (notifier *Notifier) getDefaultSeverity(rawData []interface{}, s severity) severity {
+	allData := append(notifier.RawData, rawData...)
+	for _, datum := range allData {
+		if _, ok := datum.(severity); ok {
+			return datum.(severity)
+		}
+	}
+
+	for _, datum := range allData {
+		if _, ok := datum.(HandledState); ok {
+			return datum.(HandledState).OriginalSeverity
+		}
+	}
+
+	return s
+}
+
+func (notifier *Notifier) appendStateIfNeeded(rawData []interface{}, h HandledState) []interface{} {
 
 	for _, datum := range append(notifier.RawData, rawData...) {
-		if _, ok := datum.(severity); ok {
+		if _, ok := datum.(HandledState); ok {
 			return rawData
 		}
 	}
 
-	return append(rawData, s)
+	return append(rawData, h)
 }

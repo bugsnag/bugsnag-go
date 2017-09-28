@@ -13,13 +13,22 @@ import (
 
 var once sync.Once
 
+const FrameworkName string = "Revel"
+
+var errorHandlingState = bugsnag.HandledState{
+	bugsnag.SeverityReasonUnhandledMiddlewareError,
+	bugsnag.SeverityError,
+	true,
+	FrameworkName,
+}
+
 // Filter should be added to the filter chain just after the PanicFilter.
 // It sends errors to Bugsnag automatically. Configuration is read out of
 // conf/app.conf, you should set bugsnag.apikey, and can also set
 // bugsnag.endpoint, bugsnag.releasestage, bugsnag.apptype, bugsnag.appversion,
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
-	defer bugsnag.AutoNotify(c)
+	defer bugsnag.AutoNotify(c, errorHandlingState)
 	fc[0](c, fc[1:])
 }
 

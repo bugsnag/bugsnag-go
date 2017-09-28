@@ -36,6 +36,8 @@ import (
 	"github.com/go-martini/martini"
 )
 
+const FrameworkName string = "Martini"
+
 // AutoNotify sends any panics to bugsnag, and then re-raises them.
 // You should use this after another middleware that
 // returns an error page to the client, for example martini.Recover().
@@ -43,6 +45,13 @@ import (
 // you'll pass a bugsnag.Configuration object.
 func AutoNotify(rawData ...interface{}) martini.Handler {
 
+	state := bugsnag.HandledState{
+		bugsnag.SeverityReasonUnhandledMiddlewareError,
+		bugsnag.SeverityError,
+		true,
+		FrameworkName,
+	}
+	rawData = append(rawData, state)
 	// set the release stage based on the martini environment.
 	rawData = append([]interface{}{bugsnag.Configuration{ReleaseStage: martini.Env}},
 		rawData...)
