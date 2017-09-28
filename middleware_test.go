@@ -3,12 +3,16 @@ package bugsnag
 import (
 	"bytes"
 	"fmt"
+	"github.com/bugsnag/bugsnag-go/errors"
 	"log"
 	"reflect"
 	"testing"
 )
 
 func TestMiddlewareOrder(t *testing.T) {
+
+	err := fmt.Errorf("test")
+	event, config := newEvent(errors.New(err, 1), make([]interface{}, 0), &defaultNotifier)
 
 	result := make([]int, 0, 7)
 	stack := middlewareStack{}
@@ -25,7 +29,7 @@ func TestMiddlewareOrder(t *testing.T) {
 		return nil
 	})
 
-	stack.Run(nil, nil, func() error {
+	stack.Run(event, config, func() error {
 		result = append(result, 3)
 		return nil
 	})
@@ -39,6 +43,7 @@ func TestBeforeNotifyReturnErr(t *testing.T) {
 
 	stack := middlewareStack{}
 	err := fmt.Errorf("test")
+	event, config := newEvent(errors.New(err, 1), make([]interface{}, 0), &defaultNotifier)
 
 	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		return err
@@ -46,7 +51,7 @@ func TestBeforeNotifyReturnErr(t *testing.T) {
 
 	called := false
 
-	e := stack.Run(nil, nil, func() error {
+	e := stack.Run(event, config, func() error {
 		called = true
 		return nil
 	})
@@ -63,6 +68,8 @@ func TestBeforeNotifyReturnErr(t *testing.T) {
 func TestBeforeNotifyPanic(t *testing.T) {
 
 	stack := middlewareStack{}
+	err := fmt.Errorf("test")
+	event, _ := newEvent(errors.New(err, 1), make([]interface{}, 0), &defaultNotifier)
 
 	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		panic("oops")
@@ -71,7 +78,7 @@ func TestBeforeNotifyPanic(t *testing.T) {
 	called := false
 	b := &bytes.Buffer{}
 
-	stack.Run(nil, &Configuration{Logger: log.New(b, log.Prefix(), 0)}, func() error {
+	stack.Run(event, &Configuration{Logger: log.New(b, log.Prefix(), 0)}, func() error {
 		called = true
 		return nil
 	})
