@@ -13,6 +13,7 @@ updatedeps:
 
 test: alldeps
 	go test
+	go test ./tests
 	@go vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		go get golang.org/x/tools/cmd/vet; \
 	fi

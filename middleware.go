@@ -30,9 +30,13 @@ func (stack *middlewareStack) Run(event *Event, config *Configuration, next func
 	for i := range stack.before {
 		before := stack.before[len(stack.before)-i-1]
 
+		severity := event.Severity
 		err := stack.runBeforeFilter(before, event, config)
 		if err != nil {
 			return err
+		}
+		if event.Severity != severity {
+			event.handledState.SeverityReason = SeverityReasonCallbackSpecified
 		}
 	}
 

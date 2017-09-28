@@ -5,11 +5,20 @@ import (
 	"net/http"
 )
 
+const FrameworkName string = "Negroni"
+
 type handler struct {
 	rawData []interface{}
 }
 
 func AutoNotify(rawData ...interface{}) *handler {
+	state := bugsnag.HandledState{
+		bugsnag.SeverityReasonUnhandledMiddlewareError,
+		bugsnag.SeverityError,
+		true,
+		FrameworkName,
+	}
+	rawData = append(rawData, state)
 	return &handler{
 		rawData: rawData,
 	}

@@ -54,7 +54,9 @@ func Notify(err error, rawData ...interface{}) error {
 // See also: bugsnag.Recover()
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityError)
+		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityError)
+		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
+		rawData = append([]interface{}{state}, rawData...)
 		defaultNotifier.NotifySync(errors.New(err, 2), true, rawData...)
 		panic(err)
 	}
@@ -66,7 +68,9 @@ func AutoNotify(rawData ...interface{}) {
 // Usage: defer bugsnag.Recover()
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
-		rawData = defaultNotifier.addDefaultSeverity(rawData, SeverityWarning)
+		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityWarning)
+		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
+		rawData = append([]interface{}{state}, rawData...)
 		defaultNotifier.Notify(errors.New(err, 2), rawData...)
 	}
 }

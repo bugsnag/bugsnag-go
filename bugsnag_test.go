@@ -296,6 +296,7 @@ func TestAutoNotify(t *testing.T) {
 	if exception.Get("message").MustString() != "eggs" {
 		t.Errorf("caught wrong panic")
 	}
+	assertSeverityReasonEqual(t, json, "error", "handledPanic", true)
 }
 
 func TestRecover(t *testing.T) {
@@ -329,6 +330,7 @@ func TestRecover(t *testing.T) {
 	if exception.Get("message").MustString() != "ham" {
 		t.Errorf("caught wrong panic")
 	}
+	assertSeverityReasonEqual(t, json, "warning", "handledPanic", false)
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
@@ -479,4 +481,58 @@ func ExampleOnBeforeNotify() {
 		// continue notifying as normal
 		return nil
 	})
+}
+
+func TestSeverityReasonNotifyErr(t *testing.T) {
+	startTestServer()
+
+	Notify(fmt.Errorf("hello world"), generateSampleConfig())
+
+	json, _ := simplejson.NewJson(<-postedJSON)
+	assertSeverityReasonEqual(t, json, "warning", "handledError", false)
+}
+
+func TestSeverityReasonNotifyCallback(t *testing.T) {
+	startTestServer()
+
+	OnBeforeNotify(func(event *Event, config *Configuration) error {
+		event.Severity = SeverityInfo
+		return nil
+	})
+
+	Notify(fmt.Errorf("hello world"), generateSampleConfig())
+
+	json, _ := simplejson.NewJson(<-postedJSON)
+	assertSeverityReasonEqual(t, json, "info", "userCallbackSetSeverity", false)
+}
+
+func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity string, reasonType string, expUnhandled bool) {
+	event := json.Get("events").GetIndex(0)
+	reason := event.GetPath("severityReason", "type").MustString()
+	severity := event.Get("severity").MustString()
+	unhandled := event.Get("unhandled").MustBool()
+
+	if reason != reasonType {
+		t.Errorf("Wrong severity reason, expected '%s', received '%s'", reasonType, reason)
+	}
+
+	if severity != expSeverity {
+		t.Errorf("Wrong severity, expected '%s', received '%s'", expSeverity, severity)
+	}
+
+	if unhandled != expUnhandled {
+		t.Errorf("Wrong unhandled value, expected '%d', received '%d'", expUnhandled, unhandled)
+	}
+}
+
+func generateSampleConfig() Configuration {
+	return Configuration{
+		APIKey:          testAPIKey,
+		Endpoint:        testEndpoint,
+		ReleaseStage:    "test",
+		AppType:         "foo",
+		AppVersion:      "1.2.3",
+		Hostname:        "web1",
+		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
+	}
 }
