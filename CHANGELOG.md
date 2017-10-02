@@ -1,3 +1,12 @@
+# Changelog
+
+## 1.3.0 (2017-10-02)
+
+### Enhancements
+
+* Track whether an error report was captured automatically
+* Add SourceRoot as a configuration option, defaulting to `$GOPATH`
+
 ## 1.2.2 (2017-08-25)
 
 ### Bug fixes
