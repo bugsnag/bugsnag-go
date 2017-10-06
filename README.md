@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/bugsnag/bugsnag-go.svg)](https://travis-ci.org/bugsnag/bugsnag-go)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
-Automatically detect crashes in your apps, collect diagnostic information and immediately notify your development team. Understand and resolve issues as fast as possible.
+Automatically detect crashes in your apps, collect diagnostic information and immediately notify your development team. Understand and resolve issues as fast as possible. 
+
+Learn more about Bugsnag's [Go error monitoring](https://www.bugsnag.com/platforms/go-lang-error-reporting/) solution.
 
 ## Features
 
