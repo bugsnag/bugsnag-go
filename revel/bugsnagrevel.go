@@ -37,7 +37,7 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	for _, datum := range event.RawData {
 		if controller, ok := datum.(*revel.Controller); ok {
 			// make the request visible to the builtin HttpMiddleware
-			event.RawData = append(event.RawData, controller.Request.Request)
+			event.RawData = append(event.RawData, controller.Request)
 			event.Context = controller.Action
 			event.MetaData.AddStruct("Session", controller.Session)
 		}
