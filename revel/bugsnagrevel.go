@@ -44,7 +44,6 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 				req := struct{ *http.Request }{}
 				event.RawData = append(event.RawData, req.Request)
 			}
-			event.RawData = append(event.RawData, controller.Request)
 			event.Context = controller.Action
 			event.MetaData.AddStruct("Session", controller.Session)
 		}
