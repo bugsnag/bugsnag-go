@@ -4,12 +4,12 @@
 package bugsnagrevel
 
 import (
-	"strings"
-	"sync"
-	"strconv"
-	"net/http"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/revel/revel"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var once sync.Once
@@ -41,7 +41,7 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 			if version("0.18.0") {
 				event.RawData = append(event.RawData, controller.Request)
 			} else {
-				req := struct{*http.Request}{}
+				req := struct{ *http.Request }{}
 				event.RawData = append(event.RawData, req.Request)
 			}
 			event.RawData = append(event.RawData, controller.Request)
@@ -78,13 +78,13 @@ func init() {
 
 // Very basic semantic versioning.
 // Returns true if given version matches or is above revel.Version
-func version(reqVersion string) bool{
+func version(reqVersion string) bool {
 	req := strings.Split(reqVersion, ".")
 	cur := strings.Split(revel.Version, ".")
-	for i:=0;i<2;i++{
-		rV,_ := strconv.Atoi(req[i])
-		cV,_ := strconv.Atoi(cur[i])
-		if (rV<cV && i==0) || (rV<cV && i==1){
+	for i := 0; i < 2; i++ {
+		rV, _ := strconv.Atoi(req[i])
+		cV, _ := strconv.Atoi(cur[i])
+		if (rV < cV && i == 0) || (rV < cV && i == 1) {
 			return true
 		}
 	}
