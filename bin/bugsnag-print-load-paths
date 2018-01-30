@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+CUKE_LOAD_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
+
+paths = Dir.glob("#{CUKE_LOAD_DIR}/lib/features/**/*.rb")
+print paths.join(" ")

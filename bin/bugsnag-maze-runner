@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'cucumber/cli/main'
+
+if ARGV.include? "--version"
+  require_relative '../lib/version'
+  puts BugsnagMazeRunner::VERSION
+  exit 0
+end
+
+CUKE_LOAD_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
+
+args = ARGV.dup
+args << "features" if args.empty?
+# Load internal steps and helper functions
+paths = Dir.glob("#{CUKE_LOAD_DIR}/lib/features/**/*.rb")
+# Load project-specific steps and helper functions
+paths += Dir.glob("features/{support,steps}/*.rb")
+paths.each do |path|
+  args << "-r"
+  args << path
+end
+
+Cucumber::Cli::Main.new(args).execute!
