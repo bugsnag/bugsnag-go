@@ -25,6 +25,9 @@ end
 Then(/^the event "(.+)" equals "(.+)"$/) do |field, string_value|
   step "the payload field \"events.0.#{field}\" equals \"#{string_value}\""
 end
+Then(/^the event "(.+)" is not null$/) do |field|
+  step "the payload field \"events.0.#{field}\" is not null"
+end
 Then(/^the event "(.+)" starts with "(.+)"$/) do |field, string_value|
   step "the payload field \"events.0.#{field}\" starts with \"#{string_value}\""
 end
@@ -42,6 +45,10 @@ Then(/^the exception "(.+)" equals "(.+)"$/) do |field, string_value|
   step "the payload field \"events.0.exceptions.0.#{field}\" equals \"#{string_value}\""
 end
 
+Then(/^the "(.+)" of stack frame (\d+) equals (\d+)$/) do |key, num, value|
+  field = "events.0.exceptions.0.stacktrace.#{num}.#{key}"
+  step "the payload field \"#{field}\" equals #{value}"
+end
 Then(/^the "(.+)" of stack frame (\d+) equals "(.+)"$/) do |key, num, value|
   field = "events.0.exceptions.0.stacktrace.#{num}.#{key}"
   step "the payload field \"#{field}\" equals \"#{value}\""

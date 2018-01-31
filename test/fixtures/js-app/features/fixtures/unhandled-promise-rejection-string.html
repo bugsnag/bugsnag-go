@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+
+    <head>
+        <script src="node_modules/bugsnag-js/dist/bugsnag.min.js"></script>
+        <script type="text/javascript">
+            var params = new URLSearchParams(window.location.search);
+            var bugsnagClient = bugsnag({
+                apiKey: params.get('apiKey'),
+                endpoint: params.get('notifyURL'),
+            });
+
+        </script>
+    </head>
+    <body>
+
+        <h1>PEANUT BUTTER JELLY TIME</h1>
+
+
+        <script>
+
+            function start_reactor() {
+                Promise.reject('There is no cake').then(function() {
+                  // not called
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", function(event) {
+                start_reactor();
+            });
+        </script>
+    </body>
+</html>
+

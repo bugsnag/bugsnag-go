@@ -10,7 +10,8 @@ class SampleTest < Test::Unit::TestCase
     run_scenario("test/fixtures/sinatra-app")
   end
 
-  def test_running_an_android_emulator_harness
+  def test_running_a_browser_harness
+    run_scenario("test/fixtures/js-app")
   end
 
   def run_scenario fixture_path

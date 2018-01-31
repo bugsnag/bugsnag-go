@@ -1,3 +1,5 @@
 Pods
 .bundle
 *.gem
+Gemfile.lock
+package-lock.json

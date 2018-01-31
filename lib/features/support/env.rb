@@ -5,15 +5,12 @@ require 'webrick'
 MOCK_API_PORT = 9291
 
 Before do
-  stop_server
-  start_server
-  @requests = []
+  stored_requests.clear
   @script_env = {'MOCK_API_PORT' => "#{MOCK_API_PORT}"}
   @pids = []
 end
 
 After do |scenario|
-  stop_server
   kill_script
   # TODO: if scenario fails, print script output
 end
@@ -29,6 +26,10 @@ def run_required_commands command_arrays
       exit(1)
     end
   end
+end
+
+def encode_query_params hash
+  URI.encode_www_form hash
 end
 
 def set_script_env key, value
@@ -53,7 +54,11 @@ def kill_script
 end
 
 def load_event request_index=0, event_index=0
-  @requests[request_index][:body]["events"][event_index]
+  stored_requests[request_index][:body]["events"][event_index]
+end
+
+def stored_requests
+  $requests ||= []
 end
 
 def read_key_path hash, key_path
@@ -77,6 +82,22 @@ def read_key_path hash, key_path
   value
 end
 
+
+class Servlet < WEBrick::HTTPServlet::AbstractServlet
+  def do_POST request, response
+    stored_requests << {body: JSON.load(request.body()), request:request}
+    response.header['Access-Control-Allow-Origin'] = '*'
+    response.status = 200
+  end
+
+  def do_OPTIONS request, response
+    response.header['Access-Control-Allow-Origin'] = '*'
+    response.header['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response.header['Access-Control-Allow-Headers'] = 'Origin,Content-Type,Bugsnag-Sent-At,Bugsnag-Api-Key,Bugsnag-Payload-Version,Accept'
+    response.status = 200
+  end
+end
+
 def start_server
   @thread = Thread.new do
     server = WEBrick::HTTPServer.new(
@@ -84,11 +105,7 @@ def start_server
       Logger: WEBrick::Log.new("/dev/null"),
       AccessLog: [],
     )
-    server.mount_proc '/' do |req, res|
-      @requests << {body: JSON.load(req.body()), request:req}
-      res.status = 200
-      res.body = 'OK'
-    end
+    server.mount '/', Servlet
     server.start
   end
 end
@@ -97,3 +114,10 @@ def stop_server
   @thread.kill if @thread and @thread.alive?
   @thread = nil
 end
+
+start_server
+
+at_exit do
+  stop_server
+end
+
