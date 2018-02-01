@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
     'lib/features/steps/automation_steps.rb',
     'lib/features/steps/error_reporting_steps.rb',
     'lib/features/steps/request_assertion_steps.rb',
+    'lib/features/support/compare.rb',
     'lib/features/support/env.rb',
     'lib/version.rb',
   ]

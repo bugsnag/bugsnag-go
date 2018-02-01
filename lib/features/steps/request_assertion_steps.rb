@@ -22,6 +22,24 @@ Then("the {string} header is a timestamp") do |header_name|
   header = stored_requests.first[:request][header_name]
   assert_match(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:[\d\.]+Z?$/, header)
 end
+Then("the payload body does not match the JSON fixture in {string}") do |fixture_path|
+  payload_value = stored_requests.first[:body]
+  expected_value = JSON.parse(open(fixture_path, &:read))
+  result = value_compare(expected_value, payload_value)
+  assert_false(result.equal?, "Payload:\n#{payload_value}\nExpected:#{expected_value}")
+end
+Then("the payload body matches the JSON fixture in {string}") do |fixture_path|
+  payload_value = stored_requests.first[:body]
+  expected_value = JSON.parse(open(fixture_path, &:read))
+  result = value_compare(expected_value, payload_value)
+  assert_true(result.equal?, "The payload field '#{result.keypath}' does not match the fixture:\n #{result.reasons.join('\n')}")
+end
+Then("the payload field {string} matches the JSON fixture in {string}") do |field_path, fixture_path|
+  payload_value = read_key_path(stored_requests.first[:body], field_path)
+  expected_value = JSON.parse(open(fixture_path, &:read))
+  result = value_compare(expected_value, payload_value)
+  assert_true(result.equal?, "The payload field '#{result.keypath}' does not match the fixture:\n #{result.reasons.join('\n')}")
+end
 Then("the payload field {string} is true") do |field_path|
   assert_equal(true, read_key_path(stored_requests.first[:body], field_path))
 end
