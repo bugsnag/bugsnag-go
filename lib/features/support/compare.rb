@@ -80,8 +80,15 @@ def hash_compare hash1, hash2, result
 end
 
 def string_compare template, str2, result
-  unless template == str2 or str2 =~ /#{template}/
+  unless template == str2 or regex_match(template, str2)
     result.equal = false
     result.reasons << "'#{str2}' does not match '#{template}'"
   end
+end
+
+# Adds string boundary delimiters if none specified
+def regex_match(template, value)
+  regex = template
+  regex = "^#{regex}$" unless regex.start_with?("^") or regex.end_with?("$")
+  value =~ /#{regex}/
 end

@@ -14,6 +14,10 @@ class SampleTest < Test::Unit::TestCase
     run_scenario("test/fixtures/js-app")
   end
 
+  def test_comparing_requests_to_json_files
+    run_scenario("test/fixtures/comparison")
+  end
+
   def run_scenario fixture_path
     Dir.chdir(fixture_path) do
         Process.wait Process.spawn("bundle", "exec", "bugsnag-maze-runner")
