@@ -3,3 +3,4 @@ Pods
 *.gem
 Gemfile.lock
 package-lock.json
+test/fixtures/init-test

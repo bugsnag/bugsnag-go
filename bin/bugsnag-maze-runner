@@ -1,12 +1,15 @@
 #!/usr/bin/env ruby
 
-require 'cucumber/cli/main'
-
 if ARGV.include? "--version"
   require_relative '../lib/version'
   puts BugsnagMazeRunner::VERSION
   exit 0
+elsif ARGV.include? "init"
+  require_relative 'commands/init'
+  exit 0
 end
+
+require 'cucumber/cli/main'
 
 CUKE_LOAD_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
 

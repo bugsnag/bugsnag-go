@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.files = [
     'bin/bugsnag-maze-runner',
+    'bin/commands/init.rb',
     'bin/bugsnag-print-load-paths',
     'lib/features/steps/automation_steps.rb',
     'lib/features/steps/error_reporting_steps.rb',
@@ -27,7 +28,7 @@ Gem::Specification.new do |spec|
     'lib/features/support/env.rb',
     'lib/version.rb',
   ]
-  spec.executables = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.executables = spec.files.grep(%r{^bin/[\w\-]+$}) { |f| File.basename(f) }
 
   spec.add_dependency "cucumber", "~> 3.1.0"
   spec.add_dependency "test-unit", "~> 3.2.0"
