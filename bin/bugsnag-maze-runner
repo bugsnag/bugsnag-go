@@ -13,6 +13,7 @@ require 'cucumber/cli/main'
 
 CUKE_LOAD_DIR = File.expand_path(File.dirname(File.dirname(__FILE__)))
 
+ENV['VERBOSE'] = "true" if ARGV.include? "--verbose"
 args = ARGV.dup
 args << "features" if args.empty?
 # Load internal steps and helper functions

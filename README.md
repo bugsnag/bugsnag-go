@@ -215,6 +215,9 @@ can specify specific files to run:
 bundle exec bugsnag-maze-runner features/something.feature
 ```
 
+Add the `--verbose` option to print script output and a trace of what Ruby file
+is being run.
+
 ## Contributing
 
 If steps would be useful for different projects running the maze, add the to

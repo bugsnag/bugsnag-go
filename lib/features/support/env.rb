@@ -19,11 +19,15 @@ end
 # and exiting the program
 def run_required_commands command_arrays
   command_arrays.each do |args|
-    out, err, ps = Open3.capture3(*args)
-    unless ps.exitstatus == 0
-      puts out.read
-      puts err.read
-      exit(1)
+    if ENV['VERBOSE']
+      `#{args.join(' ')}`
+    else
+      out, err, ps = Open3.capture3(*args)
+      unless ps.exitstatus == 0
+        puts out.read
+        puts err.read
+        exit(1)
+      end
     end
   end
 end
@@ -38,8 +42,12 @@ end
 
 def run_script script_path
   load_path = File.join(Dir.pwd, script_path)
-  pid = Process.spawn(@script_env, load_path,
-                     :err => '/dev/null', :out => '/dev/null')
+  options = {}
+  unless ENV['VERBOSE']
+    options[:err] = '/dev/null'
+    options[:out] = '/dev/null'
+  end
+  pid = Process.spawn(@script_env, load_path, *options)
   Process.detach(pid)
   @pids << pid
 end
