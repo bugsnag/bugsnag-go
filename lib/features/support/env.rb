@@ -20,12 +20,20 @@ end
 def run_required_commands command_arrays
   command_arrays.each do |args|
     if ENV['VERBOSE']
-      `#{args.join(' ')}`
+      command = args.join(' ')
+      puts "Running '#{command}'"
+      `#{command}`
     else
-      out, err, ps = Open3.capture3(*args)
-      unless ps.exitstatus == 0
-        puts out.read
-        puts err.read
+      out_reader, out_writer = IO.pipe
+      err_reader, err_writer = IO.pipe
+      pid = Process.spawn(@script_env || {}, args.join(' '),
+                          :out => out_writer.fileno,
+                          :err => err_writer.fileno)
+      Process.waitpid(pid, 0)
+      unless $?.exitstatus == 0
+        puts "Script failed (#{args}):"
+        puts out_reader.gets
+        puts err_reader.gets
         exit(1)
       end
     end
@@ -42,12 +50,12 @@ end
 
 def run_script script_path
   load_path = File.join(Dir.pwd, script_path)
-  options = {}
-  unless ENV['VERBOSE']
-    options[:err] = '/dev/null'
-    options[:out] = '/dev/null'
+  if ENV['VERBOSE']
+    puts "Running '#{load_path}'"
+    pid = Process.spawn(@script_env, load_path)
+  else
+    pid = Process.spawn(@script_env, load_path, :out => '/dev/null', :err => '/dev/null')
   end
-  pid = Process.spawn(@script_env, load_path, *options)
   Process.detach(pid)
   @pids << pid
 end

@@ -142,6 +142,7 @@ For example, to match the name of the second objects in the the key `fruits` bel
 |-----|-------------|
 |I set the environment variable "{key}" to "{value}" | Make an environment variable available to any scripts which run afterwards
 |I run the script "{path}" | Run the file denoted by `{path}`. It must be marked as executable
+|I run the script "{path}" synchronously | Run the file denoted by `{path}`, waiting for it to finish. It must be marked as executable
 |I open the URL "{url}"|Fetch the contents of a URL
 |I open the URL "{url}" in a browser|Open a URL in the system's default browser
 |I open the URL "{url}" in "{browser}"|Open a URL in a specified browser (Only fully implemented for macOS)
