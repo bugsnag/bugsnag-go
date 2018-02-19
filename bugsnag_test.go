@@ -55,14 +55,14 @@ func startTestServer() {
 }
 
 type _recurse struct {
-	*_recurse
+	Recurse *_recurse
 }
 
 func TestNotify(t *testing.T) {
 	startTestServer()
 
 	recurse := _recurse{}
-	recurse._recurse = &recurse
+	recurse.Recurse = &recurse
 
 	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		if event.Context == "testing" {
@@ -108,21 +108,21 @@ func TestNotify(t *testing.T) {
 	event := json.Get("events").GetIndex(0)
 
 	for k, value := range map[string]string{
-		"payloadVersion":                 "2",
-		"severity":                       "warning",
-		"context":                        "testing",
-		"groupingHash":                   "lol",
-		"app.releaseStage":               "test",
-		"app.type":                       "foo",
-		"app.version":                    "1.2.3",
-		"device.hostname":                "web1",
-		"user.id":                        "123",
-		"user.name":                      "Conrad",
-		"user.email":                     "me@cirw.in",
-		"metaData.test.password":         "[REDACTED]",
-		"metaData.test.value":            "able",
-		"metaData.test.broken":           "[complex128]",
-		"metaData.test.recurse._recurse": "[RECURSION]",
+		"payloadVersion":                "2",
+		"severity":                      "warning",
+		"context":                       "testing",
+		"groupingHash":                  "lol",
+		"app.releaseStage":              "test",
+		"app.type":                      "foo",
+		"app.version":                   "1.2.3",
+		"device.hostname":               "web1",
+		"user.id":                       "123",
+		"user.name":                     "Conrad",
+		"user.email":                    "me@cirw.in",
+		"metaData.test.password":        "[REDACTED]",
+		"metaData.test.value":           "able",
+		"metaData.test.broken":          "[complex128]",
+		"metaData.test.recurse.Recurse": "[RECURSION]",
 	} {
 		key := strings.Split(k, ".")
 		if event.GetPath(key...).MustString() != value {
