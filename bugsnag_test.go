@@ -521,7 +521,7 @@ func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity 
 	}
 
 	if unhandled != expUnhandled {
-		t.Errorf("Wrong unhandled value, expected '%d', received '%d'", expUnhandled, unhandled)
+		t.Errorf("Wrong unhandled value, expected '%t', received '%t'", expUnhandled, unhandled)
 	}
 }
 
