@@ -3,6 +3,7 @@ require 'open3'
 require 'webrick'
 
 MOCK_API_PORT = 9291
+SCRIPT_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "scripts"))
 
 Before do
   stored_requests.clear
@@ -19,6 +20,9 @@ end
 # and exiting the program
 def run_required_commands command_arrays
   command_arrays.each do |args|
+    internal_script_path = File.join(SCRIPT_PATH, args.first)
+    args[0] = internal_script_path if File.exists? internal_script_path
+
     if ENV['VERBOSE']
       command = args.join(' ')
       puts "Running '#{command}'"
@@ -49,7 +53,8 @@ def set_script_env key, value
 end
 
 def run_script script_path
-  load_path = File.join(Dir.pwd, script_path)
+  load_path = File.join(SCRIPT_PATH, script_path)
+  load_path = File.join(Dir.pwd, script_path) unless File.exists? load_path
   if ENV['VERBOSE']
     puts "Running '#{load_path}'"
     pid = Process.spawn(@script_env, load_path)
@@ -136,4 +141,3 @@ start_server
 at_exit do
   stop_server
 end
-
