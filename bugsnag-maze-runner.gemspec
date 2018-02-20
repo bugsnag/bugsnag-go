@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.files = [
     'bin/bugsnag-maze-runner',
+    'bin/maze-runner',
     'bin/commands/init.rb',
     'bin/bugsnag-print-load-paths',
     'lib/features/steps/automation_steps.rb',
