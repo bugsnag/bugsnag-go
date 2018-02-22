@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/juju/loggo"
+	"github.com/sirupsen/logrus"
 )
 
 func TestNotifyReleaseStages(t *testing.T) {
@@ -174,11 +174,11 @@ func TestStripCustomSourceRoot(t *testing.T) {
 	}
 }
 
-type LoggoWrapper struct {
-	loggo.Logger
+type LogrusWrapper struct {
+	logrus.Logger
 }
 
-func (lw *LoggoWrapper) Printf(format string, v ...interface{}) {
+func (lw *LogrusWrapper) Printf(format string, v ...interface{}) {
 	lw.Logger.Warningf(format, v...)
 }
 
@@ -186,7 +186,7 @@ func TestConfiguringCustomLogger(t *testing.T) {
 
 	l1 := log.New(os.Stdout, "", log.Lshortfile)
 
-	l2 := &LoggoWrapper{loggo.GetLogger("test")}
+	l2 := &LogrusWrapper{*logrus.New()}
 
 	var testCases = []struct {
 		config Configuration
