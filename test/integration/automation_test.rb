@@ -15,6 +15,10 @@ class SampleTest < Test::Unit::TestCase
     run_scenario("test/fixtures/js-app")
   end
 
+  def test_running_an_android_emulator_harness
+    run_scenario("test/fixtures/android-app")
+  end
+
   def test_comparing_requests_to_json_files
     run_scenario("test/fixtures/comparison")
   end
