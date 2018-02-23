@@ -28,6 +28,9 @@ end
 Then(/^the event "(.+)" is not null$/) do |field|
   step "the payload field \"events.0.#{field}\" is not null"
 end
+Then(/^the event "(.+)" is null$/) do |field|
+  step "the payload field \"events.0.#{field}\" is null"
+end
 Then(/^the event "(.+)" starts with "(.+)"$/) do |field, string_value|
   step "the payload field \"events.0.#{field}\" starts with \"#{string_value}\""
 end

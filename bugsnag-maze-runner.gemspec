@@ -22,6 +22,12 @@ Gem::Specification.new do |spec|
     'bin/maze-runner',
     'bin/commands/init.rb',
     'bin/bugsnag-print-load-paths',
+    'lib/features/scripts/await-android-emulator.sh',
+    'lib/features/scripts/clear-android-app-data.sh',
+    'lib/features/scripts/install-android-app.sh',
+    'lib/features/scripts/launch-android-app.sh',
+    'lib/features/scripts/launch-android-emulator.sh',
+    'lib/features/steps/android_steps.rb',
     'lib/features/steps/automation_steps.rb',
     'lib/features/steps/error_reporting_steps.rb',
     'lib/features/steps/request_assertion_steps.rb',
@@ -36,4 +42,3 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rack", "~> 2.0.0"
   spec.add_dependency "minitest", "~> 5.0"
 end
-
