@@ -11,6 +11,9 @@ end
 Then(/^I should receive a request$/) do
   step "I should receive 1 request"
 end
+Then(/^I should receive no requests$/) do
+  step "I should receive 0 request"
+end
 Then(/^the "(.+)" header is not null$/) do |header_name|
   assert_not_nil(stored_requests.first[:request][header_name],
                 "The '#{header_name}' header should not be null")
