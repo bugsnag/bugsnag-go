@@ -24,7 +24,7 @@ the hood to draft semantic tests.
    gem "bugsnag-maze-runner", git: "git@github.com:bugsnag/maze-runner"
    ```
 3. Run `bundle install` to fetch and install Maze Runner
-4. Run `bugsnag-maze-runner init` from the root of your project to build the
+4. Run `bundle exec bugsnag-maze-runner init` from the root of your project to build the
    basic structure to run test scenarios.
    * `features/fixtures`: Test fixture files, such as sample JSON payloads
    * `features/scripts`: Scripts to be run in scenarios. Any environment
