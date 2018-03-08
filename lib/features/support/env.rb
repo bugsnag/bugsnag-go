@@ -9,6 +9,10 @@ Before do
   stored_requests.clear
   @script_env = {'MOCK_API_PORT' => "#{MOCK_API_PORT}"}
   @pids = []
+  if @thread and not @thread.alive?
+    puts "Mock server is not running on #{MOCK_API_PORT}"
+    exit(1)
+  end
 end
 
 After do |scenario|
@@ -127,7 +131,11 @@ def start_server
       AccessLog: [],
     )
     server.mount '/', Servlet
-    server.start
+    begin
+      server.start
+    ensure
+      server.shutdown
+    end
   end
 end
 
