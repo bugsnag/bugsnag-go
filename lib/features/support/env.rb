@@ -26,24 +26,30 @@ def run_required_commands command_arrays
   command_arrays.each do |args|
     internal_script_path = File.join(SCRIPT_PATH, args.first)
     args[0] = internal_script_path if File.exists? internal_script_path
+    command = args.join(' ')
 
     if ENV['VERBOSE']
-      command = args.join(' ')
       puts "Running '#{command}'"
-      `#{command}`
+      out_reader, out_writer = nil, STDOUT
+      err_reader, err_writer = nil, STDOUT
     else
       out_reader, out_writer = IO.pipe
       err_reader, err_writer = IO.pipe
-      pid = Process.spawn(@script_env || {}, args.join(' '),
-                          :out => out_writer.fileno,
-                          :err => err_writer.fileno)
-      Process.waitpid(pid, 0)
-      unless $?.exitstatus == 0
-        puts "Script failed (#{args}):"
-        puts out_reader.gets
-        puts err_reader.gets
-        exit(1)
-      end
+    end
+
+    pid = Process.spawn(@script_env || {}, command,
+                        :out => out_writer.fileno,
+                        :err => err_writer.fileno)
+    Process.waitpid(pid, 0)
+    unless ENV['VERBOSE']
+      out_writer.close
+      err_writer.close
+    end
+    unless $?.exitstatus == 0
+      puts "Script failed (#{command}):"
+      puts out_reader.gets if out_reader and not out_reader.eof?
+      puts err_reader.gets if err_reader and not err_reader.eof?
+      exit(1)
     end
   end
 end
