@@ -49,6 +49,10 @@ end
 Then("the payload field {string} is false") do |field_path|
   assert_equal(false, read_key_path(stored_requests.first[:body], field_path))
 end
+Then(/^the payload field "(.+)" is null$/) do |field_path|
+  value = read_key_path(stored_requests.first[:body], field_path)
+  assert_nil(value, "The field '#{field_path}' should be null but is #{value}")
+end
 Then(/^the payload field "(.+)" is not null$/) do |field_path|
   assert_not_nil(read_key_path(stored_requests.first[:body], field_path),
                 "The field '#{field_path}' should not be null")
