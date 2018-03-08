@@ -11,6 +11,10 @@ When("I clear the {string} Android app data") do |app|
   step('I run the script "clear-android-app-data.sh" synchronously')
 end
 
+When("I force stop the {string} Android app") do |app|
+  step('I run the script "force-stop-android-app.sh" synchronously')
+end
+
 When("I install the {string} Android app from {string}") do |bundle, filepath|
   steps %Q{
     When I set environment variable "APP_BUNDLE" to "#{bundle}"
