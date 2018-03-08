@@ -31,24 +31,20 @@ def run_required_commands command_arrays
     if ENV['VERBOSE']
       puts "Running '#{command}'"
       out_reader, out_writer = nil, STDOUT
-      err_reader, err_writer = nil, STDOUT
     else
       out_reader, out_writer = IO.pipe
-      err_reader, err_writer = IO.pipe
     end
 
     pid = Process.spawn(@script_env || {}, command,
                         :out => out_writer.fileno,
-                        :err => err_writer.fileno)
+                        :err => out_writer.fileno)
     Process.waitpid(pid, 0)
     unless ENV['VERBOSE']
       out_writer.close
-      err_writer.close
     end
     unless $?.exitstatus == 0
       puts "Script failed (#{command}):"
       puts out_reader.gets if out_reader and not out_reader.eof?
-      puts err_reader.gets if err_reader and not err_reader.eof?
       exit(1)
     end
   end
