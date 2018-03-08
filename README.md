@@ -219,6 +219,13 @@ bundle exec bugsnag-maze-runner features/something.feature
 Add the `--verbose` option to print script output and a trace of what Ruby file
 is being run.
 
+## Troubleshooting
+
+### Known issues
+
+* Testing on iOS sometimes fails while Android Studio or gradle or some Android
+  emulators are running.
+
 ## Contributing
 
 If steps would be useful for different projects running the maze, add the to
