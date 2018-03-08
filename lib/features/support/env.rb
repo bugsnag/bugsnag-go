@@ -1,9 +1,11 @@
 require 'rack'
 require 'open3'
 require 'webrick'
+require 'json'
 
 MOCK_API_PORT = 9291
 SCRIPT_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "scripts"))
+FAILED_SCENARIO_OUTPUT_PATH = File.join(Dir.pwd, 'maze_output')
 
 Before do
   stored_requests.clear
@@ -17,7 +19,28 @@ end
 
 After do |scenario|
   kill_script
-  # TODO: if scenario fails, print script output
+
+  write_failed_requests_to_disk(scenario) if scenario.failed?
+end
+
+def write_failed_requests_to_disk(scenario)
+  Dir.mkdir(FAILED_SCENARIO_OUTPUT_PATH) unless Dir.exists? FAILED_SCENARIO_OUTPUT_PATH
+  Dir.chdir(FAILED_SCENARIO_OUTPUT_PATH) do
+    date = DateTime.now.strftime('%d%m%y%H%M%S%L')
+    stored_requests.each_with_index do |request, i|
+      filename = "#{scenario.name}-request#{i}-#{date}.log"
+      File.open(filename, 'w+') do |file|
+        file.puts "URI: #{request[:request].request_uri}"
+        file.puts "HEADERS:"
+        request[:request].header.each do |key, values|
+          file.puts "  #{key}: #{values.map {|v| "'#{v}'"}.join(' ')}"
+        end
+        file.puts
+        file.puts "BODY:"
+        file.puts JSON.pretty_generate(request[:body])
+      end
+    end
+  end
 end
 
 # Run each command synchronously, printing output only in the event of failure
