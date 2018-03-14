@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 	"testing"
-
-	"github.com/juju/loggo"
 )
 
 func TestNotifyReleaseStages(t *testing.T) {
@@ -174,19 +172,17 @@ func TestStripCustomSourceRoot(t *testing.T) {
 	}
 }
 
-type LoggoWrapper struct {
-	loggo.Logger
+type CustomTestLogger struct {
 }
 
-func (lw *LoggoWrapper) Printf(format string, v ...interface{}) {
-	lw.Logger.Warningf(format, v...)
+func (logger *CustomTestLogger) Printf(format string, v ...interface{}) {
 }
 
 func TestConfiguringCustomLogger(t *testing.T) {
 
 	l1 := log.New(os.Stdout, "", log.Lshortfile)
 
-	l2 := &LoggoWrapper{loggo.GetLogger("test")}
+	l2 := &CustomTestLogger{}
 
 	var testCases = []struct {
 		config Configuration
@@ -195,13 +191,9 @@ func TestConfiguringCustomLogger(t *testing.T) {
 	}{
 		{
 			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l1},
-			notify: true,
-			msg:    "Failed to assign log.Logger",
 		},
 		{
 			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l2},
-			notify: true,
-			msg:    "Failed to assign LoggoWrapper",
 		},
 	}
 
