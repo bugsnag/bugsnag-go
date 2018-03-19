@@ -5,6 +5,11 @@ require 'json'
 
 include Test::Unit::Assertions
 
+def find_request(request_index)
+  request_index ||= 0
+  return stored_requests[request_index]
+end
+
 Then(/^I should receive (\d+) requests?$/) do |request_count|
   assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
 end
@@ -14,77 +19,80 @@ end
 Then(/^I should receive no requests$/) do
   step "I should receive 0 request"
 end
-Then(/^the "(.+)" header is not null$/) do |header_name|
-  assert_not_nil(stored_requests.first[:request][header_name],
+Then(/^the "(.+)" header is not null(?: for request (\d+))?$/) do |header_name, request_index|
+  assert_not_nil(find_request(request_index)[:request][header_name],
                 "The '#{header_name}' header should not be null")
 end
-Then(/^the "(.+)" header equals "(.+)"$/) do |header_name, header_value|
-  assert_equal(header_value, stored_requests.first[:request][header_name])
+Then(/^the "(.+)" header equals "(.+)"(?: for request (\d+))?$/) do |header_name, header_value, request_index|
+  assert_equal(header_value, find_request(request_index)[:request][header_name])
 end
-Then("the {string} header is a timestamp") do |header_name|
-  header = stored_requests.first[:request][header_name]
+
+Then(/^the "(.+)" header is a timestamp(?: for request (\d+))?$/) do |header_name, request_index|
+  header = find_request(request_index)[:request][header_name]
   assert_match(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:[\d\.]+Z?$/, header)
 end
-Then("the payload body does not match the JSON fixture in {string}") do |fixture_path|
-  payload_value = stored_requests.first[:body]
+
+Then(/^the payload body does not match the JSON fixture in "(.+)"(?: for request (\d+))?$/) do |fixture_path, request_index|
+  payload_value = find_request(request_index)[:body]
   expected_value = JSON.parse(open(fixture_path, &:read))
   result = value_compare(expected_value, payload_value)
   assert_false(result.equal?, "Payload:\n#{payload_value}\nExpected:#{expected_value}")
 end
-Then("the payload body matches the JSON fixture in {string}") do |fixture_path|
-  payload_value = stored_requests.first[:body]
+Then(/^the payload body matches the JSON fixture in "(.+)"(?: for request (\d+))?$/) do |fixture_path, request_index|
+  payload_value = find_request(request_index)[:body]
   expected_value = JSON.parse(open(fixture_path, &:read))
   result = value_compare(expected_value, payload_value)
   assert_true(result.equal?, "The payload field '#{result.keypath}' does not match the fixture:\n #{result.reasons.join('\n')}")
 end
-Then("the payload field {string} matches the JSON fixture in {string}") do |field_path, fixture_path|
-  payload_value = read_key_path(stored_requests.first[:body], field_path)
+Then(/^the payload field "(.+)" matches the JSON fixture in "(.+)"(?: for request (\d+))?$/) do |field_path, fixture_path, request_index|
+  payload_value = read_key_path(find_request(request_index)[:body], field_path)
   expected_value = JSON.parse(open(fixture_path, &:read))
   result = value_compare(expected_value, payload_value)
   assert_true(result.equal?, "The payload field '#{result.keypath}' does not match the fixture:\n #{result.reasons.join('\n')}")
 end
-Then("the payload field {string} is true") do |field_path|
-  assert_equal(true, read_key_path(stored_requests.first[:body], field_path))
+Then(/^the payload field "(.+)" is true(?: for request (\d+))?$/) do |field_path, request_index|
+  assert_equal(true, read_key_path(find_request(request_index)[:body], field_path))
 end
-Then("the payload field {string} is false") do |field_path|
-  assert_equal(false, read_key_path(stored_requests.first[:body], field_path))
+Then(/^the payload field "(.+)" is false(?: for request (\d+))?$/) do |field_path, request_index|
+  assert_equal(false, read_key_path(find_request(request_index)[:body], field_path))
 end
-Then(/^the payload field "(.+)" is null$/) do |field_path|
-  value = read_key_path(stored_requests.first[:body], field_path)
+
+Then(/^the payload field "(.+)" is null(?: for request (\d+))?$/) do |field_path, request_index|
+  value = read_key_path(find_request(request_index)[:body], field_path)
   assert_nil(value, "The field '#{field_path}' should be null but is #{value}")
 end
-Then(/^the payload field "(.+)" is not null$/) do |field_path|
-  assert_not_nil(read_key_path(stored_requests.first[:body], field_path),
+Then(/^the payload field "(.+)" is not null(?: for request (\d+))?$/) do |field_path, request_index|
+  assert_not_nil(read_key_path(find_request(request_index)[:body], field_path),
                 "The field '#{field_path}' should not be null")
 end
-Then(/^the payload field "(.+)" equals (\d+)$/) do |field_path, int_value|
-  assert_equal(int_value, read_key_path(stored_requests.first[:body], field_path))
+Then(/^the payload field "(.+)" equals (\d+)(?: for request (\d+))?$/) do |field_path, int_value, request_index|
+  assert_equal(int_value, read_key_path(find_request(request_index)[:body], field_path))
 end
-Then(/^the payload field "(.+)" equals "(.+)"$/) do |field_path, string_value|
-  assert_equal(string_value, read_key_path(stored_requests.first[:body], field_path))
+Then(/^the payload field "(.+)" equals "(.+)"(?: for request (\d+))?$/) do |field_path, string_value, request_index|
+  assert_equal(string_value, read_key_path(find_request(request_index)[:body], field_path))
 end
-Then(/^the payload field "(.+)" starts with "(.+)"$/) do |field_path, string_value|
-  value = read_key_path(stored_requests.first[:body], field_path)
+Then(/^the payload field "(.+)" starts with "(.+)"(?: for request (\d+))?$/) do |field_path, string_value, request_index|
+  value = read_key_path(find_request(request_index)[:body], field_path)
   assert_kind_of String, value
   assert(value.start_with?(string_value), "Field '#{field_path}' value ('#{value}') does not start with '#{string_value}'")
 end
-Then(/^the payload field "(.+)" ends with "(.+)"$/) do |field_path, string_value|
-  value = read_key_path(stored_requests.first[:body], field_path)
+Then(/^the payload field "(.+)" ends with "(.+)"(?: for request (\d+))?$/) do |field_path, string_value, request_index|
+  value = read_key_path(find_request(request_index)[:body], field_path)
   assert_kind_of String, value
   assert(value.end_with? string_value, "Field '#{field_path}' does not end with '#{string_value}'")
 end
-Then(/^the payload field "(.+)" is an array with (\d+) elements?$/) do |field, count|
-  value = read_key_path(stored_requests.first[:body], field)
+Then(/^the payload field "(.+)" is an array with (\d+) elements?(?: for request (\d+))?$/) do |field, count, request_index|
+  value = read_key_path(find_request(request_index)[:body], field)
   assert_kind_of Array, value
   assert_equal(count, value.length)
 end
-Then(/^the payload field "(.+)" is a non-empty array$/) do |field|
-  value = read_key_path(stored_requests.first[:body], field)
+Then(/^the payload field "(.+)" is a non-empty array(?: for request (\d+))?$/) do |field, request_index|
+  value = read_key_path(find_request(request_index)[:body], field)
   assert_kind_of Array, value
   assert(value.length > 0, "the field '#{field}' must be a non-empty array")
 end
-Then(/^each element in payload field "(.+)" has "(.+)"$/) do |key_path, element_key_path|
-  value = read_key_path(stored_requests.first[:body], key_path)
+Then(/^each element in payload field "(.+)" has "(.+)"(?: for request (\d+))?$/) do |key_path, element_key_path, request_index|
+  value = read_key_path(find_request(request_index)[:body], key_path)
   assert_kind_of Array, value
   value.each do |element|
     assert_not_nil(read_key_path(element, element_key_path),
