@@ -32,6 +32,12 @@ Then(/^the "(.+)" header is a timestamp(?: for request (\d+))?$/) do |header_nam
   assert_match(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:[\d\.]+Z?$/, header)
 end
 
+Then(/^the request (\d+) is valid for the Build API$/) do |request_index|
+  body = find_request(request_index)[:body]
+  assert_not_nil(read_key_path(body, "apiKey"))
+  assert_not_nil(read_key_path(body, "appVersion"))
+end
+
 Then(/^the request (\d+) is valid for the Android Mapping API$/) do |request_index|
   parts = find_request(request_index)[:body]
   assert_equal(6, parts.size)
@@ -42,6 +48,7 @@ Then(/^the request (\d+) is valid for the Android Mapping API$/) do |request_ind
   assert_not_nil(parts["buildUUID"])
   assert_not_nil(parts["versionName"])
 end
+
 
 Then(/^the request (\d+) has (\d+) parts$/) do |request_index, part_count|
   parts = find_request(request_index)[:body]
