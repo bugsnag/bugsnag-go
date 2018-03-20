@@ -135,7 +135,12 @@ end
 
 class Servlet < WEBrick::HTTPServlet::AbstractServlet
   def do_POST request, response
-    stored_requests << {body: JSON.load(request.body()), request:request}
+    if request['Content-Type'] == 'application/json'
+      stored_requests << {body: JSON.load(request.body()), request:request}
+    else
+      puts "Content-Type does not equal application/json, not converting to JSON"
+      stored_requests << {body: request.query, request:request}
+    end
     response.header['Access-Control-Allow-Origin'] = '*'
     response.status = 200
   end

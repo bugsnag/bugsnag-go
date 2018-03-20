@@ -32,6 +32,32 @@ Then(/^the "(.+)" header is a timestamp(?: for request (\d+))?$/) do |header_nam
   assert_match(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:[\d\.]+Z?$/, header)
 end
 
+Then(/^the request (\d+) is valid for the Android Mapping API$/) do |request_index|
+  parts = find_request(request_index)[:body]
+  assert_equal(6, parts.size)
+  assert_not_nil(parts["proguard"])
+  assert_not_nil(parts["apiKey"])
+  assert_not_nil(parts["appId"])
+  assert_not_nil(parts["versionCode"])
+  assert_not_nil(parts["buildUUID"])
+  assert_not_nil(parts["versionName"])
+end
+
+Then(/^the request (\d+) has (\d+) parts$/) do |request_index, part_count|
+  parts = find_request(request_index)[:body]
+  assert_equal(part_count, parts.size)
+end
+
+Then(/^the part "(.+)" for request (\d+) is not null$/) do |part_key, request_index|
+  parts = find_request(request_index)[:body]
+  assert_not_nil(parts[part_key], "The field '#{part_key}' should not be null")
+end
+
+Then(/^the part "(.+)" for request (\d+) equals "(.+)"$/) do |part_key, request_index, expected_value|
+  parts = find_request(request_index)[:body]
+  assert_not_nil(parts[part_key], expected_value)
+end
+
 Then(/^the payload body does not match the JSON fixture in "(.+)"(?: for request (\d+))?$/) do |fixture_path, request_index|
   payload_value = find_request(request_index)[:body]
   expected_value = JSON.parse(open(fixture_path, &:read))
