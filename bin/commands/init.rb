@@ -39,6 +39,10 @@ end
 After do
 # Runs after every Scenario
 end
+
+at_exit do
+# Runs when the test run is completed
+end
 CONTENTS
   end
 end
