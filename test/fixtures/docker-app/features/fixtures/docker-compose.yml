@@ -1,0 +1,24 @@
+version: '3.4'
+services:
+  test_1:
+    build:
+      context: test_1
+    restart: "no"
+
+  test_2:
+    build:
+      context: test_2
+    depends_on:
+      - dep
+    restart: "no"
+    links:
+      - dep
+
+  dep:
+    build:
+      context: dep
+    restart: "no"
+    environment:
+      - PORT=8080
+    expose:
+      - "8080"

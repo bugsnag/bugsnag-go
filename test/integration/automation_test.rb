@@ -3,6 +3,10 @@ require 'fileutils'
 
 class SampleTest < Test::Unit::TestCase
 
+  def test_running_a_docker_harness
+    run_scenario("test/fixtures/docker-app")
+  end
+
   def test_running_an_ios_simulator_harness
     run_scenario("test/fixtures/ios-app")
   end

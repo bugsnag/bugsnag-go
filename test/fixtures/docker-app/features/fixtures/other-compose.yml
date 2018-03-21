@@ -1,0 +1,6 @@
+version: '3.4'
+services:
+  test_1:
+    build:
+      context: test_1
+    restart: "no"

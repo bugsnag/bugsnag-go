@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
     'lib/features/steps/request_assertion_steps.rb',
     'lib/features/support/compare.rb',
     'lib/features/support/env.rb',
+    'lib/features/support/docker.rb',
     'lib/version.rb',
   ]
   spec.executables = spec.files.grep(%r{^bin/[\w\-]+$}) { |f| File.basename(f) }
