@@ -62,7 +62,7 @@ end
 
 Then(/^the part "(.+)" for request (\d+) equals "(.+)"$/) do |part_key, request_index, expected_value|
   parts = find_request(request_index)[:body]
-  assert_not_nil(parts[part_key], expected_value)
+  assert_equal(parts[part_key], expected_value)
 end
 
 Then(/^the payload body does not match the JSON fixture in "(.+)"(?: for request (\d+))?$/) do |fixture_path, request_index|
