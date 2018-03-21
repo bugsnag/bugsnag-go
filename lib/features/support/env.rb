@@ -3,7 +3,7 @@ require 'open3'
 require 'webrick'
 require 'json'
 
-MOCK_API_PORT = 9291
+MOCK_API_PORT = 19291
 SCRIPT_PATH = File.expand_path(File.join(File.dirname(__FILE__), "..", "scripts"))
 FAILED_SCENARIO_OUTPUT_PATH = File.join(Dir.pwd, 'maze_output')
 
