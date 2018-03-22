@@ -225,6 +225,9 @@ is being run.
 
 * Testing on iOS sometimes fails while Android Studio or gradle or some Android
   emulators are running.
+* Payload field matching for raw string values can be ambiguous when there is a
+  possible regex match (e.g. when using "." as a part of an expected value
+  without escaping it).
 
 ## Contributing
 
