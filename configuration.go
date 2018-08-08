@@ -44,6 +44,16 @@ type Configuration struct {
 	// in the Bugsnag dasboard. If you set this then Bugsnag will only re-open
 	// resolved errors if they happen in different app versions.
 	AppVersion string
+
+	// AutoCaptureSessions can be set to false to disable automatic session
+	// tracking. If you want control over what is deemed a session, you can
+	// switch off automatic session tracking with this configuration, and call
+	// bugsnag.StartSession() when appropriate for your application. See the
+	// official docs for instructions and examples of associating handled
+	// errors with sessions and ensuring error rate accuracy on the Bugsnag
+	// dashboard.
+	AutoCaptureSessions bool
+
 	// The hostname of the current server. This defaults to the return value of
 	// os.Hostname() and is graphed in the Bugsnag dashboard.
 	Hostname string
