@@ -109,9 +109,6 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.APIKey != "" {
 		config.APIKey = other.APIKey
 	}
-	if other.Endpoint != "" {
-		config.Endpoint = other.Endpoint
-	}
 	if other.Hostname != "" {
 		config.Hostname = other.Hostname
 	}
@@ -135,6 +132,10 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.Logger != nil {
 		config.Logger = other.Logger
+	}
+	if other.Endpoint != "" {
+		config.Logger.Printf("WARNING: the Bugsnag configuration parameter 'Endpoint' is deprecated in favor of 'Endpoints'")
+		config.Endpoint = other.Endpoint
 	}
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages

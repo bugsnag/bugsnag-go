@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -173,9 +174,11 @@ func TestStripCustomSourceRoot(t *testing.T) {
 }
 
 type CustomTestLogger struct {
+	loggedMessages []string
 }
 
 func (logger *CustomTestLogger) Printf(format string, v ...interface{}) {
+	logger.loggedMessages = append(logger.loggedMessages, format)
 }
 
 func TestConfiguringCustomLogger(t *testing.T) {
@@ -203,5 +206,24 @@ func TestConfiguringCustomLogger(t *testing.T) {
 		// call printf just to illustrate it is present as the compiler does most of the hard work
 		testCase.config.Logger.Printf("hello %s", "bugsnag")
 
+	}
+}
+
+func TestEndpointDeprecationWarning(t *testing.T) {
+	logger := &CustomTestLogger{[]string{}}
+	Config.update(&Configuration{
+		Endpoint: "https://doesnt.matter.com/",
+		Logger:   logger,
+	})
+
+	if len(logger.loggedMessages) != 1 {
+		t.Errorf("Expected a deprecation warning when configuring endpoints.")
+	}
+	got := logger.loggedMessages[0]
+	keywords := []string{"WARNING", "Bugsnag", "Endpoint", "deprecated"}
+	for _, w := range keywords {
+		if !strings.Contains(got, w) {
+			t.Errorf("Expected deprecation warning containing '%s' when configuring Endpoint but got %s.", w, got)
+		}
 	}
 }
