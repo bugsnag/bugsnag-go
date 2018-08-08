@@ -7,15 +7,32 @@ import (
 	"strings"
 )
 
+// Endpoints hold the HTTP endpoints of the notifier.
+type Endpoints struct {
+	Sessions string
+	Notify   string
+}
+
 // Configuration sets up and customizes communication with the Bugsnag API.
 type Configuration struct {
 	// Your Bugsnag API key, e.g. "c9d60ae4c7e70c4b6c4ebd3e8056d2b8". You can
 	// find this by clicking Settings on https://bugsnag.com/.
 	APIKey string
+
+	// Deprecated: Use Endpoints (with an 's') instead.
 	// The Endpoint to notify about crashes. This defaults to
 	// "https://notify.bugsnag.com/", if you're using Bugsnag Enterprise then
 	// set it to your internal Bugsnag endpoint.
 	Endpoint string
+	// Endpoints define the HTTP endpoints that the notifier should notify
+	// about crashes and sessions. These default to notify.bugsnag.com for
+	// error reports and sessions.bugsnag.com for sessions.
+	// If you are using bugsnag on-premise you will have to set these to your
+	// Event Server and Session Server endpoints. If the notify endpoint is set
+	// but the sessions endpoint is not, session tracking will be disabled
+	// automatically to avoid leaking session information outside of your
+	// server configuration, and a warning will be logged.
+	Endpoints Endpoints
 
 	// The current release stage. This defaults to "production" and is used to
 	// filter errors in the Bugsnag dashboard.
