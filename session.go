@@ -1,6 +1,10 @@
 package bugsnag
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"os"
 	"runtime"
 	"time"
@@ -40,6 +44,27 @@ type sessionPayload struct {
 	App           appPayload           `json:"app"`
 	Device        devicePayload        `json:"device"`
 	SessionCounts sessionCountsPayload `json:"sessionCounts"`
+}
+
+func deliverSessions(sessions []session, config Configuration) error {
+	sp := makeSessionPayload(sessions, config)
+	buf, err := json.Marshal(sp)
+	if err != nil {
+		return fmt.Errorf("bugsnag/session.deliverSession unable to marshal json: %v", err)
+	}
+	client := http.Client{Transport: config.Transport}
+	req, err := http.NewRequest("POST", config.Endpoints.Sessions, bytes.NewBuffer(buf))
+	if err != nil {
+		return fmt.Errorf("bugsnag/session.deliverSession unable to create request: %v", err)
+	}
+	for k, v := range bugsnagPrefixedHeaders(config.APIKey) {
+		req.Header.Add(k, v)
+	}
+	_, err = client.Do(req)
+	if err != nil {
+		return fmt.Errorf("bugsnag/session.deliverSession unable to deliver session: %v", err)
+	}
+	return nil
 }
 
 func makeSessionPayload(sessions []session, config Configuration) sessionPayload {
