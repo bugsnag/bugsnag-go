@@ -61,7 +61,7 @@ func startPanickingApp(t *testing.T,
 
 	cmd := exec.Command("go", "run", filename)
 	cmd.Env = append(os.Environ(),
-		"BUGSNAG_ENDPOINT="+testEndpoint,
+		"BUGSNAG_NOTIFY_ENDPOINT="+testEndpoint,
 		"BUGSNAG_TEST_VARIANT="+variant)
 
 	if err := cmd.Start(); err != nil {
@@ -84,7 +84,7 @@ func startPanickingApp(t *testing.T,
 func startRevelApp(t *testing.T, variant string) *simplejson.Json {
 	cmd := exec.Command("revel", "run", "github.com/bugsnag/bugsnag-go/tests/fixtures/revel")
 	cmd.Env = append(os.Environ(),
-		"BUGSNAG_ENDPOINT="+testEndpoint,
+		"BUGSNAG_NOTIFY_ENDPOINT="+testEndpoint,
 		"BUGSNAG_TEST_VARIANT="+variant)
 
 	if err := cmd.Start(); err != nil {

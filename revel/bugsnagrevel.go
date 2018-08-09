@@ -64,8 +64,11 @@ func init() {
 		}
 
 		bugsnag.Configure(bugsnag.Configuration{
-			APIKey:          revel.Config.StringDefault("bugsnag.apikey", ""),
-			Endpoint:        revel.Config.StringDefault("bugsnag.endpoint", ""),
+			APIKey: revel.Config.StringDefault("bugsnag.apikey", ""),
+			Endpoints: bugsnag.Endpoints{
+				Notify:   revel.Config.StringDefault("bugsnag.endpoints.notify", ""),
+				Sessions: revel.Config.StringDefault("bugsnag.endpoints.sessions", ""),
+			},
 			AppType:         revel.Config.StringDefault("bugsnag.apptype", ""),
 			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
 			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),

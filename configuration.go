@@ -137,6 +137,12 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 		config.Logger.Printf("WARNING: the Bugsnag configuration parameter 'Endpoint' is deprecated in favor of 'Endpoints'")
 		config.Endpoint = other.Endpoint
 	}
+	if other.Endpoints.Notify != "" {
+		config.Endpoints.Notify = other.Endpoints.Notify
+	}
+	if other.Endpoints.Sessions != "" {
+		config.Endpoints.Sessions = other.Endpoints.Sessions
+	}
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
 	}

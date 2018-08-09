@@ -69,7 +69,7 @@ func startPanickingProcess(t *testing.T, variant string) {
 	// Use the same trick as panicwrap() to re-run ourselves.
 	// In the init() block below, we will then panic.
 	cmd := exec.Command(exePath, os.Args[1:]...)
-	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_ENDPOINT="+testEndpoint, "please_panic="+variant)
+	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_NOTIFY_ENDPOINT="+testEndpoint, "please_panic="+variant)
 
 	if err = cmd.Start(); err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func init() {
 	if os.Getenv("please_panic") == "handled" {
 		Configure(Configuration{
 			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
-			Endpoint:        os.Getenv("BUGSNAG_ENDPOINT"),
+			Endpoints:       Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
 			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		go func() {
 			defer AutoNotify()
@@ -96,7 +96,7 @@ func init() {
 	} else if os.Getenv("please_panic") == "unhandled" {
 		Configure(Configuration{
 			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
-			Endpoint:        os.Getenv("BUGSNAG_ENDPOINT"),
+			Endpoints:       Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
 			Synchronous:     true,
 			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		panick()

@@ -127,14 +127,18 @@ func init() {
 		sourceRoot = filepath.Join(runtime.GOROOT(), "src") + "/"
 	}
 	Config.update(&Configuration{
-		APIKey:        "",
-		Endpoint:      "https://notify.bugsnag.com/",
-		Hostname:      "",
-		AppType:       "",
-		AppVersion:    "",
-		ReleaseStage:  "",
-		ParamsFilters: []string{"password", "secret"},
-		SourceRoot:    sourceRoot,
+		APIKey: "",
+		Endpoints: Endpoints{
+			Notify:   "https://notify.bugsnag.com",
+			Sessions: "https://sessions.bugsnag.com",
+		},
+		Hostname:            "",
+		AppType:             "",
+		AppVersion:          "",
+		AutoCaptureSessions: true,
+		ReleaseStage:        "",
+		ParamsFilters:       []string{"password", "secret"},
+		SourceRoot:          sourceRoot,
 		// * for app-engine
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,

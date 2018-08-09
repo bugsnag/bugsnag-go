@@ -1,17 +1,18 @@
 package main
 
 import (
+	"net/http"
+	"os"
+
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/bugsnag/bugsnag-go/negroni"
 	"github.com/urfave/negroni"
-	"net/http"
-	"os"
 )
 
 func main() {
 	errorReporterConfig := bugsnag.Configuration{
-		APIKey:   "166f5ad3590596f9aa8d601ea89af845",
-		Endpoint: os.Getenv("BUGSNAG_ENDPOINT"),
+		APIKey:    "166f5ad3590596f9aa8d601ea89af845",
+		Endpoints: bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"), Sessions: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
 	}
 	if os.Getenv("BUGSNAG_TEST_VARIANT") == "beforenotify" {
 		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {

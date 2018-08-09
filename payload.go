@@ -30,7 +30,7 @@ func (p *payload) deliver() error {
 		Transport: p.Transport,
 	}
 
-	resp, err := client.Post(p.Endpoint, "application/json", bytes.NewBuffer(buf))
+	resp, err := client.Post(p.Endpoints.Notify, "application/json", bytes.NewBuffer(buf))
 
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
