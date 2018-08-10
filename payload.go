@@ -29,16 +29,21 @@ func (p *payload) deliver() error {
 	client := http.Client{
 		Transport: p.Transport,
 	}
-
-	resp, err := client.Post(p.Endpoints.Notify, "application/json", bytes.NewBuffer(buf))
-
+	req, err := http.NewRequest("POST", p.Endpoints.Notify, bytes.NewBuffer(buf))
+	if err != nil {
+		return fmt.Errorf("bugsnag/payload.deliver unable to create request: %v", err)
+	}
+	for k, v := range bugsnagPrefixedHeaders(p.APIKey) {
+		req.Header.Add(k, v)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("bugsnag/payload.deliver: Got HTTP %s\n", resp.Status)
+		return fmt.Errorf("bugsnag/payload.deliver: Got HTTP %s", resp.Status)
 	}
 
 	return nil
