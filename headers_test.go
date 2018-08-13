@@ -6,16 +6,17 @@ import (
 )
 
 const APIKey = "abcd1234abcd1234"
+const testPayloadVersion = "3"
 
 func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
-	headers := bugsnagPrefixedHeaders(APIKey)
+	headers := bugsnagPrefixedHeaders(APIKey, testPayloadVersion)
 	testCases := []struct {
 		header   string
 		expected string
 	}{
 		{header: "Content-Type", expected: "application/json"},
 		{header: "Bugsnag-Api-Key", expected: APIKey},
-		{header: "Bugsnag-Payload-Version", expected: "1"},
+		{header: "Bugsnag-Payload-Version", expected: testPayloadVersion},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.header, func(st *testing.T) {
@@ -27,7 +28,7 @@ func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
 }
 
 func TestTimeDependentBugsnagPrefixedHeaders(t *testing.T) {
-	headers := bugsnagPrefixedHeaders(APIKey)
+	headers := bugsnagPrefixedHeaders(APIKey, testPayloadVersion)
 	sentAtString := headers["Bugsnag-Sent-At"]
 	sentAt, err := time.Parse(time.RFC3339, sentAtString)
 

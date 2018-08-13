@@ -12,6 +12,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const sessionPayloadVersion = "1"
+
 type session struct {
 	startedAt time.Time
 	id        uuid.UUID
@@ -57,7 +59,7 @@ func deliverSessions(sessions []session, config Configuration) error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/session.deliverSession unable to create request: %v", err)
 	}
-	for k, v := range bugsnagPrefixedHeaders(config.APIKey) {
+	for k, v := range bugsnagPrefixedHeaders(config.APIKey, sessionPayloadVersion) {
 		req.Header.Add(k, v)
 	}
 	_, err = client.Do(req)

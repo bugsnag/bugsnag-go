@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+const notifyPayloadVersion = "2"
+
 type payload struct {
 	*Event
 	*Configuration
@@ -33,7 +35,7 @@ func (p *payload) deliver() error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver unable to create request: %v", err)
 	}
-	for k, v := range bugsnagPrefixedHeaders(p.APIKey) {
+	for k, v := range bugsnagPrefixedHeaders(p.APIKey, notifyPayloadVersion) {
 		req.Header.Add(k, v)
 	}
 	resp, err := client.Do(req)
@@ -71,7 +73,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 
 		"events": []hash{
 			{
-				"payloadVersion": "2",
+				"payloadVersion": notifyPayloadVersion,
 				"exceptions": []hash{
 					{
 						"errorClass": p.ErrorClass,
