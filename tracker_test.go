@@ -12,10 +12,11 @@ type testPublisher struct {
 	sessionsReceived [][]session
 }
 
-func (p *testPublisher) publish(sessions []session) {
+func (p *testPublisher) publish(sessions []session) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	p.sessionsReceived = append(p.sessionsReceived, sessions)
+	return nil
 }
 
 func TestStartSessionModifiesContext(t *testing.T) {

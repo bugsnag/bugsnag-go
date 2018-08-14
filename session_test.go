@@ -31,7 +31,8 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 		Transport: http.DefaultTransport,
 		APIKey:    testAPIKey,
 	}
-	root := getLatestPayload(t, sessions, config)
+	p := defaultSessionPublisher{config: config}
+	root := getLatestPayload(t, sessions, &p)
 	assertCorrectHeaders(t)
 	hostname, _ := os.Hostname()
 	testCases := []struct {
@@ -65,7 +66,8 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	startSessionTestServer()
 	sessions, earliestTime := makeSessions()
-	root := getLatestPayload(t, sessions, makeHeavilyConfiguredConfig())
+	p := defaultSessionPublisher{config: makeHeavilyConfiguredConfig()}
+	root := getLatestPayload(t, sessions, &p)
 	testCases := []struct {
 		property string
 		expected string
@@ -167,8 +169,8 @@ func makeSessions() ([]session, string) {
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 
-func getLatestPayload(t *testing.T, sessions []session, config Configuration) *json.RawMessage {
-	err := deliverSessions(sessions, config)
+func getLatestPayload(t *testing.T, sessions []session, p sessionPublisher) *json.RawMessage {
+	err := p.publish(sessions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,6 +199,7 @@ func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
 		t.Errorf("Expected %d sessions to be registered but was %d", expected, got)
 	}
 }
+
 func assertCorrectHeaders(t *testing.T) {
 	header := <-receivedSessionsHeaders
 	testCases := []struct{ name, expected string }{

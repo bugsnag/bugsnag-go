@@ -18,18 +18,10 @@ type sessionTracker struct {
 	interval       time.Duration
 	sessionChannel chan (session)
 	sessions       []session
-	publisher      publisher
+	publisher      sessionPublisher
 }
 
 type ctxKey int
-
-type publisher interface {
-	publish(sessions []session)
-}
-
-type defaultPublisher struct{}
-
-func (p *defaultPublisher) publish(sessions []session) {}
 
 func (s *sessionTracker) startSession() *session {
 	session := session{
@@ -39,6 +31,7 @@ func (s *sessionTracker) startSession() *session {
 	s.sessionChannel <- session
 	return &session
 }
+
 func (s *sessionTracker) processSessions() {
 	tic := time.Tick(s.interval)
 	for {
@@ -49,8 +42,7 @@ func (s *sessionTracker) processSessions() {
 			oldSessions := s.sessions
 			s.sessions = nil
 			s.publisher.publish(oldSessions)
-			//TODO: case for shutdown signal
-		}
+		} //TODO: case for shutdown signal
 	}
 }
 
@@ -61,7 +53,7 @@ func StartSession(ctx context.Context) context.Context {
 }
 
 func makeDefaultSessionTracker() *sessionTracker {
-	p := defaultPublisher{}
+	p := defaultSessionPublisher{config: Config}
 	return &sessionTracker{
 		interval:       60 * time.Second,
 		sessionChannel: make(chan session, 1),
