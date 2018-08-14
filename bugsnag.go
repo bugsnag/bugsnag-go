@@ -1,13 +1,17 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/bugsnag-go/errors"
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
+
+	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/bugsnag/bugsnag-go/sessions"
 
 	// Fixes a bug with SHA-384 intermediate certs on some platforms.
 	// - https://github.com/bugsnag/bugsnag-go/issues/9
@@ -22,8 +26,10 @@ var middleware middlewareStack
 
 // The configuration for the default bugsnag notifier.
 var Config Configuration
+var sessionTrackingConfig sessions.SessionTrackingConfiguration
 
 var defaultNotifier = Notifier{&Config, nil}
+var sessionTracker sessions.SessionTracker
 
 // Configure Bugsnag. The only required setting is the APIKey, which can be
 // obtained by clicking on "Settings" in your Bugsnag dashboard. This function
@@ -31,7 +37,22 @@ var defaultNotifier = Notifier{&Config, nil}
 // called as early as possible in your initialization process.
 func Configure(config Configuration) {
 	Config.update(&config)
+	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
+		APIKey:       Config.APIKey,
+		Endpoint:     Config.Endpoints.Sessions,
+		Transport:    Config.Transport,
+		ReleaseStage: Config.ReleaseStage,
+		Hostname:     Config.Hostname,
+		AppType:      Config.AppType,
+		AppVersion:   Config.AppVersion,
+	})
 	once.Do(Config.PanicHandler)
+}
+
+// StartSession creates a clone of the context.Context instance with Bugsnag
+// session data attached.
+func StartSession(ctx context.Context) context.Context {
+	return sessionTracker.StartSession(ctx)
 }
 
 // Notify sends an error to Bugsnag along with the current stack trace. The
@@ -151,4 +172,16 @@ func init() {
 	if err == nil {
 		Config.Hostname = hostname
 	}
+
+	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
+		APIKey:          Config.APIKey,
+		Endpoint:        Config.Endpoints.Sessions,
+		Version:         VERSION,
+		PublishInterval: 60 * time.Second,
+		Transport:       Config.Transport,
+		ReleaseStage:    Config.ReleaseStage,
+		Hostname:        Config.Hostname,
+		AppType:         Config.AppType,
+		AppVersion:      Config.AppVersion,
+	})
 }

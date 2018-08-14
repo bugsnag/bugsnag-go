@@ -1,4 +1,4 @@
-package bugsnag
+package sessions
 
 import (
 	"encoding/json"
@@ -16,6 +16,7 @@ import (
 )
 
 const sessionAuthority string = "localhost:9182"
+const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
 var receivedSessionsPayloads = make(chan []byte, 10)
 var receivedSessionsHeaders = make(chan http.Header, 10)
@@ -24,14 +25,12 @@ var sessionTestOnce sync.Once
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	startSessionTestServer()
 	sessions, earliestTime := makeSessions()
-	config := Configuration{
-		Endpoints: Endpoints{
-			Sessions: "http://" + sessionAuthority,
-		},
+	config := SessionTrackingConfiguration{
+		Endpoint:  "http://" + sessionAuthority,
 		Transport: http.DefaultTransport,
 		APIKey:    testAPIKey,
 	}
-	p := defaultSessionPublisher{config: config}
+	p := defaultPublisher{config: config}
 	root := getLatestPayload(t, sessions, &p)
 	assertCorrectHeaders(t)
 	hostname, _ := os.Hostname()
@@ -41,7 +40,7 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	}{
 		{property: "notifier.name", expected: "Bugsnag Go"},
 		{property: "notifier.url", expected: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", expected: VERSION},
+		{property: "notifier.version", expected: ""},
 		{property: "app.type", expected: ""},
 		{property: "app.releaseStage", expected: "production"},
 		{property: "app.version", expected: ""},
@@ -66,7 +65,7 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	startSessionTestServer()
 	sessions, earliestTime := makeSessions()
-	p := defaultSessionPublisher{config: makeHeavilyConfiguredConfig()}
+	p := defaultPublisher{config: makeHeavilyConfiguredConfig()}
 	root := getLatestPayload(t, sessions, &p)
 	testCases := []struct {
 		property string
@@ -74,7 +73,7 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}{
 		{property: "notifier.name", expected: "Bugsnag Go"},
 		{property: "notifier.url", expected: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", expected: VERSION},
+		{property: "notifier.version", expected: "2.3.4-alpha"},
 		{property: "app.type", expected: "gin"},
 		{property: "app.releaseStage", expected: "staging"},
 		{property: "app.version", expected: "1.2.3-beta"},
@@ -146,14 +145,13 @@ func startSessionTestServer() {
 	})
 }
 
-func makeHeavilyConfiguredConfig() Configuration {
-	return Configuration{
-		AppType:    "gin",
-		APIKey:     testAPIKey,
-		AppVersion: "1.2.3-beta",
-		Endpoints: Endpoints{
-			Sessions: "http://" + sessionAuthority,
-		},
+func makeHeavilyConfiguredConfig() SessionTrackingConfiguration {
+	return SessionTrackingConfiguration{
+		AppType:      "gin",
+		APIKey:       testAPIKey,
+		AppVersion:   "1.2.3-beta",
+		Version:      "2.3.4-alpha",
+		Endpoint:     "http://" + sessionAuthority,
 		Transport:    http.DefaultTransport,
 		ReleaseStage: "staging",
 		Hostname:     "gce-1234-us-west-1",
