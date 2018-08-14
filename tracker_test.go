@@ -2,17 +2,20 @@ package bugsnag
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 )
 
-func TestTrackerStartsSession(t *testing.T) {
-	tracker := newSessionTracker(60)
-	session := tracker.startSession()
-	verifyValidSession(t, session)
-	if exp, got := 1, len(tracker.sessions); exp != got {
-		t.Errorf("Expected '%d' created sessions but was %d", exp, got)
-	}
+type testPublisher struct {
+	mutex            sync.Mutex
+	sessionsReceived [][]session
+}
+
+func (p *testPublisher) publish(sessions []session) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.sessionsReceived = append(p.sessionsReceived, sessions)
 }
 
 func TestStartSessionModifiesContext(t *testing.T) {
@@ -38,6 +41,52 @@ func TestStartSessionModifiesContext(t *testing.T) {
 	}
 
 	verifyValidSession(t, s)
+}
+
+func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
+	c := make(chan session, 1)
+	defer close(c)
+	p := testPublisher{
+		mutex:            sync.Mutex{},
+		sessionsReceived: [][]session{},
+	}
+	st := &sessionTracker{
+		interval:       time.Millisecond * 10, //Publish very fast
+		sessionChannel: c,
+		sessions:       []session{},
+		publisher:      &p,
+	}
+
+	//Would publish many times in this time period if there were sessions
+	time.Sleep(10 * st.interval)
+
+	if got := len(p.sessionsReceived); got != 0 {
+		t.Errorf("Publisher was invoked unexpectedly %d times with arguments: %v", got, p.sessionsReceived)
+	}
+
+	go st.processSessions()
+	for i := 0; i < 5; i++ {
+		st.startSession()
+		time.Sleep(st.interval)
+	}
+
+	p.mutex.Lock()
+	if got := len(p.sessionsReceived); got == 0 {
+		t.Errorf("Publisher was not invoked")
+	}
+	p.mutex.Unlock()
+	var sessions []session
+	for _, s := range p.sessionsReceived {
+		for _, session := range s {
+			verifyValidSession(t, &session)
+			sessions = append(sessions, session)
+		}
+	}
+
+	if exp, got := 5, len(sessions); exp != got {
+		t.Errorf("Expected %d sessions but got %d", exp, got)
+	}
+
 }
 
 func verifyValidSession(t *testing.T, s *session) {

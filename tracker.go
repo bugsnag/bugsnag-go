@@ -7,16 +7,52 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	//Unique key for accessing and setting Bugsnag session data on a context.Context object
+	contextSessionKey ctxKey = 1
+)
+
+var defaultSessionTracker = makeDefaultSessionTracker()
+
 type sessionTracker struct {
-	interval int
-	sessions []session
+	interval       time.Duration
+	sessionChannel chan (session)
+	sessions       []session
+	publisher      publisher
 }
 
-type ctxKey struct{}
+type ctxKey int
 
-var defaultSessionTracker = newSessionTracker(60)
+type publisher interface {
+	publish(sessions []session)
+}
 
-var contextSessionKey = ctxKey{}
+type defaultPublisher struct{}
+
+func (p *defaultPublisher) publish(sessions []session) {}
+
+func (s *sessionTracker) startSession() *session {
+	session := session{
+		startedAt: time.Now(),
+		id:        uuid.NewV4(),
+	}
+	s.sessionChannel <- session
+	return &session
+}
+func (s *sessionTracker) processSessions() {
+	tic := time.Tick(s.interval)
+	for {
+		select {
+		case session := <-s.sessionChannel:
+			s.sessions = append(s.sessions, session)
+		case <-tic:
+			oldSessions := s.sessions
+			s.sessions = nil
+			s.publisher.publish(oldSessions)
+			//TODO: case for shutdown signal
+		}
+	}
+}
 
 // StartSession creates a clone of the context.Context instance with Bugsnag
 // session data attached.
@@ -24,17 +60,12 @@ func StartSession(ctx context.Context) context.Context {
 	return context.WithValue(ctx, contextSessionKey, defaultSessionTracker.startSession())
 }
 
-func (s *sessionTracker) startSession() *session {
-	session := session{
-		startedAt: time.Now(),
-		id:        uuid.NewV4(),
-	}
-	s.sessions = append(s.sessions, session)
-	return &session
-}
-
-func newSessionTracker(interval int) *sessionTracker {
+func makeDefaultSessionTracker() *sessionTracker {
+	p := defaultPublisher{}
 	return &sessionTracker{
-		interval: interval,
+		interval:       60 * time.Second,
+		sessionChannel: make(chan session, 1),
+		sessions:       []session{},
+		publisher:      &p,
 	}
 }
