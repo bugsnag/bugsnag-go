@@ -12,15 +12,15 @@ type testPublisher struct {
 	sessionsReceived [][]session
 }
 
-var publisher = testPublisher{
+var pub = testPublisher{
 	mutex:            sync.Mutex{},
 	sessionsReceived: [][]session{},
 }
 
-func (publisher *testPublisher) publish(sessions []session) error {
-	publisher.mutex.Lock()
-	defer publisher.mutex.Unlock()
-	publisher.sessionsReceived = append(publisher.sessionsReceived, sessions)
+func (pub *testPublisher) publish(sessions []session) error {
+	pub.mutex.Lock()
+	defer pub.mutex.Unlock()
+	pub.sessionsReceived = append(pub.sessionsReceived, sessions)
 	return nil
 }
 
@@ -57,8 +57,8 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 	go st.processSessions()
 	time.Sleep(10 * st.config.PublishInterval) // Would publish many times in this time period if there were sessions
 
-	if got := publisher.sessionsReceived; len(got) != 0 {
-		t.Errorf("Publisher was invoked unexpectedly %d times with arguments: %v", len(got), got)
+	if got := pub.sessionsReceived; len(got) != 0 {
+		t.Errorf("pub was invoked unexpectedly %d times with arguments: %v", len(got), got)
 	}
 
 	for i := 0; i < 50000; i++ {
@@ -67,9 +67,9 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 	time.Sleep(st.config.PublishInterval * 2)
 
 	var sessions []session
-	publisher.mutex.Lock()
-	defer publisher.mutex.Unlock()
-	for _, s := range publisher.sessionsReceived {
+	pub.mutex.Lock()
+	defer pub.mutex.Unlock()
+	for _, s := range pub.sessionsReceived {
 		for _, session := range s {
 			verifyValidSession(t, session)
 			sessions = append(sessions, session)
@@ -84,12 +84,12 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 func makeSessionTracker() (*sessionTracker, chan session) {
 	c := make(chan session, 1)
 	return &sessionTracker{
-		config: SessionTrackingConfiguration{
+		config: &SessionTrackingConfiguration{
 			PublishInterval: time.Millisecond * 10, //Publish very fast
 		},
 		sessionChannel: c,
 		sessions:       []session{},
-		publisher:      &publisher,
+		publisher:      &pub,
 	}, c
 }
 

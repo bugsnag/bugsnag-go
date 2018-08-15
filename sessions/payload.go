@@ -35,7 +35,7 @@ type sessionPayload struct {
 	SessionCounts sessionCountsPayload `json:"sessionCounts"`
 }
 
-func makeSessionPayload(sessions []session, config SessionTrackingConfiguration) sessionPayload {
+func makeSessionPayload(sessions []session, config *SessionTrackingConfiguration) sessionPayload {
 	releaseStage := config.ReleaseStage
 	if releaseStage == "" {
 		releaseStage = "production"

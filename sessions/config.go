@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -18,11 +19,14 @@ type SessionTrackingConfiguration struct {
 	AppType      string
 	AppVersion   string
 	Transport    http.RoundTripper
+	mutex        sync.Mutex
 }
 
 // Update modifies the values inside the struct to match the configured keys of the given config.
 // Existing blank keys will not be cleared.
 func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfiguration) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if config.PublishInterval != 0 {
 		c.PublishInterval = config.PublishInterval
 	}

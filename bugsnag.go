@@ -28,6 +28,9 @@ var middleware middlewareStack
 var Config Configuration
 var sessionTrackingConfig sessions.SessionTrackingConfiguration
 
+// DefaultSessionPublishInterval defines how often sessions should be sent to
+// Bugsnag. Exposed for developer sanity in testing. Modify at own risk.
+var DefaultSessionPublishInterval = 60 * time.Second
 var defaultNotifier = Notifier{&Config, nil}
 var sessionTracker sessions.SessionTracker
 
@@ -37,16 +40,8 @@ var sessionTracker sessions.SessionTracker
 // called as early as possible in your initialization process.
 func Configure(config Configuration) {
 	Config.update(&config)
-	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
-		APIKey:       Config.APIKey,
-		Endpoint:     Config.Endpoints.Sessions,
-		Transport:    Config.Transport,
-		ReleaseStage: Config.ReleaseStage,
-		Hostname:     Config.Hostname,
-		AppType:      Config.AppType,
-		AppVersion:   Config.AppVersion,
-	})
 	once.Do(Config.PanicHandler)
+	startSessionTracking()
 }
 
 // StartSession creates a clone of the context.Context instance with Bugsnag
@@ -172,16 +167,21 @@ func init() {
 	if err == nil {
 		Config.Hostname = hostname
 	}
+}
 
+func startSessionTracking() {
 	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
 		APIKey:          Config.APIKey,
 		Endpoint:        Config.Endpoints.Sessions,
 		Version:         VERSION,
-		PublishInterval: 60 * time.Second,
+		PublishInterval: DefaultSessionPublishInterval,
 		Transport:       Config.Transport,
 		ReleaseStage:    Config.ReleaseStage,
 		Hostname:        Config.Hostname,
 		AppType:         Config.AppType,
 		AppVersion:      Config.AppVersion,
 	})
+	if sessionTracker == nil {
+		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
+	}
 }

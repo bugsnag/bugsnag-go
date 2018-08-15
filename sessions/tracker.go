@@ -24,22 +24,24 @@ type SessionTracker interface {
 type sessionTracker struct {
 	sessionChannel chan (session)
 	sessions       []session
-	config         SessionTrackingConfiguration
+	config         *SessionTrackingConfiguration
 	publisher      sessionPublisher
 }
 
 // NewSessionTracker creates a new SessionTracker based on the provided config,
-func NewSessionTracker(config SessionTrackingConfiguration) SessionTracker {
-	publisher := defaultPublisher{
+func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
+	publisher := publisher{
 		config: config,
 		client: &http.Client{Transport: config.Transport},
 	}
-	return &sessionTracker{
+	st := sessionTracker{
 		sessionChannel: make(chan session, 1),
 		sessions:       []session{},
 		config:         config,
 		publisher:      &publisher,
 	}
+	go st.processSessions()
+	return &st
 }
 
 func (s *sessionTracker) StartSession(ctx context.Context) context.Context {
@@ -48,8 +50,14 @@ func (s *sessionTracker) StartSession(ctx context.Context) context.Context {
 	return context.WithValue(ctx, contextSessionKey, session)
 }
 
+func (s *sessionTracker) interval() time.Duration {
+	s.config.mutex.Lock()
+	defer s.config.mutex.Unlock()
+	return s.config.PublishInterval
+}
+
 func (s *sessionTracker) processSessions() {
-	tic := time.Tick(s.config.PublishInterval)
+	tic := time.Tick(s.interval())
 	for {
 		select {
 		case session := <-s.sessionChannel:

@@ -35,8 +35,8 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 
 	testClient := testHTTPClient{}
 
-	publisher := defaultPublisher{
-		config: smallConfig,
+	publisher := publisher{
+		config: &smallConfig,
 		client: &testClient,
 	}
 
@@ -78,7 +78,7 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
 
 	testClient := testHTTPClient{}
-	publisher := defaultPublisher{
+	publisher := publisher{
 		config: makeHeavyConfig(),
 		client: &testClient,
 	}
@@ -147,8 +147,8 @@ func getNestedJSON(root *json.RawMessage, path string) (*json.RawMessage, error)
 	return subobj[path], nil
 }
 
-func makeHeavyConfig() SessionTrackingConfiguration {
-	return SessionTrackingConfiguration{
+func makeHeavyConfig() *SessionTrackingConfiguration {
+	return &SessionTrackingConfiguration{
 		AppType:      "gin",
 		APIKey:       testAPIKey,
 		AppVersion:   "1.2.3-beta",

@@ -19,12 +19,12 @@ type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-type defaultPublisher struct {
-	config SessionTrackingConfiguration
+type publisher struct {
+	config *SessionTrackingConfiguration
 	client httpClient
 }
 
-func (p *defaultPublisher) publish(sessions []session) error {
+func (p *publisher) publish(sessions []session) error {
 	payload := makeSessionPayload(sessions, p.config)
 	buf, err := json.Marshal(payload)
 	if err != nil {
