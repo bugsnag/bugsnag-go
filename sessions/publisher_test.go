@@ -2,37 +2,40 @@ package sessions
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go/sessions/testutil"
 	uuid "github.com/satori/go.uuid"
 )
+
+var receivedRequests chan testutil.SessionRequest
+
+func TestMain(m *testing.M) {
+	receivedRequests = testutil.StartSessionTestServer(sessionAuthority)
+	defer close(receivedRequests)
+	retCode := m.Run()
+	os.Exit(retCode)
+}
 
 const sessionAuthority string = "localhost:9182"
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
-var receivedSessionsPayloads = make(chan []byte, 10)
-var receivedSessionsHeaders = make(chan http.Header, 10)
-var sessionTestOnce sync.Once
-
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
-	startSessionTestServer()
 	sessions, earliestTime := makeSessions()
 	config := SessionTrackingConfiguration{
 		Endpoint:  "http://" + sessionAuthority,
 		Transport: http.DefaultTransport,
 		APIKey:    testAPIKey,
 	}
-	p := defaultPublisher{config: config}
-	root := getLatestPayload(t, sessions, &p)
-	assertCorrectHeaders(t)
+	(&defaultPublisher{config: config}).publish(sessions)
+	req := <-receivedRequests
+	assertCorrectHeaders(t, req)
+	root := extractPayload(t, req)
 	hostname, _ := os.Hostname()
 	testCases := []struct {
 		property string
@@ -63,10 +66,11 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 }
 
 func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
-	startSessionTestServer()
 	sessions, earliestTime := makeSessions()
-	p := defaultPublisher{config: makeHeavilyConfiguredConfig()}
-	root := getLatestPayload(t, sessions, &p)
+	(&defaultPublisher{config: makeHeavilyConfiguredConfig()}).publish(sessions)
+	req := <-receivedRequests
+	assertCorrectHeaders(t, req)
+	root := extractPayload(t, req)
 	testCases := []struct {
 		property string
 		expected string
@@ -126,25 +130,6 @@ func getNestedJSON(root *json.RawMessage, path string) (*json.RawMessage, error)
 	return subobj[path], nil
 }
 
-func startSessionTestServer() {
-	sessionTestOnce.Do(func() {
-		mux := http.NewServeMux()
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				panic(err)
-			}
-			receivedSessionsPayloads <- body
-			receivedSessionsHeaders <- r.Header
-		})
-		l, err := net.Listen("tcp", sessionAuthority)
-		if err != nil {
-			panic(err)
-		}
-		go http.Serve(l, mux)
-	})
-}
-
 func makeHeavilyConfiguredConfig() SessionTrackingConfiguration {
 	return SessionTrackingConfiguration{
 		AppType:      "gin",
@@ -167,14 +152,9 @@ func makeSessions() ([]session, string) {
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 
-func getLatestPayload(t *testing.T, sessions []session, p sessionPublisher) *json.RawMessage {
-	err := p.publish(sessions)
-	if err != nil {
-		t.Fatal(err)
-	}
-	payload := <-receivedSessionsPayloads
+func extractPayload(t *testing.T, req testutil.SessionRequest) *json.RawMessage {
 	var root json.RawMessage
-	err = json.Unmarshal(payload, &root)
+	err := json.Unmarshal(req.Body, &root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,8 +178,7 @@ func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
 	}
 }
 
-func assertCorrectHeaders(t *testing.T) {
-	header := <-receivedSessionsHeaders
+func assertCorrectHeaders(t *testing.T, req testutil.SessionRequest) {
 	testCases := []struct{ name, expected string }{
 		{name: "Bugsnag-Payload-Version", expected: "1"},
 		{name: "Content-Type", expected: "application/json"},
@@ -207,13 +186,13 @@ func assertCorrectHeaders(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(st *testing.T) {
-			if got := header[tc.name][0]; tc.expected != got {
+			if got := req.Header[tc.name][0]; tc.expected != got {
 				t.Errorf("Expected header '%s' to be '%s' but was '%s'", tc.name, tc.expected, got)
 			}
 		})
 	}
 	name := "Bugsnag-Sent-At"
-	if header[name][0] == "" {
+	if req.Header[name][0] == "" {
 		t.Errorf("Expected header '%s' to be non-empty but was empty", name)
 	}
 }
