@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
@@ -9,33 +10,41 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bugsnag/bugsnag-go/sessions/testutil"
 	uuid "github.com/satori/go.uuid"
 )
-
-var receivedRequests chan testutil.SessionRequest
-
-func TestMain(m *testing.M) {
-	receivedRequests = testutil.StartSessionTestServer(sessionAuthority)
-	defer close(receivedRequests)
-	retCode := m.Run()
-	os.Exit(retCode)
-}
 
 const sessionAuthority string = "localhost:9182"
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
+type testHTTPClient struct {
+	reqs []*http.Request
+}
+
+func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
+	c.reqs = append(c.reqs, r)
+	return nil, nil
+}
+
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
-	config := SessionTrackingConfiguration{
+	smallConfig := SessionTrackingConfiguration{
 		Endpoint:  "http://" + sessionAuthority,
 		Transport: http.DefaultTransport,
 		APIKey:    testAPIKey,
 	}
-	(&defaultPublisher{config: config}).publish(sessions)
-	req := <-receivedRequests
+
+	testClient := testHTTPClient{}
+
+	publisher := defaultPublisher{
+		config: smallConfig,
+		client: &testClient,
+	}
+
+	publisher.publish(sessions)
+	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
 	root := extractPayload(t, req)
+
 	hostname, _ := os.Hostname()
 	testCases := []struct {
 		property string
@@ -67,10 +76,18 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 
 func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
-	(&defaultPublisher{config: makeHeavilyConfiguredConfig()}).publish(sessions)
-	req := <-receivedRequests
+
+	testClient := testHTTPClient{}
+	publisher := defaultPublisher{
+		config: makeHeavyConfig(),
+		client: &testClient,
+	}
+
+	publisher.publish(sessions)
+	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
 	root := extractPayload(t, req)
+
 	testCases := []struct {
 		property string
 		expected string
@@ -130,7 +147,7 @@ func getNestedJSON(root *json.RawMessage, path string) (*json.RawMessage, error)
 	return subobj[path], nil
 }
 
-func makeHeavilyConfiguredConfig() SessionTrackingConfiguration {
+func makeHeavyConfig() SessionTrackingConfiguration {
 	return SessionTrackingConfiguration{
 		AppType:      "gin",
 		APIKey:       testAPIKey,
@@ -144,7 +161,7 @@ func makeHeavilyConfiguredConfig() SessionTrackingConfiguration {
 }
 
 func makeSessions() ([]session, string) {
-	earliestTime := time.Now()
+	earliestTime := time.Now().Add(-6 * time.Minute)
 	return []session{
 		{startedAt: earliestTime, id: uuid.NewV4()},
 		{startedAt: earliestTime.Add(2 * time.Minute), id: uuid.NewV4()},
@@ -152,9 +169,13 @@ func makeSessions() ([]session, string) {
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 
-func extractPayload(t *testing.T, req testutil.SessionRequest) *json.RawMessage {
+func extractPayload(t *testing.T, req *http.Request) *json.RawMessage {
 	var root json.RawMessage
-	err := json.Unmarshal(req.Body, &root)
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal(body, &root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,12 +185,14 @@ func extractPayload(t *testing.T, req testutil.SessionRequest) *json.RawMessage 
 func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
 	subobj, err := getNestedJSON(root, "sessionCounts")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	var sessionCounts map[string]*json.RawMessage
 	err = json.Unmarshal(*subobj, &sessionCounts)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	var got int
 	err = json.Unmarshal(*sessionCounts["sessionsStarted"], &got)
@@ -178,7 +201,7 @@ func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
 	}
 }
 
-func assertCorrectHeaders(t *testing.T, req testutil.SessionRequest) {
+func assertCorrectHeaders(t *testing.T, req *http.Request) {
 	testCases := []struct{ name, expected string }{
 		{name: "Bugsnag-Payload-Version", expected: "1"},
 		{name: "Content-Type", expected: "application/json"},

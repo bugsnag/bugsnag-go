@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"context"
+	"net/http"
 	"time"
 )
 
@@ -29,7 +30,10 @@ type sessionTracker struct {
 
 // NewSessionTracker creates a new SessionTracker based on the provided config,
 func NewSessionTracker(config SessionTrackingConfiguration) SessionTracker {
-	publisher := defaultPublisher{}
+	publisher := defaultPublisher{
+		config: config,
+		client: &http.Client{Transport: config.Transport},
+	}
 	return &sessionTracker{
 		sessionChannel: make(chan session, 1),
 		sessions:       []session{},
@@ -53,7 +57,9 @@ func (s *sessionTracker) processSessions() {
 		case <-tic:
 			oldSessions := s.sessions
 			s.sessions = nil
-			s.publisher.publish(oldSessions)
+			if len(oldSessions) > 0 {
+				s.publisher.publish(oldSessions)
+			}
 		} //TODO: case for shutdown signal
 	}
 }

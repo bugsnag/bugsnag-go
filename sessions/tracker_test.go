@@ -12,10 +12,15 @@ type testPublisher struct {
 	sessionsReceived [][]session
 }
 
-func (p *testPublisher) publish(sessions []session) error {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.sessionsReceived = append(p.sessionsReceived, sessions)
+var publisher = testPublisher{
+	mutex:            sync.Mutex{},
+	sessionsReceived: [][]session{},
+}
+
+func (publisher *testPublisher) publish(sessions []session) error {
+	publisher.mutex.Lock()
+	defer publisher.mutex.Unlock()
+	publisher.sessionsReceived = append(publisher.sessionsReceived, sessions)
 	return nil
 }
 
@@ -23,20 +28,9 @@ func TestStartSessionModifiesContext(t *testing.T) {
 	type ctxKey string
 	var k ctxKey
 	k, v := "key", "val"
-	c := make(chan session, 1)
+	st, c := makeSessionTracker()
 	defer close(c)
-	p := testPublisher{
-		mutex:            sync.Mutex{},
-		sessionsReceived: [][]session{},
-	}
-	st := &sessionTracker{
-		config: SessionTrackingConfiguration{
-			PublishInterval: time.Millisecond * 10, //Publish very fast
-		},
-		sessionChannel: c,
-		sessions:       []session{},
-		publisher:      &p,
-	}
+
 	ctx := st.StartSession(context.WithValue(context.Background(), k, v))
 	if got, exp := ctx.Value(k), v; got != exp {
 		t.Errorf("Changed pre-existing key '%s' with value '%s' into %s", k, v, got)
@@ -58,51 +52,45 @@ func TestStartSessionModifiesContext(t *testing.T) {
 }
 
 func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
-	c := make(chan session, 1)
+	st, c := makeSessionTracker()
 	defer close(c)
-	p := testPublisher{
-		mutex:            sync.Mutex{},
-		sessionsReceived: [][]session{},
-	}
-	st := &sessionTracker{
-		config: SessionTrackingConfiguration{
-			PublishInterval: time.Millisecond * 10, //Publish very fast
-		},
-		sessionChannel: c,
-		sessions:       []session{},
-		publisher:      &p,
-	}
-
-	//Would publish many times in this time period if there were sessions
-	time.Sleep(10 * st.config.PublishInterval)
-
-	if got := len(p.sessionsReceived); got != 0 {
-		t.Errorf("Publisher was invoked unexpectedly %d times with arguments: %v", got, p.sessionsReceived)
-	}
-
 	go st.processSessions()
-	for i := 0; i < 5; i++ {
-		st.StartSession(context.Background())
-		time.Sleep(st.config.PublishInterval)
+	time.Sleep(10 * st.config.PublishInterval) // Would publish many times in this time period if there were sessions
+
+	if got := publisher.sessionsReceived; len(got) != 0 {
+		t.Errorf("Publisher was invoked unexpectedly %d times with arguments: %v", len(got), got)
 	}
 
-	p.mutex.Lock()
-	if got := len(p.sessionsReceived); got == 0 {
-		t.Errorf("Publisher was not invoked")
+	for i := 0; i < 50000; i++ {
+		st.StartSession(context.Background())
 	}
-	p.mutex.Unlock()
+	time.Sleep(st.config.PublishInterval * 2)
+
 	var sessions []session
-	for _, s := range p.sessionsReceived {
+	publisher.mutex.Lock()
+	defer publisher.mutex.Unlock()
+	for _, s := range publisher.sessionsReceived {
 		for _, session := range s {
 			verifyValidSession(t, session)
 			sessions = append(sessions, session)
 		}
 	}
-
-	if exp, got := 5, len(sessions); exp != got {
+	if exp, got := 50000, len(sessions); exp != got {
 		t.Errorf("Expected %d sessions but got %d", exp, got)
 	}
 
+}
+
+func makeSessionTracker() (*sessionTracker, chan session) {
+	c := make(chan session, 1)
+	return &sessionTracker{
+		config: SessionTrackingConfiguration{
+			PublishInterval: time.Millisecond * 10, //Publish very fast
+		},
+		sessionChannel: c,
+		sessions:       []session{},
+		publisher:      &publisher,
+	}, c
 }
 
 func verifyValidSession(t *testing.T, s session) {
