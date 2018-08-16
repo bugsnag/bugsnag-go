@@ -15,18 +15,18 @@ const (
 	contextSessionKey ctxKey = 1
 )
 
-// Customa type alias to ensure uniqueness of context key
+// ctxKey is a type alias that ensures uniqueness as a context.Context key
 type ctxKey int
 
-// SessionTracker exposes a methods for starting sessions that can be used for
+// SessionTracker exposes a method for starting sessions that are used for
 // gauging your application's health
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
 }
 
 type sessionTracker struct {
-	sessionChannel chan (session)
-	sessions       []session
+	sessionChannel chan *session
+	sessions       []*session
 	config         *SessionTrackingConfiguration
 	publisher      sessionPublisher
 }
@@ -38,8 +38,8 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 		client: &http.Client{Transport: config.Transport},
 	}
 	st := sessionTracker{
-		sessionChannel: make(chan session, 1),
-		sessions:       []session{},
+		sessionChannel: make(chan *session, 1),
+		sessions:       []*session{},
 		config:         config,
 		publisher:      &publisher,
 	}
@@ -70,11 +70,17 @@ func (s *sessionTracker) processSessions() {
 			oldSessions := s.sessions
 			s.sessions = nil
 			if len(oldSessions) > 0 {
-				s.publisher.publish(oldSessions)
+				err := s.publisher.publish(oldSessions)
+				if err != nil {
+					s.config.logf("%v", err)
+				}
 			}
 		case <-shutdown:
 			if len(s.sessions) > 0 {
-				s.publisher.publish(s.sessions)
+				err := s.publisher.publish(s.sessions)
+				if err != nil {
+					s.config.logf("%v", err)
+				}
 			}
 			return
 		}

@@ -9,10 +9,12 @@ import (
 	"github.com/bugsnag/bugsnag-go/headers"
 )
 
+// sessionPayloadVersion defines the current version of the payload that's
+// being sent to the session server.
 const sessionPayloadVersion = "1.0"
 
 type sessionPublisher interface {
-	publish(sessions []session) error
+	publish(sessions []*session) error
 }
 
 type httpClient interface {
@@ -24,7 +26,9 @@ type publisher struct {
 	client httpClient
 }
 
-func (p *publisher) publish(sessions []session) error {
+// publish builds a payload from the given sessions and publishes them to the
+// session server. Returns any errors that happened as part of publishing.
+func (p *publisher) publish(sessions []*session) error {
 	payload := makeSessionPayload(sessions, p.config)
 	buf, err := json.Marshal(payload)
 	if err != nil {
@@ -41,7 +45,11 @@ func (p *publisher) publish(sessions []session) error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to deliver session: %v", err)
 	}
-	defer res.Body.Close()
+	defer func(res *http.Response) {
+		if err := res.Body.Close(); err != nil {
+			p.config.logf("%v", err)
+		}
+	}(res)
 	if res.StatusCode != 200 {
 		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
 	}

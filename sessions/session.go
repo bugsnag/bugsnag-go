@@ -11,8 +11,8 @@ type session struct {
 	id        uuid.UUID
 }
 
-func newSession() session {
-	return session{
+func newSession() *session {
+	return &session{
 		startedAt: time.Now(),
 		id:        uuid.NewV4(),
 	}

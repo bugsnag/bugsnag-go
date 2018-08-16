@@ -1,29 +1,50 @@
 package sessions
 
 import (
+	"log"
 	"net/http"
 	"sync"
 	"time"
 )
 
-// SessionTrackingConfiguration defines the configuration required for session tracking.
+// SessionTrackingConfiguration defines the configuration options relevant for session tracking.
+// These are likely a subset of the global bugsnag.Configuration. Users should
+// not modify this struct directly but rather call
+// `bugsnag.Configure(bugsnag.Configuration)` which will update this configuration in return.
 type SessionTrackingConfiguration struct {
+	// PublishInterval defines how often the sessions are sent off to the session server.
 	PublishInterval time.Duration
 
-	APIKey   string
+	// APIKey defines the API key for the Bugsnag project. Same value as for reporting errors.
+	APIKey string
+	// Endpoint is the URI of the session server to receive session payloads.
 	Endpoint string
-	Version  string
+	// Version defines the current version of the notifier.
+	Version string
 
+	// Release
 	ReleaseStage string
-	Hostname     string
-	AppType      string
-	AppVersion   string
-	Transport    http.RoundTripper
-	mutex        sync.Mutex
+	// Hostname defines the host of the server this application is running on.
+	Hostname string
+	// AppType defines the type of the application.
+	AppType string
+	// AppVersion defines the version of the application.
+	AppVersion string
+	// Transport defines the http.RoundTripper to be used for managing HTTP requests.
+	Transport http.RoundTripper
+
+	// Logger is the that Bugsnag should log to. Uses the same defaults as go's
+	// builtin logging package. This logger gets invoked when any error occurs
+	// inside the library itself.
+	Logger interface {
+		Printf(format string, v ...interface{})
+	}
+
+	mutex sync.Mutex
 }
 
-// Update modifies the values inside the struct to match the configured keys of the given config.
-// Existing blank keys will not be cleared.
+// Update modifies the values inside the receiver to match the non-default properties of the given config.
+// Existing properties will not be cleared when given empty fields.
 func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfiguration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -53,5 +74,16 @@ func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfigurati
 	}
 	if config.Transport != nil {
 		c.Transport = config.Transport
+	}
+	if config.Logger != nil {
+		c.Logger = config.Logger
+	}
+}
+
+func (c *SessionTrackingConfiguration) logf(fmt string, args ...interface{}) {
+	if c != nil && c.Logger != nil {
+		c.Logger.Printf(fmt, args...)
+	} else {
+		log.Printf(fmt, args...)
 	}
 }

@@ -3,22 +3,26 @@ package sessions_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/sessions/internal"
 )
 
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
+const testPublishInterval = time.Millisecond * 10
+const sessionsCount = 50000
 
-const sessionsCount = 500000
+func init() {
+	//Naughty injection to achieve a reasonable test duration.
+	bugsnag.DefaultSessionPublishInterval = testPublishInterval
+}
 
 // Spins up a session server and checks that for every call to
 // bugsnag.StartSession() a session is being recorded.
@@ -29,7 +33,10 @@ func TestStartSession(t *testing.T) {
 	// Test server does all the checking of individual requests
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assertCorrectHeaders(t, r)
-		root := extractPayload(t, r)
+		root, err := testutil.ExtractPayload(r)
+		if err != nil {
+			t.Fatal(err)
+		}
 		hostname, _ := os.Hostname()
 		testCases := []struct {
 			property string
@@ -46,7 +53,7 @@ func TestStartSession(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.property, func(st *testing.T) {
-				got, err := getJSONString(root, tc.property)
+				got, err := testutil.GetJSONString(root, tc.property)
 				if err != nil {
 					t.Error(err)
 				}
@@ -61,6 +68,7 @@ func TestStartSession(t *testing.T) {
 	}))
 	defer ts.Close()
 
+	// Minimal config. API is mandatory, URLs point to the test server
 	bugsnag.Configure(bugsnag.Configuration{
 		APIKey: testAPIKey,
 		Endpoints: bugsnag.Endpoints{
@@ -72,7 +80,7 @@ func TestStartSession(t *testing.T) {
 		bugsnag.StartSession(context.Background())
 	}
 
-	time.Sleep(time.Millisecond * 20)
+	time.Sleep(testPublishInterval * 2)
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -81,52 +89,8 @@ func TestStartSession(t *testing.T) {
 	}
 }
 
-func getJSONString(root *json.RawMessage, path string) (string, error) {
-	if strings.Contains(path, ".") {
-		split := strings.Split(path, ".")
-		subobj, err := getNestedJSON(root, split[0])
-		if err != nil {
-			return "", err
-		}
-		return getJSONString(subobj, strings.Join(split[1:], "."))
-	}
-	var m map[string]json.RawMessage
-	err := json.Unmarshal(*root, &m)
-	if err != nil {
-		return "", err
-	}
-	var s string
-	err = json.Unmarshal(m[path], &s)
-	if err != nil {
-		return "", err
-	}
-	return s, nil
-}
-
-func getNestedJSON(root *json.RawMessage, path string) (*json.RawMessage, error) {
-	var subobj map[string]*json.RawMessage
-	err := json.Unmarshal(*root, &subobj)
-	if err != nil {
-		return nil, err
-	}
-	return subobj[path], nil
-}
-
-func extractPayload(t *testing.T, req *http.Request) *json.RawMessage {
-	var root json.RawMessage
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = json.Unmarshal(body, &root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &root
-}
-
 func getSessionsStarted(t *testing.T, root *json.RawMessage) int {
-	subobj, err := getNestedJSON(root, "sessionCounts")
+	subobj, err := testutil.GetNestedJSON(root, "sessionCounts")
 	if err != nil {
 		t.Error(err)
 		return 0
@@ -162,9 +126,4 @@ func assertCorrectHeaders(t *testing.T, req *http.Request) {
 	if req.Header[name][0] == "" {
 		t.Errorf("Expected header '%s' to be non-empty but was empty", name)
 	}
-}
-
-func init() {
-	//Naughty injection to achieve a reasonable test duration.
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 10
 }

@@ -2,33 +2,40 @@ package sessions
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go/sessions/internal"
 	uuid "github.com/satori/go.uuid"
 )
 
-const sessionAuthority string = "localhost:9182"
+const sessionEndpoint string = "http://localhost:9182"
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
 type testHTTPClient struct {
 	reqs []*http.Request
 }
 
+// A simple io.ReadCloser that we can inject as a body of a http.Request.
+type nopCloser struct {
+	io.Reader
+}
+
+func (nopCloser) Close() error { return nil }
+
 func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 	c.reqs = append(c.reqs, r)
-	return nil, nil
+	return &http.Response{Body: nopCloser{}, StatusCode: 200}, nil
 }
 
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
 	smallConfig := SessionTrackingConfiguration{
-		Endpoint:  "http://" + sessionAuthority,
+		Endpoint:  sessionEndpoint,
 		Transport: http.DefaultTransport,
 		APIKey:    testAPIKey,
 	}
@@ -40,10 +47,16 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 		client: &testClient,
 	}
 
-	publisher.publish(sessions)
+	err := publisher.publish(sessions)
+	if err != nil {
+		t.Error(err)
+	}
 	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
-	root := extractPayload(t, req)
+	root, err := testutil.ExtractPayload(req)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	hostname, _ := os.Hostname()
 	testCases := []struct {
@@ -62,7 +75,7 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.property, func(st *testing.T) {
-			got, err := getJSONString(root, tc.property)
+			got, err := testutil.GetJSONString(root, tc.property)
 			if err != nil {
 				t.Error(err)
 			}
@@ -83,10 +96,16 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 		client: &testClient,
 	}
 
-	publisher.publish(sessions)
+	err := publisher.publish(sessions)
+	if err != nil {
+		t.Error(err)
+	}
 	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
-	root := extractPayload(t, req)
+	root, err := testutil.ExtractPayload(req)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testCases := []struct {
 		property string
@@ -104,7 +123,7 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.property, func(st *testing.T) {
-			got, err := getJSONString(root, tc.property)
+			got, err := testutil.GetJSONString(root, tc.property)
 			if err != nil {
 				t.Error(err)
 			}
@@ -116,74 +135,30 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	assertSessionsStarted(t, root, len(sessions))
 }
 
-func getJSONString(root *json.RawMessage, path string) (string, error) {
-	if strings.Contains(path, ".") {
-		split := strings.Split(path, ".")
-		subobj, err := getNestedJSON(root, split[0])
-		if err != nil {
-			return "", err
-		}
-		return getJSONString(subobj, strings.Join(split[1:], "."))
-	}
-	var m map[string]json.RawMessage
-	err := json.Unmarshal(*root, &m)
-	if err != nil {
-		return "", err
-	}
-	var s string
-	err = json.Unmarshal(m[path], &s)
-	if err != nil {
-		return "", err
-	}
-	return s, nil
-}
-
-func getNestedJSON(root *json.RawMessage, path string) (*json.RawMessage, error) {
-	var subobj map[string]*json.RawMessage
-	err := json.Unmarshal(*root, &subobj)
-	if err != nil {
-		return nil, err
-	}
-	return subobj[path], nil
-}
-
 func makeHeavyConfig() *SessionTrackingConfiguration {
 	return &SessionTrackingConfiguration{
 		AppType:      "gin",
 		APIKey:       testAPIKey,
 		AppVersion:   "1.2.3-beta",
 		Version:      "2.3.4-alpha",
-		Endpoint:     "http://" + sessionAuthority,
+		Endpoint:     sessionEndpoint,
 		Transport:    http.DefaultTransport,
 		ReleaseStage: "staging",
 		Hostname:     "gce-1234-us-west-1",
 	}
 }
 
-func makeSessions() ([]session, string) {
+func makeSessions() ([]*session, string) {
 	earliestTime := time.Now().Add(-6 * time.Minute)
-	return []session{
+	return []*session{
 		{startedAt: earliestTime, id: uuid.NewV4()},
 		{startedAt: earliestTime.Add(2 * time.Minute), id: uuid.NewV4()},
 		{startedAt: earliestTime.Add(4 * time.Minute), id: uuid.NewV4()},
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 
-func extractPayload(t *testing.T, req *http.Request) *json.RawMessage {
-	var root json.RawMessage
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = json.Unmarshal(body, &root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &root
-}
-
 func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
-	subobj, err := getNestedJSON(root, "sessionCounts")
+	subobj, err := testutil.GetNestedJSON(root, "sessionCounts")
 	if err != nil {
 		t.Error(err)
 		return

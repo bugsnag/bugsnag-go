@@ -29,7 +29,8 @@ var Config Configuration
 var sessionTrackingConfig sessions.SessionTrackingConfiguration
 
 // DefaultSessionPublishInterval defines how often sessions should be sent to
-// Bugsnag. Exposed for developer sanity in testing. Modify at own risk.
+// Bugsnag.
+// Deprecated: Exposed for developer sanity in testing. Modify at own risk.
 var DefaultSessionPublishInterval = 60 * time.Second
 var defaultNotifier = Notifier{&Config, nil}
 var sessionTracker sessions.SessionTracker
@@ -180,6 +181,7 @@ func startSessionTracking() {
 		Hostname:        Config.Hostname,
 		AppType:         Config.AppType,
 		AppVersion:      Config.AppVersion,
+		Logger:          Config.Logger,
 	})
 	if sessionTracker == nil {
 		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
