@@ -133,16 +133,6 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Logger != nil {
 		config.Logger = other.Logger
 	}
-	if other.Endpoint != "" {
-		config.Logger.Printf("WARNING: the Bugsnag configuration parameter 'Endpoint' is deprecated in favor of 'Endpoints'")
-		config.Endpoint = other.Endpoint
-	}
-	if other.Endpoints.Notify != "" {
-		config.Endpoints.Notify = other.Endpoints.Notify
-	}
-	if other.Endpoints.Sessions != "" {
-		config.Endpoints.Sessions = other.Endpoints.Sessions
-	}
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
 	}
@@ -155,8 +145,29 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Synchronous {
 		config.Synchronous = true
 	}
-
+	config.updateEndpoints(other.Endpoint, &other.Endpoints)
 	return config
+}
+
+func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {
+	if endpoint != "" {
+		config.Logger.Printf("WARNING: the 'Endpoint' Bugsnag configuration parameter is deprecated in favor of 'Endpoints'")
+		config.Endpoints.Notify = endpoint
+		config.Endpoints.Sessions = ""
+	}
+	if endpoints.Notify != "" {
+		config.Endpoints.Notify = endpoints.Notify
+		if endpoints.Sessions == "" {
+			config.Logger.Printf("WARNING: Bugsnag notify endpoint configured without also configuring the sessions endpoint. No sessions will be recorded")
+			config.Endpoints.Sessions = ""
+		}
+	}
+	if endpoints.Sessions != "" {
+		if endpoints.Notify == "" {
+			panic("FATAL: Bugsnag sessions endpoint configured without also changing the notify endpoint. Bugsnag cannot identify where to report errors")
+		}
+		config.Endpoints.Sessions = endpoints.Sessions
+	}
 }
 
 func (config *Configuration) merge(other *Configuration) *Configuration {

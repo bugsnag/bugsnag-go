@@ -12,7 +12,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-const sessionPayloadVersion = "1"
+const sessionPayloadVersion = "1.0"
 
 type session struct {
 	startedAt time.Time
@@ -49,22 +49,31 @@ type sessionPayload struct {
 }
 
 func deliverSessions(sessions []session, config Configuration) error {
+	if config.Endpoints.Sessions == "" {
+		return nil //Notify endpoint changed without also changing sessions
+	}
 	sp := makeSessionPayload(sessions, config)
 	buf, err := json.Marshal(sp)
 	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSession unable to marshal json: %v", err)
+		return fmt.Errorf("bugsnag/session.deliverSessions unable to marshal json: %v", err)
 	}
 	client := http.Client{Transport: config.Transport}
 	req, err := http.NewRequest("POST", config.Endpoints.Sessions, bytes.NewBuffer(buf))
 	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSession unable to create request: %v", err)
+		return fmt.Errorf("bugsnag/session.deliverSessions unable to create request: %v", err)
 	}
 	for k, v := range bugsnagPrefixedHeaders(config.APIKey, sessionPayloadVersion) {
 		req.Header.Add(k, v)
 	}
-	_, err = client.Do(req)
+	res, err := client.Do(req)
+
 	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSession unable to deliver session: %v", err)
+		return fmt.Errorf("bugsnag/session.deliverSessions unable to deliver session: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
 	}
 	return nil
 }

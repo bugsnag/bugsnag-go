@@ -12,7 +12,7 @@ import (
 func main() {
 	errorReporterConfig := bugsnag.Configuration{
 		APIKey:    "166f5ad3590596f9aa8d601ea89af845",
-		Endpoints: bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"), Sessions: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
+		Endpoints: bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"), Sessions: os.Getenv("BUGSNAG_SESSIONS_ENDPOINT")},
 	}
 	if os.Getenv("BUGSNAG_TEST_VARIANT") == "beforenotify" {
 		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
