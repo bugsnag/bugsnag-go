@@ -147,7 +147,7 @@ func getSessionsStarted(t *testing.T, root *json.RawMessage) int {
 
 func assertCorrectHeaders(t *testing.T, req *http.Request) {
 	testCases := []struct{ name, expected string }{
-		{name: "Bugsnag-Payload-Version", expected: "1"},
+		{name: "Bugsnag-Payload-Version", expected: "1.0"},
 		{name: "Content-Type", expected: "application/json"},
 		{name: "Bugsnag-Api-Key", expected: testAPIKey},
 	}

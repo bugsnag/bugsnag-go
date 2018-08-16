@@ -9,7 +9,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/headers"
 )
 
-const sessionPayloadVersion = "1"
+const sessionPayloadVersion = "1.0"
 
 type sessionPublisher interface {
 	publish(sessions []session) error
@@ -37,9 +37,13 @@ func (p *publisher) publish(sessions []session) error {
 	for k, v := range headers.PrefixedHeaders(p.config.APIKey, sessionPayloadVersion) {
 		req.Header.Add(k, v)
 	}
-	_, err = p.client.Do(req)
+	res, err := p.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to deliver session: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
 	}
 	return nil
 }
