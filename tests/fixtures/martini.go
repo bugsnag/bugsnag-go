@@ -22,8 +22,8 @@ func main() {
 	})
 	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify(bugsnag.Configuration{
-		APIKey:   "166f5ad3590596f9aa8d601ea89af845",
-		Endpoint: os.Getenv("BUGSNAG_ENDPOINT"),
+		APIKey:    "166f5ad3590596f9aa8d601ea89af845",
+		Endpoints: bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"), Sessions: os.Getenv("BUGSNAG_SESSIONS_ENDPOINT")},
 	}))
 	m.Run()
 }

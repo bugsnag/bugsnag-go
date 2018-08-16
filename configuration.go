@@ -7,15 +7,32 @@ import (
 	"strings"
 )
 
+// Endpoints hold the HTTP endpoints of the notifier.
+type Endpoints struct {
+	Sessions string
+	Notify   string
+}
+
 // Configuration sets up and customizes communication with the Bugsnag API.
 type Configuration struct {
 	// Your Bugsnag API key, e.g. "c9d60ae4c7e70c4b6c4ebd3e8056d2b8". You can
 	// find this by clicking Settings on https://bugsnag.com/.
 	APIKey string
+
+	// Deprecated: Use Endpoints (with an 's') instead.
 	// The Endpoint to notify about crashes. This defaults to
 	// "https://notify.bugsnag.com/", if you're using Bugsnag Enterprise then
 	// set it to your internal Bugsnag endpoint.
 	Endpoint string
+	// Endpoints define the HTTP endpoints that the notifier should notify
+	// about crashes and sessions. These default to notify.bugsnag.com for
+	// error reports and sessions.bugsnag.com for sessions.
+	// If you are using bugsnag on-premise you will have to set these to your
+	// Event Server and Session Server endpoints. If the notify endpoint is set
+	// but the sessions endpoint is not, session tracking will be disabled
+	// automatically to avoid leaking session information outside of your
+	// server configuration, and a warning will be logged.
+	Endpoints Endpoints
 
 	// The current release stage. This defaults to "production" and is used to
 	// filter errors in the Bugsnag dashboard.
@@ -27,6 +44,16 @@ type Configuration struct {
 	// in the Bugsnag dasboard. If you set this then Bugsnag will only re-open
 	// resolved errors if they happen in different app versions.
 	AppVersion string
+
+	// AutoCaptureSessions can be set to false to disable automatic session
+	// tracking. If you want control over what is deemed a session, you can
+	// switch off automatic session tracking with this configuration, and call
+	// bugsnag.StartSession() when appropriate for your application. See the
+	// official docs for instructions and examples of associating handled
+	// errors with sessions and ensuring error rate accuracy on the Bugsnag
+	// dashboard.
+	AutoCaptureSessions bool
+
 	// The hostname of the current server. This defaults to the return value of
 	// os.Hostname() and is graphed in the Bugsnag dashboard.
 	Hostname string
@@ -82,9 +109,6 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.APIKey != "" {
 		config.APIKey = other.APIKey
 	}
-	if other.Endpoint != "" {
-		config.Endpoint = other.Endpoint
-	}
 	if other.Hostname != "" {
 		config.Hostname = other.Hostname
 	}
@@ -121,8 +145,29 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Synchronous {
 		config.Synchronous = true
 	}
-
+	config.updateEndpoints(other.Endpoint, &other.Endpoints)
 	return config
+}
+
+func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {
+	if endpoint != "" {
+		config.Logger.Printf("WARNING: the 'Endpoint' Bugsnag configuration parameter is deprecated in favor of 'Endpoints'")
+		config.Endpoints.Notify = endpoint
+		config.Endpoints.Sessions = ""
+	}
+	if endpoints.Notify != "" {
+		config.Endpoints.Notify = endpoints.Notify
+		if endpoints.Sessions == "" {
+			config.Logger.Printf("WARNING: Bugsnag notify endpoint configured without also configuring the sessions endpoint. No sessions will be recorded")
+			config.Endpoints.Sessions = ""
+		}
+	}
+	if endpoints.Sessions != "" {
+		if endpoints.Notify == "" {
+			panic("FATAL: Bugsnag sessions endpoint configured without also changing the notify endpoint. Bugsnag cannot identify where to report errors")
+		}
+		config.Endpoints.Sessions = endpoints.Sessions
+	}
 }
 
 func (config *Configuration) merge(other *Configuration) *Configuration {

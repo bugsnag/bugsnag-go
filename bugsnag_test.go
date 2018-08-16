@@ -74,7 +74,7 @@ func TestNotify(t *testing.T) {
 	Notify(fmt.Errorf("hello world"),
 		Configuration{
 			APIKey:          testAPIKey,
-			Endpoint:        testEndpoint,
+			Endpoints:       Endpoints{Notify: testEndpoint},
 			ReleaseStage:    "test",
 			AppType:         "foo",
 			AppVersion:      "1.2.3",
@@ -187,7 +187,7 @@ func TestHandler(t *testing.T) {
 
 	l, err := runCrashyServer(Configuration{
 		APIKey:          testAPIKey,
-		Endpoint:        testEndpoint,
+		Endpoints:       Endpoints{Notify: testEndpoint},
 		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
 		Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
 	}, SeverityInfo)
@@ -272,7 +272,7 @@ func TestAutoNotify(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer AutoNotify(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
+		defer AutoNotify(Configuration{Endpoints: Endpoints{Notify: testEndpoint}, APIKey: testAPIKey})
 
 		panic("eggs")
 	}()
@@ -306,7 +306,7 @@ func TestRecover(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer Recover(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
+		defer Recover(Configuration{Endpoints: Endpoints{Notify: testEndpoint}, APIKey: testAPIKey})
 
 		panic("ham")
 	}()
@@ -367,7 +367,7 @@ func ExampleRecover() {
 	}
 
 	func() {
-		defer Recover(Configuration{Endpoint: testEndpoint, APIKey: testAPIKey})
+		defer Recover(Configuration{Endpoints: Endpoints{Notify: testEndpoint}, APIKey: testAPIKey})
 		job.Process()
 	}()
 	fmt.Println("Panic recovered")
@@ -528,7 +528,7 @@ func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity 
 func generateSampleConfig() Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
-		Endpoint:        testEndpoint,
+		Endpoints:       Endpoints{Notify: testEndpoint},
 		ReleaseStage:    "test",
 		AppType:         "foo",
 		AppVersion:      "1.2.3",

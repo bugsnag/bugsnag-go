@@ -25,7 +25,7 @@ func init() {
 		revel.ActionInvoker,           // Invoke the action.
 	}
 	bugsnag.Configure(bugsnag.Configuration{
-		Endpoint: os.Getenv("BUGSNAG_ENDPOINT"),
+		Endpoints: bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"), Sessions: os.Getenv("BUGSNAG_SESSIONS_ENDPOINT")},
 	})
 	if os.Getenv("BUGSNAG_TEST_VARIANT") == "beforenotify" {
 		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
