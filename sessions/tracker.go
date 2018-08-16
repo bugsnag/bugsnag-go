@@ -3,6 +3,9 @@ package sessions
 import (
 	"context"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -58,6 +61,7 @@ func (s *sessionTracker) interval() time.Duration {
 
 func (s *sessionTracker) processSessions() {
 	tic := time.Tick(s.interval())
+	shutdown := shutdownSignals()
 	for {
 		select {
 		case session := <-s.sessionChannel:
@@ -68,6 +72,17 @@ func (s *sessionTracker) processSessions() {
 			if len(oldSessions) > 0 {
 				s.publisher.publish(oldSessions)
 			}
-		} //TODO: case for shutdown signal
+		case <-shutdown:
+			if len(s.sessions) > 0 {
+				s.publisher.publish(s.sessions)
+			}
+			return
+		}
 	}
+}
+
+func shutdownSignals() <-chan os.Signal {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
+	return c
 }
