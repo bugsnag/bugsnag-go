@@ -20,6 +20,7 @@ import (
 
 // The current version of bugsnag-go.
 const VERSION = "1.3.1"
+const configuredMultipleTimes = "WARNING: Bugsnag was configured twice. It is recommended to only call bugsnag.Configure once to ensure consistent session tracking behavior"
 
 var once sync.Once
 var middleware middlewareStack
@@ -183,7 +184,8 @@ func startSessionTracking() {
 		AppVersion:      Config.AppVersion,
 		Logger:          Config.Logger,
 	})
-	if sessionTracker == nil {
-		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
+	if sessionTracker != nil {
+		Config.logf(configuredMultipleTimes)
 	}
+	sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 }

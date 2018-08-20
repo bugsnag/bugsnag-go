@@ -22,7 +22,9 @@ type SessionTrackingConfiguration struct {
 	// Version defines the current version of the notifier.
 	Version string
 
-	// Release
+	// ReleaseStage defines the release stage, e.g. "production" or "staging",
+	// that this session occurred in. The release stage, in combination with
+	// the app version make up the release that Bugsnag tracks.
 	ReleaseStage string
 	// Hostname defines the host of the server this application is running on.
 	Hostname string
@@ -33,9 +35,9 @@ type SessionTrackingConfiguration struct {
 	// Transport defines the http.RoundTripper to be used for managing HTTP requests.
 	Transport http.RoundTripper
 
-	// Logger is the that Bugsnag should log to. Uses the same defaults as go's
-	// builtin logging package. This logger gets invoked when any error occurs
-	// inside the library itself.
+	// Logger is the logger that Bugsnag should log to. Uses the same defaults
+	// as go's builtin logging package. This logger gets invoked when any error
+	// occurs inside the library itself.
 	Logger interface {
 		Printf(format string, v ...interface{})
 	}

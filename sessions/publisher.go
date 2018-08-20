@@ -29,6 +29,8 @@ type publisher struct {
 // publish builds a payload from the given sessions and publishes them to the
 // session server. Returns any errors that happened as part of publishing.
 func (p *publisher) publish(sessions []*session) error {
+	p.config.mutex.Lock()
+	defer p.config.mutex.Unlock()
 	payload := makeSessionPayload(sessions, p.config)
 	buf, err := json.Marshal(payload)
 	if err != nil {
