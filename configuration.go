@@ -68,6 +68,10 @@ type Configuration struct {
 	Logger interface {
 		Printf(format string, v ...interface{}) // limited to the functions used
 	}
+	// Shipper is the expected interface for sending payload data to a backend
+	Shipper interface {
+		Deliver(p *payload) error
+	}
 	// The http Transport to use, defaults to the default http Transport. This
 	// can be configured if you are in an environment like Google App Engine
 	// that has stringent conditions on making http requests.
@@ -108,6 +112,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.Logger != nil {
 		config.Logger = other.Logger
+	}
+	if other.Shipper != nil {
+		config.Shipper = other.Shipper
 	}
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
