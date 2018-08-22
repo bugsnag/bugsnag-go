@@ -12,8 +12,9 @@ type session struct {
 }
 
 func newSession() *session {
+	sessionID, _ := uuid.NewV4()
 	return &session{
 		startedAt: time.Now(),
-		id:        uuid.NewV4(),
+		id:        sessionID,
 	}
 }
