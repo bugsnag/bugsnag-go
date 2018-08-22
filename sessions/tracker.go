@@ -22,6 +22,7 @@ type ctxKey int
 // gauging your application's health
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
+	GetSession(context.Context) *Session
 }
 
 type sessionTracker struct {
@@ -45,6 +46,10 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 	}
 	go st.processSessions()
 	return &st
+}
+
+func (s *sessionTracker) GetSession(ctx context.Context) *Session {
+	return ctx.Value(contextSessionKey).(*Session)
 }
 
 func (s *sessionTracker) StartSession(ctx context.Context) context.Context {

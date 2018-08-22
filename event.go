@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"context"
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go/errors"
@@ -98,6 +99,8 @@ type Event struct {
 	User *User
 	// Other MetaData to send to Bugsnag. Appears as a set of tabbed tables in the dashboard.
 	MetaData MetaData
+	// Ctx is the context of the session the event occurred in. This allows Bugsnag to associate the event with the session.
+	Ctx context.Context
 	// The reason for the severity and original value
 	handledState HandledState
 }
@@ -138,6 +141,9 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 
 		case Context:
 			event.Context = datum.String
+
+		case context.Context:
+			event.Ctx = datum
 
 		case Configuration:
 			config = config.merge(&datum)

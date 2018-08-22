@@ -39,16 +39,7 @@ func TestStartSessionModifiesContext(t *testing.T) {
 		t.Fatalf("No session information applied to context %v", ctx)
 	}
 
-	var s *Session
-	got := ctx.Value(contextSessionKey)
-	switch got.(type) {
-	case *Session:
-		s = got.(*Session)
-	default:
-		t.Fatalf("Expected a session to be set on the context but was of wrong type: %T", got)
-	}
-
-	verifyValidSession(t, s)
+	verifyValidSession(t, st.GetSession(ctx))
 }
 
 func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
