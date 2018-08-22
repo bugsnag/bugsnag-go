@@ -14,7 +14,7 @@ import (
 const sessionPayloadVersion = "1.0"
 
 type sessionPublisher interface {
-	publish(sessions []*session) error
+	publish(sessions []*Session) error
 }
 
 type httpClient interface {
@@ -28,7 +28,7 @@ type publisher struct {
 
 // publish builds a payload from the given sessions and publishes them to the
 // session server. Returns any errors that happened as part of publishing.
-func (p *publisher) publish(sessions []*session) error {
+func (p *publisher) publish(sessions []*Session) error {
 	p.config.mutex.Lock()
 	defer p.config.mutex.Unlock()
 	payload := makeSessionPayload(sessions, p.config)

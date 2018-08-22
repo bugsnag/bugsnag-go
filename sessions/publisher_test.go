@@ -148,10 +148,10 @@ func makeHeavyConfig() *SessionTrackingConfiguration {
 	}
 }
 
-func makeSessions() ([]*session, string) {
+func makeSessions() ([]*Session, string) {
 	earliestTime := time.Now().Add(-6 * time.Minute)
 	genUUID := func() uuid.UUID { sessionID, _ := uuid.NewV4(); return sessionID }
-	return []*session{
+	return []*Session{
 		{startedAt: earliestTime, id: genUUID()},
 		{startedAt: earliestTime.Add(2 * time.Minute), id: genUUID()},
 		{startedAt: earliestTime.Add(4 * time.Minute), id: genUUID()},

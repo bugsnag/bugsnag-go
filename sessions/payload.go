@@ -41,7 +41,7 @@ type sessionPayload struct {
 }
 
 // makeSessionPayload creates a sessionPayload based off of the given sessions and config
-func makeSessionPayload(sessions []*session, config *SessionTrackingConfiguration) *sessionPayload {
+func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguration) *sessionPayload {
 	releaseStage := config.ReleaseStage
 	if releaseStage == "" {
 		releaseStage = "production"

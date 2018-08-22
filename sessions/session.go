@@ -6,14 +6,15 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type session struct {
+// Session represents a start time and a unique ID that identifies the session.
+type Session struct {
 	startedAt time.Time
 	id        uuid.UUID
 }
 
-func newSession() *session {
+func newSession() *Session {
 	sessionID, _ := uuid.NewV4()
-	return &session{
+	return &Session{
 		startedAt: time.Now(),
 		id:        sessionID,
 	}

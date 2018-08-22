@@ -25,8 +25,8 @@ type SessionTracker interface {
 }
 
 type sessionTracker struct {
-	sessionChannel chan *session
-	sessions       []*session
+	sessionChannel chan *Session
+	sessions       []*Session
 	config         *SessionTrackingConfiguration
 	publisher      sessionPublisher
 }
@@ -38,8 +38,8 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 		client: &http.Client{Transport: config.Transport},
 	}
 	st := sessionTracker{
-		sessionChannel: make(chan *session, 1),
-		sessions:       []*session{},
+		sessionChannel: make(chan *Session, 1),
+		sessions:       []*Session{},
 		config:         config,
 		publisher:      &publisher,
 	}
