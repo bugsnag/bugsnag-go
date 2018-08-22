@@ -20,7 +20,6 @@ import (
 
 // VERSION defines the version of this Bugsnag notifier
 const VERSION = "1.3.1"
-const configuredMultipleTimes = "WARNING: Bugsnag was configured twice. It is recommended to only call bugsnag.Configure once to ensure consistent session tracking behavior"
 
 var once sync.Once
 var middleware middlewareStack
@@ -43,12 +42,13 @@ var sessionTracker sessions.SessionTracker
 func Configure(config Configuration) {
 	Config.update(&config)
 	once.Do(Config.PanicHandler)
-	startSessionTracking()
 }
 
 // StartSession creates new context from the context.Context instance with
-// Bugsnag session data attached.
+// Bugsnag session data attached. Will start the session tracker if not already
+// started
 func StartSession(ctx context.Context) context.Context {
+	startSessionTracking()
 	return sessionTracker.StartSession(ctx)
 }
 
@@ -137,8 +137,15 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer notifier.AutoNotify(StartSession(r.Context()), r)
-		h.ServeHTTP(w, r)
+		request := r
+
+		ctx := StartSession(r.Context())
+		// Record a session if auto notify session is enabled
+		if Config.IsAutoCaptureSessions() {
+			request = r.WithContext(ctx)
+		}
+		defer notifier.AutoNotify(ctx, request)
+		h.ServeHTTP(w, request)
 	})
 }
 
@@ -152,8 +159,14 @@ func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 	notifier := New(rawData...)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer notifier.AutoNotify(r)
-		h(w, r)
+		request := r
+		// Record a session if auto notify session is enabled
+		if Config.IsAutoCaptureSessions() {
+			ctx := StartSession(r.Context())
+			request = r.WithContext(ctx)
+		}
+		defer notifier.AutoNotify(request)
+		h(w, request)
 	}
 }
 
@@ -196,21 +209,19 @@ func init() {
 }
 
 func startSessionTracking() {
-	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
-		APIKey:          Config.APIKey,
-		Endpoint:        Config.Endpoints.Sessions,
-		Version:         VERSION,
-		PublishInterval: DefaultSessionPublishInterval,
-		Transport:       Config.Transport,
-		ReleaseStage:    Config.ReleaseStage,
-		Hostname:        Config.Hostname,
-		AppType:         Config.AppType,
-		AppVersion:      Config.AppVersion,
-		Logger:          Config.Logger,
-	})
-	if sessionTracker != nil {
-		Config.logf(configuredMultipleTimes)
-	} else {
+	if sessionTracker == nil {
+		sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
+			APIKey:          Config.APIKey,
+			Endpoint:        Config.Endpoints.Sessions,
+			Version:         VERSION,
+			PublishInterval: DefaultSessionPublishInterval,
+			Transport:       Config.Transport,
+			ReleaseStage:    Config.ReleaseStage,
+			Hostname:        Config.Hostname,
+			AppType:         Config.AppType,
+			AppVersion:      Config.AppVersion,
+			Logger:          Config.Logger,
+		})
 		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 	}
 }

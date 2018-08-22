@@ -51,8 +51,9 @@ type Configuration struct {
 	// bugsnag.StartSession() when appropriate for your application. See the
 	// official docs for instructions and examples of associating handled
 	// errors with sessions and ensuring error rate accuracy on the Bugsnag
-	// dashboard.
-	AutoCaptureSessions bool
+	// dashboard. This will default to true, but is stored as an interface to enable
+	// us to detect when this option has not been set.
+	AutoCaptureSessions interface{}
 
 	// The hostname of the current server. This defaults to the return value of
 	// os.Hostname() and is graphed in the Bugsnag dashboard.
@@ -145,11 +146,24 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Synchronous {
 		config.Synchronous = true
 	}
+
+	if other.AutoCaptureSessions != nil {
+		config.AutoCaptureSessions = other.AutoCaptureSessions
+	}
 	config.updateEndpoints(other.Endpoint, &other.Endpoints)
 	return config
 }
 
+func (config *Configuration) IsAutoCaptureSessions() bool {
+	val, ok := config.AutoCaptureSessions.(bool)
+	if !ok {
+		return false
+	}
+	return val
+}
+
 func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {
+
 	if endpoint != "" {
 		config.Logger.Printf("WARNING: the 'Endpoint' Bugsnag configuration parameter is deprecated in favor of 'Endpoints'")
 		config.Endpoints.Notify = endpoint

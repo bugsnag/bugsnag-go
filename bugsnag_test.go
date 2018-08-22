@@ -124,7 +124,7 @@ func TestNotify(t *testing.T) {
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
 	})
-	assertValidSession(t, event, false)
+	assertValidSession(t, event, handled)
 
 	for k, exp := range map[string]string{
 		"metaData.test.password":        "[REDACTED]",
@@ -180,7 +180,7 @@ func TestHandler(t *testing.T) {
 		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
 	})
 	event := getIndex(json, "events", 0)
-	assertValidSession(t, event, true)
+	assertValidSession(t, event, unhandled)
 	for k, exp := range map[string]string{
 		"metaData.request.httpMethod": "GET",
 		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
@@ -332,20 +332,6 @@ func TestNotifyWithoutError(t *testing.T) {
 				t.Errorf("Expected to see '%s' in logged message but logged message was '%s'", exp, got)
 			}
 		}
-	}
-}
-
-func TestConfigureTwice(t *testing.T) {
-	sessionTracker = nil
-
-	l := logger{}
-	Configure(Configuration{Logger: &l})
-	if l.msg != "" {
-		t.Errorf("unexpected log message: %s", l.msg)
-	}
-	Configure(Configuration{})
-	if got, exp := l.msg, configuredMultipleTimes; exp != got {
-		t.Errorf("unexpected log message: '%s', expected '%s'", got, exp)
 	}
 }
 

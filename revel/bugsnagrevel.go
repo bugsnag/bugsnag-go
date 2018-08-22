@@ -4,31 +4,40 @@
 package bugsnagrevel
 
 import (
-	"github.com/bugsnag/bugsnag-go"
-	"github.com/revel/revel"
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/bugsnag/bugsnag-go"
+	"github.com/revel/revel"
 )
 
 var once sync.Once
 
+// FrameworkName is the name of the framework this middleware applies to
 const FrameworkName string = "Revel"
 
 var errorHandlingState = bugsnag.HandledState{
-	bugsnag.SeverityReasonUnhandledMiddlewareError,
-	bugsnag.SeverityError,
-	true,
-	FrameworkName,
+	SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
+	OriginalSeverity: bugsnag.SeverityError,
+	Unhandled:        true,
+	Framework:        FrameworkName,
 }
 
 // Filter should be added to the filter chain just after the PanicFilter.
 // It sends errors to Bugsnag automatically. Configuration is read out of
 // conf/app.conf, you should set bugsnag.apikey, and can also set
-// bugsnag.endpoint, bugsnag.releasestage, bugsnag.apptype, bugsnag.appversion,
+// bugsnag.endpoints, bugsnag.releasestage, bugsnag.apptype, bugsnag.appversion,
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
+	// Record a session if auto capture sessions is enabled
+	if bugsnag.Config.IsAutoCaptureSessions() {
+		ctx := bugsnag.StartSession(context.Background())
+		c.Args["context"] = ctx
+	}
+
 	defer bugsnag.AutoNotify(c, errorHandlingState)
 	fc[0](c, fc[1:])
 }
@@ -64,7 +73,8 @@ func init() {
 		}
 
 		bugsnag.Configure(bugsnag.Configuration{
-			APIKey: revel.Config.StringDefault("bugsnag.apikey", ""),
+			APIKey:              revel.Config.StringDefault("bugsnag.apikey", ""),
+			AutoCaptureSessions: revel.Config.BoolDefault("bugnsnag.autocapturesessions", true),
 			Endpoints: bugsnag.Endpoints{
 				Notify:   revel.Config.StringDefault("bugsnag.endpoints.notify", ""),
 				Sessions: revel.Config.StringDefault("bugsnag.endpoints.sessions", ""),

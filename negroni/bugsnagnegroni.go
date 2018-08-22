@@ -1,22 +1,25 @@
 package bugsnagnegroni
 
 import (
-	"github.com/bugsnag/bugsnag-go"
 	"net/http"
+
+	"github.com/bugsnag/bugsnag-go"
 )
 
+// FrameworkName is the name of the framework this middleware applies to
 const FrameworkName string = "Negroni"
 
 type handler struct {
 	rawData []interface{}
 }
 
+// AutoNotify sends any panics to bugsnag, and then re-raises them.
 func AutoNotify(rawData ...interface{}) *handler {
 	state := bugsnag.HandledState{
-		bugsnag.SeverityReasonUnhandledMiddlewareError,
-		bugsnag.SeverityError,
-		true,
-		FrameworkName,
+		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
+		OriginalSeverity: bugsnag.SeverityError,
+		Unhandled:        true,
+		Framework:        FrameworkName,
 	}
 	rawData = append(rawData, state)
 	return &handler{
@@ -25,7 +28,14 @@ func AutoNotify(rawData ...interface{}) *handler {
 }
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	notifier := bugsnag.New(append(h.rawData, r)...)
-	defer notifier.AutoNotify(r)
-	next(rw, r)
+	request := r
+	// Record a session if auto capture sessions is enabled
+	if bugsnag.Config.IsAutoCaptureSessions() {
+		ctx := bugsnag.StartSession(r.Context())
+		request = r.WithContext(ctx)
+	}
+
+	notifier := bugsnag.New(append(h.rawData, request)...)
+	defer notifier.AutoNotify(request)
+	next(rw, request)
 }

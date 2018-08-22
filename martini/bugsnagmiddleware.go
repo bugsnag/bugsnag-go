@@ -36,6 +36,7 @@ import (
 	"github.com/go-martini/martini"
 )
 
+// FrameworkName is the name of the framework this middleware applies to
 const FrameworkName string = "Martini"
 
 // AutoNotify sends any panics to bugsnag, and then re-raises them.
@@ -46,10 +47,10 @@ const FrameworkName string = "Martini"
 func AutoNotify(rawData ...interface{}) martini.Handler {
 
 	state := bugsnag.HandledState{
-		bugsnag.SeverityReasonUnhandledMiddlewareError,
-		bugsnag.SeverityError,
-		true,
-		FrameworkName,
+		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
+		OriginalSeverity: bugsnag.SeverityError,
+		Unhandled:        true,
+		Framework:        FrameworkName,
 	}
 	rawData = append(rawData, state)
 	// set the release stage based on the martini environment.
@@ -57,10 +58,19 @@ func AutoNotify(rawData ...interface{}) martini.Handler {
 		rawData...)
 
 	return func(r *http.Request, c martini.Context) {
+		request := r
+		// Record a session if auto capture sessions is enabled
+		if bugsnag.Config.IsAutoCaptureSessions() {
+			ctx := bugsnag.StartSession(r.Context())
+			request = r.WithContext(ctx)
+
+			// Replace the request with the new request with session info
+			c.MapTo(request, (*http.Request)(nil))
+		}
 
 		// create a notifier that has the current request bound to it
-		notifier := bugsnag.New(append(rawData, r)...)
-		defer notifier.AutoNotify(r)
+		notifier := bugsnag.New(append(rawData, request)...)
+		defer notifier.AutoNotify(request)
 		c.Map(notifier)
 		c.Next()
 	}
