@@ -186,6 +186,7 @@ func startSessionTracking() {
 	})
 	if sessionTracker != nil {
 		Config.logf(configuredMultipleTimes)
+	} else {
+		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 	}
-	sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 }
