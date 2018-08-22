@@ -231,6 +231,9 @@ func TestAutoNotify(t *testing.T) {
 		panic("eggs")
 	}()
 
+	// Note: If this line panics attempting to convert a `runtime.errorString`
+	// into `string` then comment out the `panicked = recover()` line above, as
+	// the panic you received here is not the one we expected.
 	if panicked.(string) != "eggs" {
 		t.Errorf("didn't re-panic")
 	}

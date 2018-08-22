@@ -33,23 +33,22 @@ func New(rawData ...interface{}) *Notifier {
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
-func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
-	config := notifier.Config
-	return notifier.NotifySync(err, config.Synchronous, rawData...)
+func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
+	return notifier.NotifySync(append(rawData, notifier.Config.Synchronous)...)
 }
 
 // NotifySync sends an error to Bugsnag. The synchronous parameter specifies
 // whether to send the report in the current context. Any rawData you pass here
 // will be sent to Bugsnag after being converted to JSON. e.g.
 // bugsnag.SeverityError,  bugsnag.Context, or bugsnag.MetaData.
-func (notifier *Notifier) NotifySync(err error, synchronous bool, rawData ...interface{}) (e error) {
-	event, config := newEvent(errors.New(err, 1), rawData, notifier)
+func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
+	event, config := newEvent(rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
 		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
-			if synchronous {
+			if config.Synchronous {
 				return (&payload{event, config}).deliver()
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.
@@ -83,7 +82,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(errors.New(err, 2), rawData...)
+		notifier.Notify(append(rawData, errors.New(err, 2))...)
 		panic(err)
 	}
 }
@@ -96,7 +95,7 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(errors.New(err, 2), rawData...)
+		notifier.Notify(append(rawData, errors.New(err, 2))...)
 	}
 }
 

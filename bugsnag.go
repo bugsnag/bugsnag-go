@@ -57,7 +57,7 @@ func StartSession(ctx context.Context) context.Context {
 // you can pass the current http.Request to Bugsnag to see information about it
 // in the dashboard, or set the severity of the notification.
 func Notify(err error, rawData ...interface{}) error {
-	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
+	return defaultNotifier.Notify(append(rawData, errors.New(err, 1))...)
 }
 
 // AutoNotify logs a panic on a goroutine and then repanics.
@@ -75,7 +75,7 @@ func AutoNotify(rawData ...interface{}) {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.NotifySync(errors.New(err, 2), true, rawData...)
+		defaultNotifier.NotifySync(append(rawData, errors.New(err, 2), true)...)
 		panic(err)
 	}
 }
@@ -89,7 +89,7 @@ func Recover(rawData ...interface{}) {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.Notify(errors.New(err, 2), rawData...)
+		defaultNotifier.Notify(append(rawData, errors.New(err, 2))...)
 	}
 }
 

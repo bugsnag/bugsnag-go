@@ -102,31 +102,35 @@ type Event struct {
 	handledState HandledState
 }
 
-func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Event, *Configuration) {
-
+func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration) {
 	config := notifier.Config
 	event := &Event{
-		Error:   err,
-		RawData: append(notifier.RawData, rawData...),
-
-		ErrorClass: err.TypeName(),
-		Message:    err.Error(),
-		Stacktrace: make([]stackFrame, len(err.StackFrames())),
-
+		RawData:  append(notifier.RawData, rawData...),
 		Severity: SeverityWarning,
-
 		MetaData: make(MetaData),
-
 		handledState: HandledState{
-			SeverityReasonHandledError,
-			SeverityWarning,
-			false,
-			"",
+			SeverityReason:   SeverityReasonHandledError,
+			OriginalSeverity: SeverityWarning,
+			Unhandled:        false,
+			Framework:        "",
 		},
 	}
 
+	var err *errors.Error
+
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
+
+		case error, errors.Error:
+			err = errors.New(datum.(error), 1)
+			event.Error = err
+			event.ErrorClass = err.TypeName()
+			event.Message = err.Error()
+			event.Stacktrace = make([]stackFrame, len(err.StackFrames()))
+
+		case bool:
+			config.Synchronous = bool(datum)
+
 		case severity:
 			event.Severity = datum
 			event.handledState.OriginalSeverity = datum
