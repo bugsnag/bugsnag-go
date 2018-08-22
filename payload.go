@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/bugsnag/bugsnag-go/headers"
 )
 
 const notifyPayloadVersion = "2"
@@ -35,7 +37,7 @@ func (p *payload) deliver() error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver unable to create request: %v", err)
 	}
-	for k, v := range bugsnagPrefixedHeaders(p.APIKey, notifyPayloadVersion) {
+	for k, v := range headers.PrefixedHeaders(p.APIKey, notifyPayloadVersion) {
 		req.Header.Add(k, v)
 	}
 	resp, err := client.Do(req)

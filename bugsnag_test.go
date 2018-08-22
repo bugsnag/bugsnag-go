@@ -506,6 +506,24 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 	assertSeverityReasonEqual(t, json, "info", "userCallbackSetSeverity", false)
 }
 
+type logger struct{ msg string }
+
+func (l *logger) Printf(format string, v ...interface{}) { l.msg = format }
+
+func TestConfigureTwice(t *testing.T) {
+	sessionTracker = nil
+
+	l := logger{}
+	Configure(Configuration{Logger: &l})
+	if l.msg != "" {
+		t.Errorf("unexpected log message: %s", l.msg)
+	}
+	Configure(Configuration{})
+	if got, exp := l.msg, configuredMultipleTimes; exp != got {
+		t.Errorf("unexpected log message: '%s', expected '%s'", got, exp)
+	}
+}
+
 func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity string, reasonType string, expUnhandled bool) {
 	event := json.Get("events").GetIndex(0)
 	reason := event.GetPath("severityReason", "type").MustString()

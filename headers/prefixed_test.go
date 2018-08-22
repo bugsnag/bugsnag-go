@@ -1,4 +1,4 @@
-package bugsnag
+package headers
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ const APIKey = "abcd1234abcd1234"
 const testPayloadVersion = "3"
 
 func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
-	headers := bugsnagPrefixedHeaders(APIKey, testPayloadVersion)
+	headers := PrefixedHeaders(APIKey, testPayloadVersion)
 	testCases := []struct {
 		header   string
 		expected string
@@ -28,7 +28,7 @@ func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
 }
 
 func TestTimeDependentBugsnagPrefixedHeaders(t *testing.T) {
-	headers := bugsnagPrefixedHeaders(APIKey, testPayloadVersion)
+	headers := PrefixedHeaders(APIKey, testPayloadVersion)
 	sentAtString := headers["Bugsnag-Sent-At"]
 	sentAt, err := time.Parse(time.RFC3339, sentAtString)
 

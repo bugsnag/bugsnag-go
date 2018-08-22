@@ -1,46 +1,38 @@
-package bugsnag
+package sessions
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"os"
 	"runtime"
 	"time"
-
-	uuid "github.com/satori/go.uuid"
 )
 
-const sessionPayloadVersion = "1.0"
-
-type session struct {
-	startedAt time.Time
-	id        uuid.UUID
-}
-
+// notifierPayload defines the .notifier subobject of the payload
 type notifierPayload struct {
 	Name    string `json:"name"`
 	URL     string `json:"url"`
 	Version string `json:"version"`
 }
 
+// appPayload defines the .app subobject of the payload
 type appPayload struct {
 	Type         string `json:"type"`
 	ReleaseStage string `json:"releaseStage"`
 	Version      string `json:"version"`
 }
 
+// devicePayload defines the .device subobject of the payload
 type devicePayload struct {
 	OsName   string `json:"osName"`
 	Hostname string `json:"hostname"`
 }
 
+// sessionCountsPayload defines the .sessionCounts subobject of the payload
 type sessionCountsPayload struct {
 	StartedAt       string `json:"startedAt"`
 	SessionsStarted int    `json:"sessionsStarted"`
 }
 
+// sessionPayload defines the top level payload object
 type sessionPayload struct {
 	Notifier      notifierPayload      `json:"notifier"`
 	App           appPayload           `json:"app"`
@@ -48,37 +40,8 @@ type sessionPayload struct {
 	SessionCounts sessionCountsPayload `json:"sessionCounts"`
 }
 
-func deliverSessions(sessions []session, config Configuration) error {
-	if config.Endpoints.Sessions == "" {
-		return nil //Notify endpoint changed without also changing sessions
-	}
-	sp := makeSessionPayload(sessions, config)
-	buf, err := json.Marshal(sp)
-	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSessions unable to marshal json: %v", err)
-	}
-	client := http.Client{Transport: config.Transport}
-	req, err := http.NewRequest("POST", config.Endpoints.Sessions, bytes.NewBuffer(buf))
-	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSessions unable to create request: %v", err)
-	}
-	for k, v := range bugsnagPrefixedHeaders(config.APIKey, sessionPayloadVersion) {
-		req.Header.Add(k, v)
-	}
-	res, err := client.Do(req)
-
-	if err != nil {
-		return fmt.Errorf("bugsnag/session.deliverSessions unable to deliver session: %v", err)
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
-	}
-	return nil
-}
-
-func makeSessionPayload(sessions []session, config Configuration) sessionPayload {
+// makeSessionPayload creates a sessionPayload based off of the given sessions and config
+func makeSessionPayload(sessions []*session, config *SessionTrackingConfiguration) *sessionPayload {
 	releaseStage := config.ReleaseStage
 	if releaseStage == "" {
 		releaseStage = "production"
@@ -88,11 +51,11 @@ func makeSessionPayload(sessions []session, config Configuration) sessionPayload
 		hostname, _ = os.Hostname() //Ignore the hostname if this call errors
 	}
 
-	return sessionPayload{
+	return &sessionPayload{
 		Notifier: notifierPayload{
 			Name:    "Bugsnag Go",
 			URL:     "https://github.com/bugsnag/bugsnag-go",
-			Version: VERSION,
+			Version: config.Version,
 		},
 		App: appPayload{
 			Type:         config.AppType,

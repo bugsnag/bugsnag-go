@@ -1,13 +1,17 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/bugsnag-go/errors"
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
+
+	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/bugsnag/bugsnag-go/sessions"
 
 	// Fixes a bug with SHA-384 intermediate certs on some platforms.
 	// - https://github.com/bugsnag/bugsnag-go/issues/9
@@ -16,14 +20,21 @@ import (
 
 // The current version of bugsnag-go.
 const VERSION = "1.3.1"
+const configuredMultipleTimes = "WARNING: Bugsnag was configured twice. It is recommended to only call bugsnag.Configure once to ensure consistent session tracking behavior"
 
 var once sync.Once
 var middleware middlewareStack
 
 // The configuration for the default bugsnag notifier.
 var Config Configuration
+var sessionTrackingConfig sessions.SessionTrackingConfiguration
 
+// DefaultSessionPublishInterval defines how often sessions should be sent to
+// Bugsnag.
+// Deprecated: Exposed for developer sanity in testing. Modify at own risk.
+var DefaultSessionPublishInterval = 60 * time.Second
 var defaultNotifier = Notifier{&Config, nil}
+var sessionTracker sessions.SessionTracker
 
 // Configure Bugsnag. The only required setting is the APIKey, which can be
 // obtained by clicking on "Settings" in your Bugsnag dashboard. This function
@@ -32,6 +43,13 @@ var defaultNotifier = Notifier{&Config, nil}
 func Configure(config Configuration) {
 	Config.update(&config)
 	once.Do(Config.PanicHandler)
+	startSessionTracking()
+}
+
+// StartSession creates a clone of the context.Context instance with Bugsnag
+// session data attached.
+func StartSession(ctx context.Context) context.Context {
+	return sessionTracker.StartSession(ctx)
 }
 
 // Notify sends an error to Bugsnag along with the current stack trace. The
@@ -150,5 +168,25 @@ func init() {
 	hostname, err := os.Hostname()
 	if err == nil {
 		Config.Hostname = hostname
+	}
+}
+
+func startSessionTracking() {
+	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
+		APIKey:          Config.APIKey,
+		Endpoint:        Config.Endpoints.Sessions,
+		Version:         VERSION,
+		PublishInterval: DefaultSessionPublishInterval,
+		Transport:       Config.Transport,
+		ReleaseStage:    Config.ReleaseStage,
+		Hostname:        Config.Hostname,
+		AppType:         Config.AppType,
+		AppVersion:      Config.AppVersion,
+		Logger:          Config.Logger,
+	})
+	if sessionTracker != nil {
+		Config.logf(configuredMultipleTimes)
+	} else {
+		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 	}
 }
