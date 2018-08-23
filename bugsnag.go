@@ -56,8 +56,8 @@ func StartSession(ctx context.Context) context.Context {
 // rawData is used to send extra information along with the error. For example
 // you can pass the current http.Request to Bugsnag to see information about it
 // in the dashboard, or set the severity of the notification.
-func Notify(err error, rawData ...interface{}) error {
-	return defaultNotifier.Notify(append(rawData, errors.New(err, 1))...)
+func Notify(rawData ...interface{}) error {
+	return defaultNotifier.Notify(rawData...)
 }
 
 // AutoNotify logs a panic on a goroutine and then repanics.
