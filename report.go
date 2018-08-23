@@ -1,5 +1,11 @@
 package bugsnag
 
+import (
+	"time"
+
+	uuid "github.com/satori/go.uuid"
+)
+
 type reportJSON struct {
 	APIKey   string       `json:"apiKey"`
 	Events   []eventJSON  `json:"events"`
@@ -20,10 +26,22 @@ type eventJSON struct {
 	GroupingHash   string              `json:"groupingHash,omitempty"`
 	Metadata       interface{}         `json:"metaData"`
 	PayloadVersion string              `json:"payloadVersion"`
+	Session        *sessionJSON        `json:"session,omitempty"`
 	Severity       string              `json:"severity"`
 	SeverityReason *severityReasonJSON `json:"severityReason,omitempty"`
 	Unhandled      bool                `json:"unhandled"`
 	User           *User               `json:"user,omitempty"`
+}
+
+type sessionJSON struct {
+	StartedAt time.Time       `json:"startedAt"`
+	ID        uuid.UUID       `json:"id"`
+	Events    eventCountsJSON `json:"events"`
+}
+
+type eventCountsJSON struct {
+	Handled   int `json:"handled"`
+	Unhandled int `json:"unhandled"`
 }
 
 type appJSON struct {

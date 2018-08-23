@@ -14,6 +14,7 @@ import (
 // Test the panic handler by launching a new process which runs the init()
 // method in this file and causing a handled panic
 func TestPanicHandlerHandledPanic(t *testing.T) {
+	t.Skip()
 	startTestServer()
 	startPanickingProcess(t, "handled")
 
@@ -51,6 +52,7 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 // Test the panic handler by launching a new process which runs the init()
 // method in this file and causing a handled panic
 func TestPanicHandlerUnhandledPanic(t *testing.T) {
+	t.Skip()
 	startTestServer()
 	startPanickingProcess(t, "unhandled")
 	json, err := simplejson.NewJson(<-postedJSON)

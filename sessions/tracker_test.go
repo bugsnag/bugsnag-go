@@ -85,10 +85,10 @@ func makeSessionTracker() (*sessionTracker, chan *Session) {
 }
 
 func verifyValidSession(t *testing.T, s *Session) {
-	if (s.startedAt == time.Time{}) {
+	if (s.StartedAt == time.Time{}) {
 		t.Errorf("Expected start time to be set but was nil")
 	}
-	if len(s.id) != 16 {
-		t.Errorf("Expected UUID to be a valid V4 UUID but was %s", s.id)
+	if len(s.ID) != 16 {
+		t.Errorf("Expected UUID to be a valid V4 UUID but was %s", s.ID)
 	}
 }

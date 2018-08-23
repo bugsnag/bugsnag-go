@@ -8,14 +8,14 @@ import (
 
 // Session represents a start time and a unique ID that identifies the session.
 type Session struct {
-	startedAt time.Time
-	id        uuid.UUID
+	StartedAt time.Time
+	ID        uuid.UUID
 }
 
 func newSession() *Session {
 	sessionID, _ := uuid.NewV4()
 	return &Session{
-		startedAt: time.Now(),
-		id:        sessionID,
+		StartedAt: time.Now(),
+		ID:        sessionID,
 	}
 }

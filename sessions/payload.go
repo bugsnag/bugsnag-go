@@ -67,7 +67,7 @@ func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguratio
 			Hostname: hostname,
 		},
 		SessionCounts: sessionCountsPayload{
-			StartedAt:       sessions[0].startedAt.UTC().Format(time.RFC3339),
+			StartedAt:       sessions[0].StartedAt.UTC().Format(time.RFC3339),
 			SessionsStarted: len(sessions),
 		},
 	}

@@ -75,6 +75,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 				GroupingHash:   p.GroupingHash,
 				Metadata:       p.MetaData.sanitize(p.ParamsFilters),
 				PayloadVersion: notifyPayloadVersion,
+				Session:        p.makeSession(),
 				Severity:       p.Severity.String,
 				SeverityReason: p.severityReasonPayload(),
 				Unhandled:      p.handledState.Unhandled,
@@ -87,6 +88,25 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 			Version: VERSION,
 		},
 	})
+}
+
+func (p *payload) makeSession() *sessionJSON {
+	session := sessionTracker.GetSession(p.Ctx)
+	if p.Ctx == nil {
+		return nil
+	}
+	handled, unhandled := 1, 0
+	if p.handledState.Unhandled {
+		handled, unhandled = unhandled, handled
+	}
+	return &sessionJSON{
+		ID:        session.ID,
+		StartedAt: session.StartedAt,
+		Events: eventCountsJSON{
+			Handled:   handled,
+			Unhandled: unhandled,
+		},
+	}
 }
 
 func (p *payload) severityReasonPayload() *severityReasonJSON {

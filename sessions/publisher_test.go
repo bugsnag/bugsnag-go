@@ -152,9 +152,9 @@ func makeSessions() ([]*Session, string) {
 	earliestTime := time.Now().Add(-6 * time.Minute)
 	genUUID := func() uuid.UUID { sessionID, _ := uuid.NewV4(); return sessionID }
 	return []*Session{
-		{startedAt: earliestTime, id: genUUID()},
-		{startedAt: earliestTime.Add(2 * time.Minute), id: genUUID()},
-		{startedAt: earliestTime.Add(4 * time.Minute), id: genUUID()},
+		{StartedAt: earliestTime, ID: genUUID()},
+		{StartedAt: earliestTime.Add(2 * time.Minute), ID: genUUID()},
+		{StartedAt: earliestTime.Add(4 * time.Minute), ID: genUUID()},
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 
