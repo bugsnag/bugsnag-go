@@ -15,7 +15,7 @@ func NewHTTPShipper() Shipper {
 type httpShipper struct {
 }
 
-func (s *httpShipper) Deliver(p *payload) error {
+func (s *httpShipper) Deliver(p *Payload) error {
 	if len(p.APIKey) != 32 {
 		return fmt.Errorf("bugsnag/payload.deliver: invalid api key")
 	}

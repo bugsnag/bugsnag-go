@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 )
 
-type payload struct {
+// Payload is a wrapper around Event and Configuration data
+type Payload struct {
 	*Event
 	*Configuration
 }
 
 type hash map[string]interface{}
 
-func (p *payload) MarshalJSON() ([]byte, error) {
+func (p *Payload) MarshalJSON() ([]byte, error) {
 
 	severityReason := hash{
 		"type": p.handledState.SeverityReason,

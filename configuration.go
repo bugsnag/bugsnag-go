@@ -70,7 +70,7 @@ type Configuration struct {
 	}
 	// Shipper is the expected interface for sending payload data to a backend
 	Shipper interface {
-		Deliver(p *payload) error
+		Deliver(p *Payload) error
 	}
 	// The http Transport to use, defaults to the default http Transport. This
 	// can be configured if you are in an environment like Google App Engine

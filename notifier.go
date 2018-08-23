@@ -50,11 +50,11 @@ func (notifier *Notifier) NotifySync(err error, synchronous bool, rawData ...int
 		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
 			if synchronous {
-				return config.Shipper.Deliver(&payload{event, config})
+				return config.Shipper.Deliver(&Payload{event, config})
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.
 			go func(event *Event, config *Configuration) {
-				err := config.Shipper.Deliver(&payload{event, config})
+				err := config.Shipper.Deliver(&Payload{event, config})
 				if err != nil {
 					config.logf("bugsnag.Notify: %v", err)
 				}
