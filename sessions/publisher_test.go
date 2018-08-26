@@ -1,20 +1,22 @@
 package sessions
 
 import (
-	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
 	"testing"
 	"time"
 
-	"github.com/bugsnag/bugsnag-go/sessions/internal"
+	simplejson "github.com/bitly/go-simplejson"
 	uuid "github.com/satori/go.uuid"
 )
 
-const sessionEndpoint string = "http://localhost:9182"
-const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
+const (
+	sessionEndpoint = "http://localhost:9181"
+	testAPIKey      = "166f5ad3590596f9aa8d601ea89af845"
+)
 
 type testHTTPClient struct {
 	reqs []*http.Request
@@ -34,16 +36,10 @@ func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
-	smallConfig := SessionTrackingConfiguration{
-		Endpoint:  sessionEndpoint,
-		Transport: http.DefaultTransport,
-		APIKey:    testAPIKey,
-	}
-
 	testClient := testHTTPClient{}
 
 	publisher := publisher{
-		config: &smallConfig,
+		config: &SessionTrackingConfiguration{Endpoint: sessionEndpoint, Transport: http.DefaultTransport, APIKey: testAPIKey},
 		client: &testClient,
 	}
 
@@ -53,38 +49,45 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	}
 	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
-	root, err := testutil.ExtractPayload(req)
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	root, err := simplejson.NewJson(body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	hostname, _ := os.Hostname()
+	notifier := root.Get("notifier")
+	app := root.Get("app")
+	device := root.Get("device")
+	sessionCounts := root.Get("sessionCounts")
 	testCases := []struct {
 		property string
-		expected string
+		got      interface{}
+		exp      interface{}
 	}{
-		{property: "notifier.name", expected: "Bugsnag Go"},
-		{property: "notifier.url", expected: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", expected: ""},
-		{property: "app.type", expected: ""},
-		{property: "app.releaseStage", expected: "production"},
-		{property: "app.version", expected: ""},
-		{property: "device.osName", expected: runtime.GOOS},
-		{property: "device.hostname", expected: hostname},
-		{property: "sessionCounts.startedAt", expected: earliestTime},
+		{property: "notifier.name", got: notifier.Get("name").MustString(), exp: "Bugsnag Go"},
+		{property: "notifier.url", got: notifier.Get("url").MustString(), exp: "https://github.com/bugsnag/bugsnag-go"},
+		{property: "notifier.version", got: notifier.Get("version").MustString(), exp: ""},
+
+		{property: "app.type", got: app.Get("type").MustString(), exp: ""},
+		{property: "app.releaseStage", got: app.Get("releaseStage").MustString(), exp: "production"},
+		{property: "app.version", got: app.Get("version").MustString(), exp: ""},
+
+		{property: "device.osName", got: device.Get("osName").MustString(), exp: runtime.GOOS},
+		{property: "device.hostname", got: device.Get("hostname").MustString(), exp: hostname},
+		{property: "sessionCounts.startedAt", got: sessionCounts.Get("startedAt").MustString(), exp: earliestTime},
+		{property: "sessionCounts.sessionsStarted", got: sessionCounts.Get("sessionsStarted").MustInt(), exp: len(sessions)},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.property, func(st *testing.T) {
-			got, err := testutil.GetJSONString(root, tc.property)
-			if err != nil {
-				t.Error(err)
-			}
-			if got != tc.expected {
-				t.Errorf("Expected property '%s' in JSON to be '%s' but was '%s'", tc.property, tc.expected, got)
+			if tc.got != tc.exp {
+				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", tc.property, tc.exp, tc.got)
 			}
 		})
 	}
-	assertSessionsStarted(t, root, len(sessions))
 }
 
 func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
@@ -102,37 +105,42 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 	req := testClient.reqs[0]
 	assertCorrectHeaders(t, req)
-	root, err := testutil.ExtractPayload(req)
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	root, err := simplejson.NewJson(body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	notifier := root.Get("notifier")
+	device := root.Get("device")
+	app := root.Get("app")
+	sessionCounts := root.Get("sessionCounts")
 	testCases := []struct {
 		property string
-		expected string
+		expected interface{}
+		got      interface{}
 	}{
-		{property: "notifier.name", expected: "Bugsnag Go"},
-		{property: "notifier.url", expected: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", expected: "2.3.4-alpha"},
-		{property: "app.type", expected: "gin"},
-		{property: "app.releaseStage", expected: "staging"},
-		{property: "app.version", expected: "1.2.3-beta"},
-		{property: "device.osName", expected: runtime.GOOS},
-		{property: "device.hostname", expected: "gce-1234-us-west-1"},
-		{property: "sessionCounts.startedAt", expected: earliestTime},
+		{property: "notifier.name", got: notifier.Get("name").MustString(), expected: "Bugsnag Go"},
+		{property: "notifier.url", got: notifier.Get("url").MustString(), expected: "https://github.com/bugsnag/bugsnag-go"},
+		{property: "notifier.version", got: notifier.Get("version").MustString(), expected: "2.3.4-alpha"},
+		{property: "app.type", got: app.Get("type").MustString(), expected: "gin"},
+		{property: "app.releaseStage", got: app.Get("releaseStage").MustString(), expected: "staging"},
+		{property: "app.version", got: app.Get("version").MustString(), expected: "1.2.3-beta"},
+		{property: "device.osName", got: device.Get("osName").MustString(), expected: runtime.GOOS},
+		{property: "device.hostname", got: device.Get("hostname").MustString(), expected: "gce-1234-us-west-1"},
+		{property: "sessionCounts.startedAt", got: sessionCounts.Get("startedAt").MustString(), expected: earliestTime},
+		{property: "sessionCounts.sessionsStarted", got: sessionCounts.Get("sessionsStarted").MustInt(), expected: len(sessions)},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.property, func(st *testing.T) {
-			got, err := testutil.GetJSONString(root, tc.property)
-			if err != nil {
-				t.Error(err)
-			}
-			if got != tc.expected {
-				t.Errorf("Expected property '%s' in JSON to be '%s' but was '%s'", tc.property, tc.expected, got)
+			if tc.got != tc.expected {
+				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", tc.property, tc.expected, tc.got)
 			}
 		})
 	}
-	assertSessionsStarted(t, root, len(sessions))
 }
 
 func makeHeavyConfig() *SessionTrackingConfiguration {
@@ -156,25 +164,6 @@ func makeSessions() ([]*Session, string) {
 		{StartedAt: earliestTime.Add(2 * time.Minute), ID: genUUID()},
 		{StartedAt: earliestTime.Add(4 * time.Minute), ID: genUUID()},
 	}, earliestTime.UTC().Format(time.RFC3339)
-}
-
-func assertSessionsStarted(t *testing.T, root *json.RawMessage, expected int) {
-	subobj, err := testutil.GetNestedJSON(root, "sessionCounts")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	var sessionCounts map[string]*json.RawMessage
-	err = json.Unmarshal(*subobj, &sessionCounts)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	var got int
-	err = json.Unmarshal(*sessionCounts["sessionsStarted"], &got)
-	if got != expected {
-		t.Errorf("Expected %d sessions to be registered but was %d", expected, got)
-	}
 }
 
 func assertCorrectHeaders(t *testing.T, req *http.Request) {
