@@ -1,13 +1,14 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/bugsnag-go/errors"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+
+	"github.com/bugsnag/bugsnag-go/errors"
 
 	// Fixes a bug with SHA-384 intermediate certs on some platforms.
 	// - https://github.com/bugsnag/bugsnag-go/issues/9
@@ -40,6 +41,15 @@ func Configure(config Configuration) {
 // in the dashboard, or set the severity of the notification.
 func Notify(err error, rawData ...interface{}) error {
 	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
+}
+
+// NotifySkip sends an error to Bugsnag along with the current stack trace. The
+// rawData is used to send extra information along with the error. For example
+// you can pass the current http.Request to Bugsnag to see information about it
+// in the dashboard, or set the severity of the notification.  The skip allows custom
+// skipping of stacktrace data
+func NotifySkip(err error, skip int, rawData ...interface{}) error {
+	return defaultNotifier.Notify(errors.New(err, skip+1), rawData...)
 }
 
 // AutoNotify logs a panic on a goroutine and then repanics.
