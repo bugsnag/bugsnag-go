@@ -1,26 +1,46 @@
 package bugsnag
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/bugsnag/bugsnag-go/sessions"
 )
 
 type _recurse struct {
 	Recurse *_recurse
 }
 
-var postedJSON = make(chan []byte, 10)
-var testOnce sync.Once
-var testEndpoint string
 var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
+
+// setup sets up a simple sessionTracker and returns a test event server for receiving the event payloads.
+// report payloads published to ts.URL will be put on the returned channel
+func setup() (*httptest.Server, chan []byte) {
+	reports := make(chan []byte, 10)
+	sessionTracker = &testSessionTracker{}
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := ioutil.ReadAll(r.Body)
+		reports <- body
+	})), reports
+}
+
+type testSessionTracker struct{}
+
+func (t *testSessionTracker) StartSession(context.Context) context.Context {
+	return context.Background()
+}
+
+func (t *testSessionTracker) GetSession(context.Context) *sessions.Session {
+	return &sessions.Session{}
+}
 
 func TestConfigure(t *testing.T) {
 	Configure(Configuration{
@@ -37,7 +57,8 @@ func TestConfigure(t *testing.T) {
 }
 
 func TestNotify(t *testing.T) {
-	startTestServer()
+	ts, reports := setup()
+	defer ts.Close()
 
 	recurse := _recurse{}
 	recurse.Recurse = &recurse
@@ -50,15 +71,7 @@ func TestNotify(t *testing.T) {
 	})
 
 	Notify(fmt.Errorf("hello world"),
-		Configuration{
-			APIKey:          testAPIKey,
-			Endpoints:       Endpoints{Notify: testEndpoint},
-			ReleaseStage:    "test",
-			AppType:         "foo",
-			AppVersion:      "1.2.3",
-			Hostname:        "web1",
-			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
-		},
+		generateSampleConfig(ts.URL),
 		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Context{"testing"},
 		MetaData{"test": {
@@ -69,7 +82,7 @@ func TestNotify(t *testing.T) {
 		}},
 	)
 
-	json, err := simplejson.NewJson(<-postedJSON)
+	json, err := simplejson.NewJson(<-reports)
 
 	if err != nil {
 		t.Fatal(err)
@@ -137,21 +150,32 @@ func TestNotify(t *testing.T) {
 }
 
 func TestHandler(t *testing.T) {
-	startTestServer()
+	ts, reports := setup()
+	defer ts.Close()
 
-	l, err := runCrashyServer(Configuration{
-		APIKey:          testAPIKey,
-		Endpoints:       Endpoints{Notify: testEndpoint},
-		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
-		Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
-	}, SeverityInfo)
+	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", crashyHandler)
+	srv := http.Server{
+		Addr: l.Addr().String(),
+		Handler: Handler(mux, Configuration{
+			APIKey:          testAPIKey,
+			Endpoints:       Endpoints{Notify: ts.URL},
+			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
+			Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
+		}, SeverityInfo),
+		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
+	}
+
+	go srv.Serve(l)
+
 	http.Get("http://" + l.Addr().String() + "/ok?foo=bar")
 	l.Close()
 
-	json, err := simplejson.NewJson(<-postedJSON)
+	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,6 +243,8 @@ func TestHandler(t *testing.T) {
 }
 
 func TestAutoNotify(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
 
 	var panicked interface{}
 
@@ -226,7 +252,7 @@ func TestAutoNotify(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer AutoNotify(Configuration{Endpoints: Endpoints{Notify: testEndpoint}, APIKey: testAPIKey})
+		defer AutoNotify(Configuration{Endpoints: Endpoints{Notify: ts.URL}, APIKey: testAPIKey})
 
 		panic("eggs")
 	}()
@@ -238,7 +264,7 @@ func TestAutoNotify(t *testing.T) {
 		t.Errorf("didn't re-panic")
 	}
 
-	json, err := simplejson.NewJson(<-postedJSON)
+	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,13 +283,16 @@ func TestAutoNotify(t *testing.T) {
 }
 
 func TestRecover(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
 	var panicked interface{}
 
 	func() {
 		defer func() {
 			panicked = recover()
 		}()
-		defer Recover(Configuration{Endpoints: Endpoints{Notify: testEndpoint}, APIKey: testAPIKey})
+		defer Recover(Configuration{Endpoints: Endpoints{Notify: ts.URL}, APIKey: testAPIKey})
 
 		panic("ham")
 	}()
@@ -272,7 +301,7 @@ func TestRecover(t *testing.T) {
 		t.Errorf("re-panick'd")
 	}
 
-	json, err := simplejson.NewJson(<-postedJSON)
+	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -291,25 +320,27 @@ func TestRecover(t *testing.T) {
 }
 
 func TestSeverityReasonNotifyErr(t *testing.T) {
-	startTestServer()
+	ts, reports := setup()
+	defer ts.Close()
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig())
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
 
-	json, _ := simplejson.NewJson(<-postedJSON)
+	json, _ := simplejson.NewJson(<-reports)
 	assertSeverityReasonEqual(t, json, "warning", "handledError", false)
 }
 
 func TestSeverityReasonNotifyCallback(t *testing.T) {
-	startTestServer()
+	ts, reports := setup()
+	defer ts.Close()
 
 	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		event.Severity = SeverityInfo
 		return nil
 	})
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig())
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
 
-	json, _ := simplejson.NewJson(<-postedJSON)
+	json, _ := simplejson.NewJson(<-reports)
 	assertSeverityReasonEqual(t, json, "info", "userCallbackSetSeverity", false)
 }
 
@@ -350,10 +381,10 @@ func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity 
 	}
 }
 
-func generateSampleConfig() Configuration {
+func generateSampleConfig(endpoint string) Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
-		Endpoints:       Endpoints{Notify: testEndpoint},
+		Endpoints:       Endpoints{Notify: endpoint},
 		ReleaseStage:    "test",
 		AppType:         "foo",
 		AppVersion:      "1.2.3",
@@ -366,43 +397,4 @@ func crashyHandler(w http.ResponseWriter, r *http.Request) {
 	c := make(chan int)
 	close(c)
 	c <- 1
-}
-
-func runCrashyServer(rawData ...interface{}) (net.Listener, error) {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return nil, err
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", crashyHandler)
-	srv := http.Server{
-		Addr:     l.Addr().String(),
-		Handler:  Handler(mux, rawData...),
-		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
-	}
-
-	go srv.Serve(l)
-	return l, err
-}
-
-func startTestServer() {
-	testOnce.Do(func() {
-		mux := http.NewServeMux()
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				panic(err)
-			}
-			postedJSON <- body
-		})
-
-		l, err := net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			panic(err)
-		}
-		testEndpoint = "http://" + l.Addr().String() + "/"
-
-		go http.Serve(l, mux)
-	})
 }

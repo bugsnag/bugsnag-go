@@ -3,22 +3,24 @@
 package bugsnag
 
 import (
-	"github.com/bitly/go-simplejson"
-	"github.com/kardianos/osext"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/bitly/go-simplejson"
+	"github.com/kardianos/osext"
 )
 
 // Test the panic handler by launching a new process which runs the init()
 // method in this file and causing a handled panic
 func TestPanicHandlerHandledPanic(t *testing.T) {
-	t.Skip()
-	startTestServer()
-	startPanickingProcess(t, "handled")
+	ts, reports := setup()
+	defer ts.Close()
 
-	json, err := simplejson.NewJson(<-postedJSON)
+	startPanickingProcess(t, "handled", ts.URL)
+
+	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,19 +52,20 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 }
 
 // Test the panic handler by launching a new process which runs the init()
-// method in this file and causing a handled panic
+// method in this file and causing an unhandled panic
 func TestPanicHandlerUnhandledPanic(t *testing.T) {
-	t.Skip()
-	startTestServer()
-	startPanickingProcess(t, "unhandled")
-	json, err := simplejson.NewJson(<-postedJSON)
+	ts, reports := setup()
+	defer ts.Close()
+
+	startPanickingProcess(t, "unhandled", ts.URL)
+	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertSeverityReasonEqual(t, json, "error", "unhandledPanic", true)
 }
 
-func startPanickingProcess(t *testing.T, variant string) {
+func startPanickingProcess(t *testing.T, variant string, endpoint string) {
 	exePath, err := osext.Executable()
 	if err != nil {
 		t.Fatal(err)
@@ -71,7 +74,16 @@ func startPanickingProcess(t *testing.T, variant string) {
 	// Use the same trick as panicwrap() to re-run ourselves.
 	// In the init() block below, we will then panic.
 	cmd := exec.Command(exePath, os.Args[1:]...)
-	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_NOTIFY_ENDPOINT="+testEndpoint, "please_panic="+variant)
+	cmd.Env = append(os.Environ(), "BUGSNAG_API_KEY="+testAPIKey, "BUGSNAG_NOTIFY_ENDPOINT="+endpoint, "please_panic="+variant)
+
+	// Gift for the debugging developer:
+	// As these tests shell out we don't see, or even want to see, the output
+	// of these tests by default.  The following two lines may be uncommented
+	// in order to see what this command would print to stdout and stderr.
+	/*
+		bytes, _ := cmd.CombinedOutput()
+		fmt.Println(string(bytes))
+	*/
 
 	if err = cmd.Start(); err != nil {
 		t.Fatal(err)

@@ -24,7 +24,7 @@ func (p *payload) deliver() error {
 		return fmt.Errorf("bugsnag/payload.deliver: invalid api key")
 	}
 
-	buf, err := json.Marshal(p)
+	buf, err := p.MarshalJSON()
 
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
@@ -91,21 +91,26 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 }
 
 func (p *payload) makeSession() *sessionJSON {
-	session := sessionTracker.GetSession(p.Ctx)
-	if p.Ctx == nil {
-		return nil
-	}
 	handled, unhandled := 1, 0
 	if p.handledState.Unhandled {
 		handled, unhandled = unhandled, handled
 	}
+
+	// In the case of an immediate crash on startup, the sessionTracker may
+	// not have been set up just yet. We therefore have to fall back to a
+	// payload without a 'session' property
+	if sessionTracker == nil {
+		return nil
+	}
+
+	session := sessionTracker.GetSession(p.Ctx)
+	if p.Ctx == nil {
+		return nil
+	}
 	return &sessionJSON{
 		ID:        session.ID,
 		StartedAt: session.StartedAt,
-		Events: eventCountsJSON{
-			Handled:   handled,
-			Unhandled: unhandled,
-		},
+		Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
 	}
 }
 
