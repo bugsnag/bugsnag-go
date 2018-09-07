@@ -246,21 +246,24 @@ func TestAutoNotify(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
 
-	var panicked interface{}
+	var panicked error
 
 	func() {
 		defer func() {
-			panicked = recover()
+			p := recover()
+			switch p.(type) {
+			case error:
+				panicked = p.(error)
+			default:
+				t.Fatalf("Unexpected panic happened. Expected 'eggs' Error but was a(n) <%T> with value <%+v>", p, p)
+			}
 		}()
 		defer AutoNotify(Configuration{Endpoints: Endpoints{Notify: ts.URL}, APIKey: testAPIKey})
 
-		panic("eggs")
+		panic(fmt.Errorf("eggs"))
 	}()
 
-	// Note: If this line panics attempting to convert a `runtime.errorString`
-	// into `string` then comment out the `panicked = recover()` line above, as
-	// the panic you received here is not the one we expected.
-	if panicked.(string) != "eggs" {
+	if panicked.Error() != "eggs" {
 		t.Errorf("didn't re-panic")
 	}
 
