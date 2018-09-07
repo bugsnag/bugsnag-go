@@ -10,7 +10,7 @@ import (
 	"time"
 
 	simplejson "github.com/bitly/go-simplejson"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 )
 
 const (

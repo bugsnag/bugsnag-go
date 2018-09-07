@@ -3,7 +3,7 @@ package sessions
 import (
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 )
 
 // Session represents a start time and a unique ID that identifies the session.
