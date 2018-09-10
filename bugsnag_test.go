@@ -10,16 +10,34 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/bugsnag/bugsnag-go/sessions"
 )
 
+// The line numbers of this method are used in tests.
+// If you move this function you'll have to change tests
+func crashyHandler(w http.ResponseWriter, r *http.Request) {
+	c := make(chan int)
+	close(c)
+	c <- 1
+}
+
 type _recurse struct {
 	Recurse *_recurse
 }
 
+const (
+	unhandled = true
+	handled   = false
+)
+
 var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
+
+type logger struct{ msg string }
+
+func (l *logger) Printf(format string, v ...interface{}) { l.msg = format }
 
 // setup sets up a simple sessionTracker and returns a test event server for receiving the event payloads.
 // report payloads published to ts.URL will be put on the returned channel
@@ -59,6 +77,8 @@ func TestConfigure(t *testing.T) {
 func TestNotify(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	sessionTracker = nil
+	startSessionTracking()
 
 	recurse := _recurse{}
 	recurse.Recurse = &recurse
@@ -70,7 +90,9 @@ func TestNotify(t *testing.T) {
 		return nil
 	})
 
-	Notify(fmt.Errorf("hello world"),
+	Notify(
+		StartSession(context.Background()),
+		fmt.Errorf("hello world"),
 		generateSampleConfig(ts.URL),
 		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Context{"testing"},
@@ -88,65 +110,35 @@ func TestNotify(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if json.Get("apiKey").MustString() != testAPIKey {
-		t.Errorf("Wrong api key in payload")
-	}
-
-	if json.GetPath("notifier", "name").MustString() != "Bugsnag Go" {
-		t.Errorf("Wrong notifier name in payload")
-	}
-
 	event := json.Get("events").GetIndex(0)
 
-	for k, value := range map[string]string{
-		"payloadVersion":                "2",
-		"severity":                      "warning",
-		"context":                       "testing",
-		"groupingHash":                  "lol",
-		"app.releaseStage":              "test",
-		"app.type":                      "foo",
-		"app.version":                   "1.2.3",
-		"device.hostname":               "web1",
-		"user.id":                       "123",
-		"user.name":                     "Conrad",
-		"user.email":                    "me@cirw.in",
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "testing",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "lol",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
+	})
+
+	for k, exp := range map[string]string{
 		"metaData.test.password":        "[REDACTED]",
 		"metaData.test.value":           "able",
 		"metaData.test.broken":          "[complex128]",
 		"metaData.test.recurse.Recurse": "[RECURSION]",
 	} {
-		key := strings.Split(k, ".")
-		if event.GetPath(key...).MustString() != value {
-			t.Errorf("Wrong %v: %v != %v", key, event.GetPath(key...).MustString(), value)
+		if got := getString(event, k); got != exp {
+			t.Errorf("Expected %s to be '%s' but was '%s'", k, exp, got)
 		}
 	}
 
 	exception := event.Get("exceptions").GetIndex(0)
-
-	if exception.Get("message").MustString() != "hello world" {
-		t.Errorf("Wrong message in payload")
-	}
-
-	if exception.Get("errorClass").MustString() != "*errors.errorString" {
-		t.Errorf("Wrong errorClass in payload: %v", exception.Get("errorClass").MustString())
-	}
-
-	frame0 := exception.Get("stacktrace").GetIndex(0)
-	if frame0.Get("file").MustString() != "bugsnag_test.go" ||
-		frame0.Get("method").MustString() != "TestNotify" ||
-		frame0.Get("inProject").MustBool() != true ||
-		frame0.Get("lineNumber").MustInt() == 0 {
-		t.Errorf("Wrong frame0")
-	}
-
-	frame1 := exception.Get("stacktrace").GetIndex(1)
-
-	if frame1.Get("file").MustString() != "testing/testing.go" ||
-		frame1.Get("method").MustString() != "tRunner" ||
-		frame1.Get("inProject").MustBool() != false ||
-		frame1.Get("lineNumber").MustInt() == 0 {
-		t.Errorf("Wrong frame1")
-	}
+	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 93, InProject: true})
+	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
 
 func TestHandler(t *testing.T) {
@@ -157,89 +149,56 @@ func TestHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer l.Close()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", crashyHandler)
-	srv := http.Server{
-		Addr: l.Addr().String(),
-		Handler: Handler(mux, Configuration{
-			APIKey:          testAPIKey,
-			Endpoints:       Endpoints{Notify: ts.URL},
-			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
-			Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
-		}, SeverityInfo),
-		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
-	}
 
-	go srv.Serve(l)
+	go (&http.Server{
+		Addr:     l.Addr().String(),
+		Handler:  Handler(mux, generateSampleConfig(ts.URL), SeverityInfo),
+		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
+	}).Serve(l)
 
 	http.Get("http://" + l.Addr().String() + "/ok?foo=bar")
-	l.Close()
 
 	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if json.Get("apiKey").MustString() != testAPIKey {
-		t.Errorf("Wrong api key in payload")
-	}
-
-	if json.GetPath("notifier", "name").MustString() != "Bugsnag Go" {
-		t.Errorf("Wrong notifier name in payload")
-	}
-
-	event := json.Get("events").GetIndex(0)
-
-	for k, value := range map[string]string{
-		"payloadVersion":              "2",
-		"severity":                    "info",
-		"user.id":                     "127.0.0.1",
-		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "/ok",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "info",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		Unhandled:      true,
+		User:           &User{Id: "127.0.0.1", Name: "", Email: ""},
+		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
+	})
+	event := getIndex(json, "events", 0)
+	for k, exp := range map[string]string{
 		"metaData.request.httpMethod": "GET",
+		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
 	} {
-		key := strings.Split(k, ".")
-		if event.GetPath(key...).MustString() != value {
-			t.Errorf("Wrong %v: %v != %v", key, event.GetPath(key...).MustString(), value)
+		if got := getString(event, k); got != exp {
+			t.Errorf("Expected %s to be '%s' but was '%s'", k, exp, got)
+		}
+	}
+	for k, exp := range map[string]string{
+		"metaData.request.params.foo":              "bar",
+		"metaData.request.headers.Accept-Encoding": "gzip",
+	} {
+		if got := getFirstString(event, k); got != exp {
+			t.Errorf("Expected %s to be '%s' but was '%s'", k, exp, got)
 		}
 	}
 
-	if event.GetPath("metaData", "request", "params", "foo").GetIndex(0).MustString() != "bar" {
-		t.Errorf("missing GET params in request metadata")
-	}
-
-	if event.GetPath("metaData", "request", "headers", "Accept-Encoding").GetIndex(0).MustString() != "gzip" {
-		t.Errorf("missing GET params in request metadata: %v", event.GetPath("metaData", "request", "headers"))
-	}
-
-	exception := event.Get("exceptions").GetIndex(0)
-
-	if !strings.Contains(exception.Get("message").MustString(), "send on closed channel") {
-		t.Errorf("Wrong message in payload: %v '%v'", exception.Get("message").MustString(), "runtime error: send on closed channel")
-	}
-
-	errorClass := exception.Get("errorClass").MustString()
-	if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" && errorClass != "runtime.plainError" {
-		t.Errorf("Wrong errorClass in payload: %v, expected '%v', '%v', '%v'",
-			exception.Get("errorClass").MustString(),
-			"runtime.errorCString", "*errors.errorString", "runtime.plainError")
-	}
-
-	frame0 := exception.Get("stacktrace").GetIndex(0)
-
-	file0 := frame0.Get("file").MustString()
-	if !strings.HasPrefix(file0, "runtime/panic") ||
-		frame0.Get("inProject").MustBool() != false {
-		t.Errorf("Wrong frame0: %v", frame0)
-	}
-
-	frame3 := exception.Get("stacktrace").GetIndex(3)
-
-	if frame3.Get("file").MustString() != "bugsnag_test.go" ||
-		frame3.Get("method").MustString() != "crashyHandler" ||
-		frame3.Get("inProject").MustBool() != true ||
-		frame3.Get("lineNumber").MustInt() == 0 {
-		t.Errorf("Wrong frame3: %v", frame3)
-	}
+	exception := getIndex(event, "exceptions", 0)
+	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "runtime/panic.go", Method: "gopanic", InProject: false})
+	checkFrame(t, getIndex(exception, "stacktrace", 3), stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", LineNumber: 24, InProject: true})
 }
 
 func TestAutoNotify(t *testing.T) {
@@ -258,7 +217,7 @@ func TestAutoNotify(t *testing.T) {
 				t.Fatalf("Unexpected panic happened. Expected 'eggs' Error but was a(n) <%T> with value <%+v>", p, p)
 			}
 		}()
-		defer AutoNotify(Configuration{Endpoints: Endpoints{Notify: ts.URL}, APIKey: testAPIKey})
+		defer AutoNotify(StartSession(context.Background()), generateSampleConfig(ts.URL))
 
 		panic(fmt.Errorf("eggs"))
 	}()
@@ -272,17 +231,18 @@ func TestAutoNotify(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	event := json.Get("events").GetIndex(0)
-
-	if event.Get("severity").MustString() != "error" {
-		t.Errorf("severity should be error")
-	}
-	exception := event.Get("exceptions").GetIndex(0)
-
-	if exception.Get("message").MustString() != "eggs" {
-		t.Errorf("caught wrong panic")
-	}
-	assertSeverityReasonEqual(t, json, "error", "handledPanic", true)
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "error",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic}, //TODO: this should be unhandled panic!
+		Unhandled:      true,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "eggs"}},
+	})
 }
 
 func TestRecover(t *testing.T) {
@@ -295,13 +255,13 @@ func TestRecover(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer Recover(Configuration{Endpoints: Endpoints{Notify: ts.URL}, APIKey: testAPIKey})
+		defer Recover(StartSession(context.Background()), generateSampleConfig(ts.URL))
 
 		panic("ham")
 	}()
 
 	if panicked != nil {
-		t.Errorf("re-panick'd")
+		t.Errorf("Did not expect a panic but repanicked")
 	}
 
 	json, err := simplejson.NewJson(<-reports)
@@ -309,27 +269,44 @@ func TestRecover(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	event := json.Get("events").GetIndex(0)
-
-	if event.Get("severity").MustString() != "warning" {
-		t.Errorf("severity should be warning")
-	}
-	exception := event.Get("exceptions").GetIndex(0)
-
-	if exception.Get("message").MustString() != "ham" {
-		t.Errorf("caught wrong panic")
-	}
-	assertSeverityReasonEqual(t, json, "warning", "handledPanic", false)
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		Unhandled:      false,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ham"}},
+	})
 }
 
+//TODO: What does this test add over TestNotify?
 func TestSeverityReasonNotifyErr(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
+	Notify(StartSession(context.Background()), fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
 
-	json, _ := simplejson.NewJson(<-reports)
-	assertSeverityReasonEqual(t, json, "warning", "handledError", false)
+	json, err := simplejson.NewJson(<-reports)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
+	})
 }
 
 func TestSeverityReasonNotifyCallback(t *testing.T) {
@@ -341,15 +318,22 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		return nil
 	})
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
+	Notify(StartSession(context.Background()), fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
 
 	json, _ := simplejson.NewJson(<-reports)
-	assertSeverityReasonEqual(t, json, "info", "userCallbackSetSeverity", false)
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "info",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonCallbackSpecified},
+		Unhandled:      false,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
+	})
 }
-
-type logger struct{ msg string }
-
-func (l *logger) Printf(format string, v ...interface{}) { l.msg = format }
 
 func TestConfigureTwice(t *testing.T) {
 	sessionTracker = nil
@@ -362,6 +346,38 @@ func TestConfigureTwice(t *testing.T) {
 	Configure(Configuration{})
 	if got, exp := l.msg, configuredMultipleTimes; exp != got {
 		t.Errorf("unexpected log message: '%s', expected '%s'", got, exp)
+	}
+}
+
+func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
+	if sessionID := event.GetPath("session", "id").MustString(); len(sessionID) != 36 {
+		t.Errorf("Expected a valid session ID to be set but was '%s'", sessionID)
+	}
+	if _, e := time.Parse(time.RFC3339, event.GetPath("session", "startedAt").MustString()); e != nil {
+		t.Error(e)
+	}
+	expHandled, expUnhandled := 1, 0
+	if unhandled {
+		expHandled, expUnhandled = expUnhandled, expHandled
+	}
+	if got := event.GetPath("session", "events", "unhandled").MustInt(); got != expUnhandled {
+		t.Errorf("Expected %d unhandled events in session but was %d", expUnhandled, got)
+	}
+	if got := event.GetPath("session", "events", "handled").MustInt(); got != expHandled {
+		t.Errorf("Expected %d handled events in session but was %d", expHandled, got)
+	}
+}
+
+func generateSampleConfig(endpoint string) Configuration {
+	return Configuration{
+		APIKey:          testAPIKey,
+		Endpoints:       Endpoints{Notify: endpoint},
+		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
+		Logger:          log.New(ioutil.Discard, log.Prefix(), log.Flags()),
+		ReleaseStage:    "test",
+		AppType:         "foo",
+		AppVersion:      "1.2.3",
+		Hostname:        "web1",
 	}
 }
 
@@ -383,21 +399,94 @@ func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity 
 		t.Errorf("Wrong unhandled value, expected '%t', received '%t'", expUnhandled, unhandled)
 	}
 }
-
-func generateSampleConfig(endpoint string) Configuration {
-	return Configuration{
-		APIKey:          testAPIKey,
-		Endpoints:       Endpoints{Notify: endpoint},
-		ReleaseStage:    "test",
-		AppType:         "foo",
-		AppVersion:      "1.2.3",
-		Hostname:        "web1",
-		ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"},
-	}
+func get(j *simplejson.Json, path string) *simplejson.Json {
+	return j.GetPath(strings.Split(path, ".")...)
+}
+func getBool(j *simplejson.Json, path string) bool {
+	return get(j, path).MustBool()
+}
+func getInt(j *simplejson.Json, path string) int {
+	return get(j, path).MustInt()
+}
+func getString(j *simplejson.Json, path string) string {
+	return get(j, path).MustString()
+}
+func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
+	return get(j, path).GetIndex(index)
+}
+func getFirstString(j *simplejson.Json, path string) string {
+	return getIndex(j, path, 0).MustString()
 }
 
-func crashyHandler(w http.ResponseWriter, r *http.Request) {
-	c := make(chan int)
-	close(c)
-	c <- 1
+// assertPayload compares the payload that was received by the event-server to
+// the expected report JSON payload
+func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
+	expException := exp.Exceptions[0]
+
+	event := report.Get("events").GetIndex(0)
+	exception := getIndex(event, "exceptions", 0)
+
+	for _, tc := range []struct {
+		prop     string
+		exp, got interface{}
+	}{
+		{prop: "API Key", exp: testAPIKey, got: getString(report, "apiKey")},
+
+		{prop: "notifier name", exp: "Bugsnag Go", got: getString(report, "notifier.name")},
+		{prop: "notifier version", exp: VERSION, got: getString(report, "notifier.version")},
+		{prop: "notifier url", exp: "https://github.com/bugsnag/bugsnag-go", got: getString(report, "notifier.url")},
+
+		{prop: "exception message", exp: expException.Message, got: getString(exception, "message")},
+		{prop: "exception error class", exp: expException.ErrorClass, got: getString(exception, "errorClass")},
+
+		{prop: "unhandled", exp: exp.Unhandled, got: getBool(event, "unhandled")},
+
+		{prop: "app version", exp: exp.App.Version, got: getString(event, "app.version")},
+		{prop: "app release stage", exp: exp.App.ReleaseStage, got: getString(event, "app.releaseStage")},
+		{prop: "app type", exp: exp.App.Type, got: getString(event, "app.type")},
+
+		{prop: "user id", exp: exp.User.Id, got: getString(event, "user.id")},
+		{prop: "user name", exp: exp.User.Name, got: getString(event, "user.name")},
+		{prop: "user email", exp: exp.User.Email, got: getString(event, "user.email")},
+
+		{prop: "context", exp: exp.Context, got: getString(event, "context")},
+		{prop: "device hostname", exp: exp.Device.Hostname, got: getString(event, "device.hostname")},
+		{prop: "grouping hash", exp: exp.GroupingHash, got: getString(event, "groupingHash")},
+		{prop: "payload version", exp: "2", got: getString(event, "payloadVersion")},
+
+		{prop: "severity", exp: exp.Severity, got: getString(event, "severity")},
+
+		{
+			prop: "severity reason attribute: 'framework'",
+			exp:  exp.SeverityReason.Attributes.Framework,
+			got:  getString(event, "severityReason.attributes.framework"),
+		},
+
+		{
+			prop: "severity reason type",
+			exp:  string(exp.SeverityReason.Type),
+			got:  getString(event, "severityReason.type"),
+		},
+	} {
+		if tc.got != tc.exp {
+			t.Errorf("Wrong %s: expected '%v' but got '%v'", tc.prop, tc.exp, tc.got)
+		}
+	}
+
+	assertValidSession(t, event, exp.Unhandled)
+}
+
+func checkFrame(t *testing.T, frame *simplejson.Json, exp stackFrame) {
+	if got := getString(frame, "file"); got != exp.File {
+		t.Errorf("Expected frame file to be '%s' but was '%s'", exp.File, got)
+	}
+	if got := getString(frame, "method"); got != exp.Method {
+		t.Errorf("Expected frame method to be '%s' but was '%s'", exp.Method, got)
+	}
+	if got := getInt(frame, "lineNumber"); got != exp.LineNumber && exp.InProject { // Don't check files that vary per version of go
+		t.Errorf("Expected frame line number to be %d but was %d", exp.LineNumber, got)
+	}
+	if got := getBool(frame, "inProject"); got != exp.InProject {
+		t.Errorf("Expected frame inProject to be '%v' but was '%v'", exp.InProject, got)
+	}
 }
