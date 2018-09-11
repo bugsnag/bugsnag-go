@@ -75,10 +75,12 @@ func (s *sessionTracker) processSessions() {
 			oldSessions := s.sessions
 			s.sessions = nil
 			if len(oldSessions) > 0 {
-				err := s.publisher.publish(oldSessions)
-				if err != nil {
-					s.config.logf("%v", err)
-				}
+				go func(s *sessionTracker) {
+					err := s.publisher.publish(oldSessions)
+					if err != nil {
+						s.config.logf("%v", err)
+					}
+				}(s)
 			}
 		case <-shutdown:
 			if len(s.sessions) > 0 {
