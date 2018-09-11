@@ -99,14 +99,13 @@ func (p *payload) makeSession() *sessionJSON {
 	// In the case of an immediate crash on startup, the sessionTracker may
 	// not have been set up just yet. We therefore have to fall back to a
 	// payload without a 'session' property
-	if sessionTracker == nil {
+	// If a context has not been applied to the payload then assume that no
+	// session has started either
+	if sessionTracker == nil || p.Ctx == nil {
 		return nil
 	}
 
 	session := sessionTracker.GetSession(p.Ctx)
-	if p.Ctx == nil {
-		return nil
-	}
 	return &sessionJSON{
 		ID:        session.ID,
 		StartedAt: session.StartedAt,
