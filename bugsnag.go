@@ -113,7 +113,7 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer notifier.AutoNotify(r)
+		defer notifier.AutoNotify(StartSession(r.Context()), r)
 		h.ServeHTTP(w, r)
 	})
 }
