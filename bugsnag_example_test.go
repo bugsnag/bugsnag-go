@@ -1,6 +1,7 @@
 package bugsnag_test
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -13,21 +14,15 @@ var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 var testEndpoint string
 
 func ExampleAutoNotify() {
-	createAccount := func() {
-		fmt.Println("Creating account...")
+	config := bugsnag.Configuration{APIKey: testAPIKey}
+	createAccount := func(ctx context.Context) {
+		fmt.Println("Creating account and passing context around...")
 	}
-
-	//AutoNotify would report any panics that happen
-	handlerFunc := func(w http.ResponseWriter, request *http.Request) {
-		defer bugsnag.AutoNotify(request, bugsnag.Context{String: "createAccount"})
-		createAccount()
-	}
-
-	var w http.ResponseWriter
-	var request *http.Request
-	handlerFunc(w, request)
+	ctx := bugsnag.StartSession(context.Background())
+	defer bugsnag.AutoNotify(ctx, config)
+	createAccount(ctx)
 	// Output:
-	// Creating account...
+	// Creating account and passing context around...
 }
 
 func ExampleRecover() {
@@ -39,7 +34,7 @@ func ExampleRecover() {
 	// Will recover when panicFunc panics
 	func() {
 		config := bugsnag.Configuration{APIKey: testAPIKey}
-		defer bugsnag.Recover(config)
+		defer bugsnag.Recover(bugsnag.StartSession(context.Background()), config)
 		panicFunc()
 	}()
 
@@ -53,17 +48,17 @@ func ExampleConfigure() {
 	bugsnag.Configure(bugsnag.Configuration{
 		APIKey:       "YOUR_API_KEY_HERE",
 		ReleaseStage: "production",
-		// See Configuration{} for other fields
+		// See bugsnag.Configuration for other fields
 	})
 }
 
 func ExampleHandler() {
-	handleGet := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Handling GET")
+	handleReq := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Handling HTTP request")
 	}
 
 	// Set up your http handlers as usual
-	http.HandleFunc("/", handleGet)
+	http.HandleFunc("/", handleReq)
 
 	// use bugsnag.Handler(nil) to wrap the default http handlers
 	// so that Bugsnag is automatically notified about panics.
@@ -71,12 +66,12 @@ func ExampleHandler() {
 }
 
 func ExampleHandler_customServer() {
-	handleGet := func(w http.ResponseWriter, r *http.Request) {
+	handleReq := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Handling GET")
 	}
 
 	// If you're using a custom server, set the handlers explicitly.
-	http.HandleFunc("/", handleGet)
+	http.HandleFunc("/", handleReq)
 
 	srv := http.Server{
 		Addr:        ":1234",
@@ -89,31 +84,35 @@ func ExampleHandler_customServer() {
 }
 
 func ExampleHandler_customHandlers() {
-	handleGet := func(w http.ResponseWriter, r *http.Request) {
+	handleReq := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Handling GET")
 	}
 
 	// If you're using custom handlers, wrap the handlers explicitly.
 	handler := http.NewServeMux()
-	http.HandleFunc("/", handleGet)
+	http.HandleFunc("/", handleReq)
 	// use bugsnag.Handler(handler) to wrap the handlers so that Bugsnag is
 	// automatically notified about panics
 	http.ListenAndServe(":1234", bugsnag.Handler(handler))
 }
 
 func ExampleNotify() {
+	ctx := context.Background()
+	ctx = bugsnag.StartSession(ctx)
 	_, err := net.Listen("tcp", ":80")
 
 	if err != nil {
-		bugsnag.Notify(err)
+		bugsnag.Notify(ctx, err)
 	}
 }
 
 func ExampleNotify_details() {
+	ctx := context.Background()
+	ctx = bugsnag.StartSession(ctx)
 	_, err := net.Listen("tcp", ":80")
 
 	if err != nil {
-		bugsnag.Notify(err,
+		bugsnag.Notify(ctx, err,
 			// show as low-severity
 			bugsnag.SeverityInfo,
 			// set the context
