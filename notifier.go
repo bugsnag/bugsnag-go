@@ -81,7 +81,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		severity := notifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
-		notifier.appendStateIfNeeded(rawData, state)
+		rawData = notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(append(rawData, errors.New(err, 2))...)
 		panic(err)
 	}
@@ -94,7 +94,7 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		severity := notifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
-		notifier.appendStateIfNeeded(rawData, state)
+		rawData = notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(append(rawData, errors.New(err, 2))...)
 	}
 }
