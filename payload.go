@@ -9,7 +9,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/headers"
 )
 
-const notifyPayloadVersion = "2"
+const notifyPayloadVersion = "4"
 
 type payload struct {
 	*Event

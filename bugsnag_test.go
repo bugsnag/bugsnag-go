@@ -417,7 +417,7 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 		{prop: "context", exp: exp.Context, got: getString(event, "context")},
 		{prop: "device hostname", exp: exp.Device.Hostname, got: getString(event, "device.hostname")},
 		{prop: "grouping hash", exp: exp.GroupingHash, got: getString(event, "groupingHash")},
-		{prop: "payload version", exp: "2", got: getString(event, "payloadVersion")},
+		{prop: "payload version", exp: "4", got: getString(event, "payloadVersion")},
 
 		{prop: "severity", exp: exp.Severity, got: getString(event, "severity")},
 
