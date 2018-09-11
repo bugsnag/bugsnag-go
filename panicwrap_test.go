@@ -3,6 +3,7 @@
 package bugsnag
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"testing"
@@ -25,22 +26,23 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "error",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		Unhandled:      true,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ruh roh"}},
+	})
+
 	event := json.Get("events").GetIndex(0)
+	assertValidSession(t, event, true)
 
-	exception := event.Get("exceptions").GetIndex(0)
-
-	message := exception.Get("message").MustString()
-	if message != "ruh roh" {
-		t.Errorf("caught wrong panic message: '%s'", message)
-	}
-
-	errorClass := exception.Get("errorClass").MustString()
-	if errorClass != "*errors.errorString" {
-		t.Errorf("caught wrong panic errorClass: '%s'", errorClass)
-	}
-	assertSeverityReasonEqual(t, json, "error", "handledPanic", true)
-
-	stacktrace := exception.Get("stacktrace")
+	stacktrace := event.Get("exceptions").GetIndex(0).Get("stacktrace")
 
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
 	frame := stacktrace.GetIndex(1)
@@ -62,7 +64,18 @@ func TestPanicHandlerUnhandledPanic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertSeverityReasonEqual(t, json, "error", "unhandledPanic", true)
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "error",
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonUnhandledPanic},
+		Unhandled:      true,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "panic", Message: "ruh roh"}},
+	})
 }
 
 func startPanickingProcess(t *testing.T, variant string, endpoint string) {
@@ -99,9 +112,11 @@ func init() {
 		Configure(Configuration{
 			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
 			Endpoints:       Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
+			Hostname:        "web1",
 			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		go func() {
-			defer AutoNotify()
+			ctx := StartSession(context.Background())
+			defer AutoNotify(ctx)
 
 			panick()
 		}()
@@ -111,6 +126,7 @@ func init() {
 		Configure(Configuration{
 			APIKey:          os.Getenv("BUGSNAG_API_KEY"),
 			Endpoints:       Endpoints{Notify: os.Getenv("BUGSNAG_NOTIFY_ENDPOINT")},
+			Hostname:        "web1",
 			Synchronous:     true,
 			ProjectPackages: []string{"github.com/bugsnag/bugsnag-go"}})
 		panick()

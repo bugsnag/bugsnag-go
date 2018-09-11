@@ -124,6 +124,7 @@ func TestNotify(t *testing.T) {
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
 	})
+	assertValidSession(t, event, false)
 
 	for k, exp := range map[string]string{
 		"metaData.test.password":        "[REDACTED]",
@@ -179,6 +180,7 @@ func TestHandler(t *testing.T) {
 		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
 	})
 	event := getIndex(json, "events", 0)
+	assertValidSession(t, event, true)
 	for k, exp := range map[string]string{
 		"metaData.request.httpMethod": "GET",
 		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
@@ -349,25 +351,6 @@ func TestConfigureTwice(t *testing.T) {
 	}
 }
 
-func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
-	if sessionID := event.GetPath("session", "id").MustString(); len(sessionID) != 36 {
-		t.Errorf("Expected a valid session ID to be set but was '%s'", sessionID)
-	}
-	if _, e := time.Parse(time.RFC3339, event.GetPath("session", "startedAt").MustString()); e != nil {
-		t.Error(e)
-	}
-	expHandled, expUnhandled := 1, 0
-	if unhandled {
-		expHandled, expUnhandled = expUnhandled, expHandled
-	}
-	if got := event.GetPath("session", "events", "unhandled").MustInt(); got != expUnhandled {
-		t.Errorf("Expected %d unhandled events in session but was %d", expUnhandled, got)
-	}
-	if got := event.GetPath("session", "events", "handled").MustInt(); got != expHandled {
-		t.Errorf("Expected %d handled events in session but was %d", expHandled, got)
-	}
-}
-
 func generateSampleConfig(endpoint string) Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
@@ -381,24 +364,6 @@ func generateSampleConfig(endpoint string) Configuration {
 	}
 }
 
-func assertSeverityReasonEqual(t *testing.T, json *simplejson.Json, expSeverity string, reasonType string, expUnhandled bool) {
-	event := json.Get("events").GetIndex(0)
-	reason := event.GetPath("severityReason", "type").MustString()
-	severity := event.Get("severity").MustString()
-	unhandled := event.Get("unhandled").MustBool()
-
-	if reason != reasonType {
-		t.Errorf("Wrong severity reason, expected '%s', received '%s'", reasonType, reason)
-	}
-
-	if severity != expSeverity {
-		t.Errorf("Wrong severity, expected '%s', received '%s'", expSeverity, severity)
-	}
-
-	if unhandled != expUnhandled {
-		t.Errorf("Wrong unhandled value, expected '%t', received '%t'", expUnhandled, unhandled)
-	}
-}
 func get(j *simplejson.Json, path string) *simplejson.Json {
 	return j.GetPath(strings.Split(path, ".")...)
 }
@@ -472,8 +437,25 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 			t.Errorf("Wrong %s: expected '%v' but got '%v'", tc.prop, tc.exp, tc.got)
 		}
 	}
+}
 
-	assertValidSession(t, event, exp.Unhandled)
+func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
+	if sessionID := event.GetPath("session", "id").MustString(); len(sessionID) != 36 {
+		t.Errorf("Expected a valid session ID to be set but was '%s'", sessionID)
+	}
+	if _, e := time.Parse(time.RFC3339, event.GetPath("session", "startedAt").MustString()); e != nil {
+		t.Error(e)
+	}
+	expHandled, expUnhandled := 1, 0
+	if unhandled {
+		expHandled, expUnhandled = expUnhandled, expHandled
+	}
+	if got := event.GetPath("session", "events", "unhandled").MustInt(); got != expUnhandled {
+		t.Errorf("Expected %d unhandled events in session but was %d", expUnhandled, got)
+	}
+	if got := event.GetPath("session", "events", "handled").MustInt(); got != expHandled {
+		t.Errorf("Expected %d handled events in session but was %d", expHandled, got)
+	}
 }
 
 func checkFrame(t *testing.T, frame *simplejson.Json, exp stackFrame) {
