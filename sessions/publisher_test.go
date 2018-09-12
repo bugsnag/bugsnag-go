@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,6 +35,25 @@ func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 	return &http.Response{Body: nopCloser{}, StatusCode: 200}, nil
 }
 
+func get(j *simplejson.Json, path string) *simplejson.Json {
+	return j.GetPath(strings.Split(path, ".")...)
+}
+func getBool(j *simplejson.Json, path string) bool {
+	return get(j, path).MustBool()
+}
+func getInt(j *simplejson.Json, path string) int {
+	return get(j, path).MustInt()
+}
+func getString(j *simplejson.Json, path string) string {
+	return get(j, path).MustString()
+}
+func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
+	return get(j, path).GetIndex(index)
+}
+func getFirstString(j *simplejson.Json, path string) string {
+	return getIndex(j, path, 0).MustString()
+}
+
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	sessions, earliestTime := makeSessions()
 	testClient := testHTTPClient{}
@@ -59,34 +79,26 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	}
 
 	hostname, _ := os.Hostname()
-	notifier := root.Get("notifier")
-	app := root.Get("app")
-	device := root.Get("device")
-	sessionCounts := root.Get("sessionCounts")
-	testCases := []struct {
-		property string
-		got      interface{}
-		exp      interface{}
-	}{
-		{property: "notifier.name", got: notifier.Get("name").MustString(), exp: "Bugsnag Go"},
-		{property: "notifier.url", got: notifier.Get("url").MustString(), exp: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", got: notifier.Get("version").MustString(), exp: ""},
 
-		{property: "app.type", got: app.Get("type").MustString(), exp: ""},
-		{property: "app.releaseStage", got: app.Get("releaseStage").MustString(), exp: "production"},
-		{property: "app.version", got: app.Get("version").MustString(), exp: ""},
-
-		{property: "device.osName", got: device.Get("osName").MustString(), exp: runtime.GOOS},
-		{property: "device.hostname", got: device.Get("hostname").MustString(), exp: hostname},
-		{property: "sessionCounts.startedAt", got: sessionCounts.Get("startedAt").MustString(), exp: earliestTime},
-		{property: "sessionCounts.sessionsStarted", got: sessionCounts.Get("sessionsStarted").MustInt(), exp: len(sessions)},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.property, func(st *testing.T) {
-			if tc.got != tc.exp {
-				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", tc.property, tc.exp, tc.got)
+	for prop, exp := range map[string]string{
+		"notifier.name":           "Bugsnag Go",
+		"notifier.url":            "https://github.com/bugsnag/bugsnag-go",
+		"notifier.version":        "",
+		"app.type":                "",
+		"app.releaseStage":        "production",
+		"app.version":             "",
+		"device.osName":           runtime.GOOS,
+		"device.hostname":         hostname,
+		"sessionCounts.startedAt": earliestTime,
+	} {
+		t.Run(prop, func(st *testing.T) {
+			if got := getString(root, prop); got != exp {
+				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", prop, exp, got)
 			}
 		})
+	}
+	if got, exp := getInt(root, "sessionCounts.sessionsStarted"), len(sessions); got != exp {
+		t.Errorf("Expected sessionCounts.sessionsStarted to be %d but was %d", exp, got)
 	}
 }
 
@@ -114,32 +126,25 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	notifier := root.Get("notifier")
-	device := root.Get("device")
-	app := root.Get("app")
-	sessionCounts := root.Get("sessionCounts")
-	testCases := []struct {
-		property string
-		expected interface{}
-		got      interface{}
-	}{
-		{property: "notifier.name", got: notifier.Get("name").MustString(), expected: "Bugsnag Go"},
-		{property: "notifier.url", got: notifier.Get("url").MustString(), expected: "https://github.com/bugsnag/bugsnag-go"},
-		{property: "notifier.version", got: notifier.Get("version").MustString(), expected: "2.3.4-alpha"},
-		{property: "app.type", got: app.Get("type").MustString(), expected: "gin"},
-		{property: "app.releaseStage", got: app.Get("releaseStage").MustString(), expected: "staging"},
-		{property: "app.version", got: app.Get("version").MustString(), expected: "1.2.3-beta"},
-		{property: "device.osName", got: device.Get("osName").MustString(), expected: runtime.GOOS},
-		{property: "device.hostname", got: device.Get("hostname").MustString(), expected: "gce-1234-us-west-1"},
-		{property: "sessionCounts.startedAt", got: sessionCounts.Get("startedAt").MustString(), expected: earliestTime},
-		{property: "sessionCounts.sessionsStarted", got: sessionCounts.Get("sessionsStarted").MustInt(), expected: len(sessions)},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.property, func(st *testing.T) {
-			if tc.got != tc.expected {
-				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", tc.property, tc.expected, tc.got)
+	for prop, exp := range map[string]string{
+		"notifier.name":           "Bugsnag Go",
+		"notifier.url":            "https://github.com/bugsnag/bugsnag-go",
+		"notifier.version":        "2.3.4-alpha",
+		"app.type":                "gin",
+		"app.releaseStage":        "staging",
+		"app.version":             "1.2.3-beta",
+		"device.osName":           runtime.GOOS,
+		"device.hostname":         "gce-1234-us-west-1",
+		"sessionCounts.startedAt": earliestTime,
+	} {
+		t.Run(prop, func(st *testing.T) {
+			if got := getString(root, prop); got != exp {
+				t.Errorf("Expected property '%s' in JSON to be '%v' but was '%v'", prop, exp, got)
 			}
 		})
+	}
+	if got, exp := getInt(root, "sessionCounts.sessionsStarted"), len(sessions); got != exp {
+		t.Errorf("Expected sessionCounts.sessionsStarted to be %d but was %d", exp, got)
 	}
 }
 

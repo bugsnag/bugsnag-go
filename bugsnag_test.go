@@ -110,7 +110,7 @@ func TestNotify(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	event := json.Get("events").GetIndex(0)
+	event := getIndex(json, "events", 0)
 
 	assertPayload(t, json, eventJSON{
 		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
@@ -137,7 +137,7 @@ func TestNotify(t *testing.T) {
 		}
 	}
 
-	exception := event.Get("exceptions").GetIndex(0)
+	exception := getIndex(event, "exceptions", 0)
 	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 93, InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
@@ -240,7 +240,7 @@ func TestAutoNotify(t *testing.T) {
 		GroupingHash:   "",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic}, //TODO: this should be unhandled panic!
+		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "eggs"}},
@@ -438,20 +438,20 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 }
 
 func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
-	if sessionID := event.GetPath("session", "id").MustString(); len(sessionID) != 36 {
+	if sessionID := getString(event, "session.id"); len(sessionID) != 36 {
 		t.Errorf("Expected a valid session ID to be set but was '%s'", sessionID)
 	}
-	if _, e := time.Parse(time.RFC3339, event.GetPath("session", "startedAt").MustString()); e != nil {
+	if _, e := time.Parse(time.RFC3339, getString(event, "session.startedAt")); e != nil {
 		t.Error(e)
 	}
 	expHandled, expUnhandled := 1, 0
 	if unhandled {
 		expHandled, expUnhandled = expUnhandled, expHandled
 	}
-	if got := event.GetPath("session", "events", "unhandled").MustInt(); got != expUnhandled {
+	if got := getInt(event, "session.events.unhandled"); got != expUnhandled {
 		t.Errorf("Expected %d unhandled events in session but was %d", expUnhandled, got)
 	}
-	if got := event.GetPath("session", "events", "handled").MustInt(); got != expHandled {
+	if got := getInt(event, "session.events.handled"); got != expHandled {
 		t.Errorf("Expected %d handled events in session but was %d", expHandled, got)
 	}
 }

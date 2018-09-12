@@ -39,16 +39,14 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ruh roh"}},
 	})
 
-	event := json.Get("events").GetIndex(0)
+	event := getIndex(json, "events", 0)
 	assertValidSession(t, event, true)
 
-	stacktrace := event.Get("exceptions").GetIndex(0).Get("stacktrace")
-
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
-	frame := stacktrace.GetIndex(1)
-	if frame.Get("inProject").MustBool() != true ||
-		frame.Get("file").MustString() != "panicwrap_test.go" ||
-		frame.Get("lineNumber").MustInt() == 0 {
+	frame := getIndex(getIndex(event, "exceptions", 0), "stacktrace", 1)
+	if getBool(frame, "inProject") != true ||
+		getString(frame, "file") != "panicwrap_test.go" ||
+		getInt(frame, "lineNumber") == 0 {
 		t.Errorf("stack frame seems wrong at index 1: %v", frame)
 	}
 }

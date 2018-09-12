@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -22,6 +23,25 @@ const sessionsCount = 50000
 func init() {
 	//Naughty injection to achieve a reasonable test duration.
 	bugsnag.DefaultSessionPublishInterval = testPublishInterval
+}
+
+func get(j *simplejson.Json, path string) *simplejson.Json {
+	return j.GetPath(strings.Split(path, ".")...)
+}
+func getBool(j *simplejson.Json, path string) bool {
+	return get(j, path).MustBool()
+}
+func getInt(j *simplejson.Json, path string) int {
+	return get(j, path).MustInt()
+}
+func getString(j *simplejson.Json, path string) string {
+	return get(j, path).MustString()
+}
+func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
+	return get(j, path).GetIndex(index)
+}
+func getFirstString(j *simplejson.Json, path string) string {
+	return getIndex(j, path, 0).MustString()
 }
 
 // Spins up a session server and checks that for every call to
@@ -41,35 +61,32 @@ func TestStartSession(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		notifier := json.Get("notifier")
-		app := json.Get("app")
-		device := json.Get("device")
 		hostname, _ := os.Hostname()
-		sessionCounts := json.Get("sessionCounts")
 		tt := []struct {
 			prop string
 			exp  interface{}
 			got  interface{}
 		}{
-			{got: notifier.Get("name").MustString(), prop: "notifier.name", exp: "Bugsnag Go"},
-			{got: notifier.Get("url").MustString(), prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
-			{got: notifier.Get("version").MustString(), prop: "notifier.version", exp: bugsnag.VERSION},
-			{got: app.Get("releaseStage").MustString(), prop: "app.releaseStage", exp: "production"},
-			{got: app.Get("version").MustString(), prop: "app.version", exp: ""},
-			{got: device.Get("osName").MustString(), prop: "device.osName", exp: runtime.GOOS},
-			{got: device.Get("hostname").MustString(), prop: "device.hostname", exp: hostname},
+			{got: getString(json, "notifier.name"), prop: "notifier.name", exp: "Bugsnag Go"},
+			{got: getString(json, "notifier.url"), prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
+			{got: getString(json, "notifier.version"), prop: "notifier.version", exp: bugsnag.VERSION},
+			{got: getString(json, "app.releaseStage"), prop: "app.releaseStage", exp: "production"},
+			{got: getString(json, "app.version"), prop: "app.version", exp: ""},
+			{got: getString(json, "device.osName"), prop: "device.osName", exp: runtime.GOOS},
+			{got: getString(json, "device.hostname"), prop: "device.hostname", exp: hostname},
 		}
 		for _, tc := range tt {
 			if tc.got != tc.exp {
 				t.Errorf("Expected '%s' to be '%s' but was %s", tc.prop, tc.exp, tc.got)
 			}
 		}
-		if got := sessionCounts.Get("startedAt").MustString(); len(got) != 20 {
+		sessionCounts := get(json, "sessionCounts")
+		if got := getString(sessionCounts, "startedAt"); len(got) != 20 {
 			t.Errorf("Expected 'sessionCounts.startedAt' to be valid timestamp but was %s", got)
 		}
 		mutex.Lock()
 		defer mutex.Unlock()
-		sessionsStarted += sessionCounts.Get("sessionsStarted").MustInt()
+		sessionsStarted += getInt(sessionCounts, "sessionsStarted")
 	}))
 	defer ts.Close()
 
