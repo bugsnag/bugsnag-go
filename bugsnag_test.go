@@ -285,32 +285,6 @@ func TestRecover(t *testing.T) {
 	})
 }
 
-//TODO: What does this test add over TestNotify?
-func TestSeverityReasonNotifyErr(t *testing.T) {
-	ts, reports := setup()
-	defer ts.Close()
-
-	Notify(StartSession(context.Background()), fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
-
-	json, err := simplejson.NewJson(<-reports)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assertPayload(t, json, eventJSON{
-		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
-		Context:        "",
-		Device:         &deviceJSON{Hostname: "web1"},
-		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
-		Severity:       "warning",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledError},
-		Unhandled:      false,
-		User:           &User{},
-		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
-	})
-}
-
 func TestSeverityReasonNotifyCallback(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
