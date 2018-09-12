@@ -13,7 +13,7 @@ func TestMiddlewareOrder(t *testing.T) {
 
 	err := fmt.Errorf("test")
 	data := []interface{}{errors.New(err, 1)}
-	event, config := newEvent(data, &defaultNotifier)
+	event, config, _ := newEvent(data, &defaultNotifier)
 
 	result := make([]int, 0, 7)
 	stack := middlewareStack{}
@@ -45,7 +45,7 @@ func TestBeforeNotifyReturnErr(t *testing.T) {
 	stack := middlewareStack{}
 	err := fmt.Errorf("test")
 	data := []interface{}{errors.New(err, 1)}
-	event, config := newEvent(data, &defaultNotifier)
+	event, config, _ := newEvent(data, &defaultNotifier)
 
 	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		return err
@@ -71,7 +71,7 @@ func TestBeforeNotifyPanic(t *testing.T) {
 
 	stack := middlewareStack{}
 	err := fmt.Errorf("test")
-	event, _ := newEvent([]interface{}{errors.New(err, 1)}, &defaultNotifier)
+	event, _, _ := newEvent([]interface{}{errors.New(err, 1)}, &defaultNotifier)
 
 	stack.OnBeforeNotify(func(e *Event, c *Configuration) error {
 		panic("oops")
