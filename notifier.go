@@ -42,6 +42,17 @@ func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
 // will be sent to Bugsnag after being converted to JSON. e.g.
 // bugsnag.SeverityError,  bugsnag.Context, or bugsnag.MetaData.
 func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
+	containsError := false
+	for _, datum := range rawData {
+		if _, ok := datum.(error); ok {
+			containsError = true
+		}
+	}
+	if !containsError {
+		msg := "bugsnag.Notify was called without supplying an error. Bugsnag not notified"
+		notifier.Config.Logger.Printf("ERROR: " + msg)
+		return fmt.Errorf(msg)
+	}
 	event, config := newEvent(rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.

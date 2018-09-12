@@ -337,6 +337,30 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 	})
 }
 
+func TestNotifyWithoutError(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	config := generateSampleConfig(ts.URL)
+	config.Synchronous = true
+	l := logger{}
+	config.Logger = &l
+	Configure(config)
+
+	Notify(StartSession(context.Background()))
+
+	select {
+	case r := <-reports:
+		t.Fatalf("Unexpected request made to bugsnag: %+v", r)
+	default:
+		for _, exp := range []string{"ERROR", "error", "bugsnag.Notify", "not notified"} {
+			if got := l.msg; !strings.Contains(got, exp) {
+				t.Errorf("Expected to see '%s' in logged message but logged message was '%s'", exp, got)
+			}
+		}
+	}
+}
+
 func TestConfigureTwice(t *testing.T) {
 	sessionTracker = nil
 
@@ -388,7 +412,7 @@ func getFirstString(j *simplejson.Json, path string) string {
 func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 	expException := exp.Exceptions[0]
 
-	event := report.Get("events").GetIndex(0)
+	event := getIndex(report, "events", 0)
 	exception := getIndex(event, "exceptions", 0)
 
 	for _, tc := range []struct {
