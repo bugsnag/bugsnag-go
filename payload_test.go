@@ -35,20 +35,6 @@ func TestMarshalLargePayload(t *testing.T) {
 	}
 }
 
-func BenchmarkEmptyMarshalJSON(b *testing.B) {
-	payload := payload{&Event{}, &Configuration{}}
-	for i := 0; i < b.N; i++ {
-		payload.MarshalJSON()
-	}
-}
-
-func BenchmarkLargeMarshalJSON(b *testing.B) {
-	payload := makeLargePayload()
-	for i := 0; i < b.N; i++ {
-		payload.MarshalJSON()
-	}
-}
-
 func makeLargePayload() *payload {
 	stackframes := []stackFrame{
 		{Method: "doA", File: "a.go", LineNumber: 65, InProject: false},
