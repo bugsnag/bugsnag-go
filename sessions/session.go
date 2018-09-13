@@ -3,18 +3,19 @@ package sessions
 import (
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 )
 
-type session struct {
-	startedAt time.Time
-	id        uuid.UUID
+// Session represents a start time and a unique ID that identifies the session.
+type Session struct {
+	StartedAt time.Time
+	ID        uuid.UUID
 }
 
-func newSession() *session {
+func newSession() *Session {
 	sessionID, _ := uuid.NewV4()
-	return &session{
-		startedAt: time.Now(),
-		id:        sessionID,
+	return &Session{
+		StartedAt: time.Now(),
+		ID:        sessionID,
 	}
 }

@@ -9,15 +9,15 @@ import (
 
 type testPublisher struct {
 	mutex            sync.Mutex
-	sessionsReceived [][]*session
+	sessionsReceived [][]*Session
 }
 
 var pub = testPublisher{
 	mutex:            sync.Mutex{},
-	sessionsReceived: [][]*session{},
+	sessionsReceived: [][]*Session{},
 }
 
-func (pub *testPublisher) publish(sessions []*session) error {
+func (pub *testPublisher) publish(sessions []*Session) error {
 	pub.mutex.Lock()
 	defer pub.mutex.Unlock()
 	pub.sessionsReceived = append(pub.sessionsReceived, sessions)
@@ -39,16 +39,7 @@ func TestStartSessionModifiesContext(t *testing.T) {
 		t.Fatalf("No session information applied to context %v", ctx)
 	}
 
-	var s *session
-	got := ctx.Value(contextSessionKey)
-	switch got.(type) {
-	case *session:
-		s = got.(*session)
-	default:
-		t.Fatalf("Expected a session to be set on the context but was of wrong type: %T", got)
-	}
-
-	verifyValidSession(t, s)
+	verifyValidSession(t, st.GetSession(ctx))
 }
 
 func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
@@ -66,7 +57,7 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 	}
 	time.Sleep(st.config.PublishInterval * 2)
 
-	var sessions []*session
+	var sessions []*Session
 	pub.mutex.Lock()
 	defer pub.mutex.Unlock()
 	for _, s := range pub.sessionsReceived {
@@ -81,23 +72,23 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 
 }
 
-func makeSessionTracker() (*sessionTracker, chan *session) {
-	c := make(chan *session, 1)
+func makeSessionTracker() (*sessionTracker, chan *Session) {
+	c := make(chan *Session, 1)
 	return &sessionTracker{
 		config: &SessionTrackingConfiguration{
 			PublishInterval: time.Millisecond * 10, //Publish very fast
 		},
 		sessionChannel: c,
-		sessions:       []*session{},
+		sessions:       []*Session{},
 		publisher:      &pub,
 	}, c
 }
 
-func verifyValidSession(t *testing.T, s *session) {
-	if (s.startedAt == time.Time{}) {
+func verifyValidSession(t *testing.T, s *Session) {
+	if (s.StartedAt == time.Time{}) {
 		t.Errorf("Expected start time to be set but was nil")
 	}
-	if len(s.id) != 16 {
-		t.Errorf("Expected UUID to be a valid V4 UUID but was %s", s.id)
+	if len(s.ID) != 16 {
+		t.Errorf("Expected UUID to be a valid V4 UUID but was %s", s.ID)
 	}
 }

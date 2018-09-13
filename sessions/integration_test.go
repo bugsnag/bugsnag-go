@@ -2,17 +2,18 @@ package sessions_test
 
 import (
 	"context"
-	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	simplejson "github.com/bitly/go-simplejson"
 	bugsnag "github.com/bugsnag/bugsnag-go"
-	"github.com/bugsnag/bugsnag-go/sessions/internal"
 )
 
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
@@ -24,6 +25,25 @@ func init() {
 	bugsnag.DefaultSessionPublishInterval = testPublishInterval
 }
 
+func get(j *simplejson.Json, path string) *simplejson.Json {
+	return j.GetPath(strings.Split(path, ".")...)
+}
+func getBool(j *simplejson.Json, path string) bool {
+	return get(j, path).MustBool()
+}
+func getInt(j *simplejson.Json, path string) int {
+	return get(j, path).MustInt()
+}
+func getString(j *simplejson.Json, path string) string {
+	return get(j, path).MustString()
+}
+func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
+	return get(j, path).GetIndex(index)
+}
+func getFirstString(j *simplejson.Json, path string) string {
+	return getIndex(j, path, 0).MustString()
+}
+
 // Spins up a session server and checks that for every call to
 // bugsnag.StartSession() a session is being recorded.
 func TestStartSession(t *testing.T) {
@@ -33,38 +53,40 @@ func TestStartSession(t *testing.T) {
 	// Test server does all the checking of individual requests
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assertCorrectHeaders(t, r)
-		root, err := testutil.ExtractPayload(r)
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+		}
+		json, err := simplejson.NewJson(body)
+		if err != nil {
+			t.Error(err)
 		}
 		hostname, _ := os.Hostname()
-		testCases := []struct {
-			property string
-			expected string
+		tt := []struct {
+			prop string
+			exp  interface{}
+			got  interface{}
 		}{
-			{property: "notifier.name", expected: "Bugsnag Go"},
-			{property: "notifier.url", expected: "https://github.com/bugsnag/bugsnag-go"},
-			{property: "notifier.version", expected: bugsnag.VERSION},
-			{property: "app.type", expected: ""},
-			{property: "app.releaseStage", expected: "production"},
-			{property: "app.version", expected: ""},
-			{property: "device.osName", expected: runtime.GOOS},
-			{property: "device.hostname", expected: hostname},
+			{got: getString(json, "notifier.name"), prop: "notifier.name", exp: "Bugsnag Go"},
+			{got: getString(json, "notifier.url"), prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
+			{got: getString(json, "notifier.version"), prop: "notifier.version", exp: bugsnag.VERSION},
+			{got: getString(json, "app.releaseStage"), prop: "app.releaseStage", exp: "production"},
+			{got: getString(json, "app.version"), prop: "app.version", exp: ""},
+			{got: getString(json, "device.osName"), prop: "device.osName", exp: runtime.GOOS},
+			{got: getString(json, "device.hostname"), prop: "device.hostname", exp: hostname},
 		}
-		for _, tc := range testCases {
-			t.Run(tc.property, func(st *testing.T) {
-				got, err := testutil.GetJSONString(root, tc.property)
-				if err != nil {
-					t.Error(err)
-				}
-				if got != tc.expected {
-					t.Errorf("Expected property '%s' in JSON to be '%s' but was '%s'", tc.property, tc.expected, got)
-				}
-			})
+		for _, tc := range tt {
+			if tc.got != tc.exp {
+				t.Errorf("Expected '%s' to be '%s' but was %s", tc.prop, tc.exp, tc.got)
+			}
+		}
+		sessionCounts := get(json, "sessionCounts")
+		if got := getString(sessionCounts, "startedAt"); len(got) != 20 {
+			t.Errorf("Expected 'sessionCounts.startedAt' to be valid timestamp but was %s", got)
 		}
 		mutex.Lock()
 		defer mutex.Unlock()
-		sessionsStarted += getSessionsStarted(t, root)
+		sessionsStarted += getInt(sessionCounts, "sessionsStarted")
 	}))
 	defer ts.Close()
 
@@ -87,26 +109,6 @@ func TestStartSession(t *testing.T) {
 	if got, exp := sessionsStarted, sessionsCount; got != exp {
 		t.Errorf("Expected %d sessions started, but was %d", got, exp)
 	}
-}
-
-func getSessionsStarted(t *testing.T, root *json.RawMessage) int {
-	subobj, err := testutil.GetNestedJSON(root, "sessionCounts")
-	if err != nil {
-		t.Error(err)
-		return 0
-	}
-	var sessionCounts map[string]*json.RawMessage
-	err = json.Unmarshal(*subobj, &sessionCounts)
-	if err != nil {
-		t.Error(err)
-		return 0
-	}
-	var got int
-	err = json.Unmarshal(*sessionCounts["sessionsStarted"], &got)
-	if err != nil {
-		t.Error(err)
-	}
-	return got
 }
 
 func assertCorrectHeaders(t *testing.T, req *http.Request) {

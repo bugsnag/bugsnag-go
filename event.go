@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"context"
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go/errors"
@@ -98,35 +99,42 @@ type Event struct {
 	User *User
 	// Other MetaData to send to Bugsnag. Appears as a set of tabbed tables in the dashboard.
 	MetaData MetaData
+	// Ctx is the context of the session the event occurred in. This allows Bugsnag to associate the event with the session.
+	Ctx context.Context
 	// The reason for the severity and original value
 	handledState HandledState
 }
 
-func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Event, *Configuration) {
-
+func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration, bool) {
+	sync := false
 	config := notifier.Config
 	event := &Event{
-		Error:   err,
-		RawData: append(notifier.RawData, rawData...),
-
-		ErrorClass: err.TypeName(),
-		Message:    err.Error(),
-		Stacktrace: make([]stackFrame, len(err.StackFrames())),
-
+		RawData:  append(notifier.RawData, rawData...),
 		Severity: SeverityWarning,
-
 		MetaData: make(MetaData),
-
 		handledState: HandledState{
-			SeverityReasonHandledError,
-			SeverityWarning,
-			false,
-			"",
+			SeverityReason:   SeverityReasonHandledError,
+			OriginalSeverity: SeverityWarning,
+			Unhandled:        false,
+			Framework:        "",
 		},
 	}
 
+	var err *errors.Error
+
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
+
+		case error, errors.Error:
+			err = errors.New(datum.(error), 4)
+			event.Error = err
+			event.ErrorClass = err.TypeName()
+			event.Message = err.Error()
+			event.Stacktrace = make([]stackFrame, len(err.StackFrames()))
+
+		case bool:
+			sync = bool(datum)
+
 		case severity:
 			event.Severity = datum
 			event.handledState.OriginalSeverity = datum
@@ -134,6 +142,9 @@ func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Ev
 
 		case Context:
 			event.Context = datum.String
+
+		case context.Context:
+			event.Ctx = datum
 
 		case Configuration:
 			config = config.merge(&datum)
@@ -173,5 +184,5 @@ func newEvent(err *errors.Error, rawData []interface{}, notifier *Notifier) (*Ev
 		}
 	}
 
-	return event, config
+	return event, config, sync
 }

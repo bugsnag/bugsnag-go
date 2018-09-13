@@ -18,14 +18,14 @@ import (
 	_ "crypto/sha512"
 )
 
-// The current version of bugsnag-go.
+// VERSION defines the version of this Bugsnag notifier
 const VERSION = "1.3.1"
 const configuredMultipleTimes = "WARNING: Bugsnag was configured twice. It is recommended to only call bugsnag.Configure once to ensure consistent session tracking behavior"
 
 var once sync.Once
 var middleware middlewareStack
 
-// The configuration for the default bugsnag notifier.
+// Config is the configuration for the default bugsnag notifier.
 var Config Configuration
 var sessionTrackingConfig sessions.SessionTrackingConfiguration
 
@@ -46,27 +46,40 @@ func Configure(config Configuration) {
 	startSessionTracking()
 }
 
-// StartSession creates a clone of the context.Context instance with Bugsnag
-// session data attached.
+// StartSession creates new context from the context.Context instance with
+// Bugsnag session data attached.
 func StartSession(ctx context.Context) context.Context {
 	return sessionTracker.StartSession(ctx)
 }
 
-// Notify sends an error to Bugsnag along with the current stack trace. The
-// rawData is used to send extra information along with the error. For example
-// you can pass the current http.Request to Bugsnag to see information about it
-// in the dashboard, or set the severity of the notification.
-func Notify(err error, rawData ...interface{}) error {
-	return defaultNotifier.Notify(errors.New(err, 1), rawData...)
+// Notify sends an error.Error to Bugsnag along with the current stack trace.
+// Although it's not strictly enforced, it's highly recommended to pass a
+// context.Context object that has at one-point been returned from
+// bugsnag.StartSession. Doing so ensures your stability score remains accurate,
+// and future versions of Bugsnag may extract more useful information from this
+// context.
+// The remaining rawData is used to send extra information along with the
+// error. For example you can pass the current http.Request to Bugsnag to see
+// information about it in the dashboard, or set the severity of the
+// notification.
+func Notify(rawData ...interface{}) error {
+	return defaultNotifier.Notify(rawData...)
 }
 
 // AutoNotify logs a panic on a goroutine and then repanics.
 // It should only be used in places that have existing panic handlers further
-// up the stack. The rawData is used to send extra information along with any
+// up the stack.
+// Although it's not strictly enforced, it's highly recommended to pass a
+// context.Context object that has at one-point been returned from
+// bugsnag.StartSession. Doing so ensures your stability score remains accurate,
+// and future versions of Bugsnag may extract more useful information from this
+// context.
+// The rawData is used to send extra information along with any
 // panics that are handled this way.
 // Usage:
 //  go func() {
-//		defer bugsnag.AutoNotify()
+//      ctx := bugsnag.StartSession(context.Background())
+//		defer bugsnag.AutoNotify(ctx)
 //      // (possibly crashy code)
 //  }()
 // See also: bugsnag.Recover()
@@ -75,21 +88,32 @@ func AutoNotify(rawData ...interface{}) {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.NotifySync(errors.New(err, 2), true, rawData...)
+		defaultNotifier.NotifySync(append(rawData, errors.New(err, 2), true)...)
 		panic(err)
 	}
 }
 
 // Recover logs a panic on a goroutine and then recovers.
+// Although it's not strictly enforced, it's highly recommended to pass a
+// context.Context object that has at one-point been returned from
+// bugsnag.StartSession. Doing so ensures your stability score remains accurate,
+// and future versions of Bugsnag may extract more useful information from this
+// context.
 // The rawData is used to send extra information along with
 // any panics that are handled this way
-// Usage: defer bugsnag.Recover()
+// Usage:
+//  go func() {
+//      ctx := bugsnag.StartSession(context.Background())
+//		defer bugsnag.Recover(ctx)
+//      // (possibly crashy code)
+//  }()
+// See also: bugsnag.AutoNotify()
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.Notify(errors.New(err, 2), rawData...)
+		defaultNotifier.Notify(append(rawData, errors.New(err, 2))...)
 	}
 }
 
@@ -113,7 +137,7 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer notifier.AutoNotify(r)
+		defer notifier.AutoNotify(StartSession(r.Context()), r)
 		h.ServeHTTP(w, r)
 	})
 }

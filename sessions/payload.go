@@ -41,7 +41,7 @@ type sessionPayload struct {
 }
 
 // makeSessionPayload creates a sessionPayload based off of the given sessions and config
-func makeSessionPayload(sessions []*session, config *SessionTrackingConfiguration) *sessionPayload {
+func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguration) *sessionPayload {
 	releaseStage := config.ReleaseStage
 	if releaseStage == "" {
 		releaseStage = "production"
@@ -67,7 +67,7 @@ func makeSessionPayload(sessions []*session, config *SessionTrackingConfiguratio
 			Hostname: hostname,
 		},
 		SessionCounts: sessionCountsPayload{
-			StartedAt:       sessions[0].startedAt.UTC().Format(time.RFC3339),
+			StartedAt:       sessions[0].StartedAt.UTC().Format(time.RFC3339),
 			SessionsStarted: len(sessions),
 		},
 	}

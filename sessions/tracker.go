@@ -22,11 +22,12 @@ type ctxKey int
 // gauging your application's health
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
+	GetSession(context.Context) *Session
 }
 
 type sessionTracker struct {
-	sessionChannel chan *session
-	sessions       []*session
+	sessionChannel chan *Session
+	sessions       []*Session
 	config         *SessionTrackingConfiguration
 	publisher      sessionPublisher
 }
@@ -38,13 +39,17 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 		client: &http.Client{Transport: config.Transport},
 	}
 	st := sessionTracker{
-		sessionChannel: make(chan *session, 1),
-		sessions:       []*session{},
+		sessionChannel: make(chan *Session, 1),
+		sessions:       []*Session{},
 		config:         config,
 		publisher:      &publisher,
 	}
 	go st.processSessions()
 	return &st
+}
+
+func (s *sessionTracker) GetSession(ctx context.Context) *Session {
+	return ctx.Value(contextSessionKey).(*Session)
 }
 
 func (s *sessionTracker) StartSession(ctx context.Context) context.Context {
@@ -70,10 +75,12 @@ func (s *sessionTracker) processSessions() {
 			oldSessions := s.sessions
 			s.sessions = nil
 			if len(oldSessions) > 0 {
-				err := s.publisher.publish(oldSessions)
-				if err != nil {
-					s.config.logf("%v", err)
-				}
+				go func(s *sessionTracker) {
+					err := s.publisher.publish(oldSessions)
+					if err != nil {
+						s.config.logf("%v", err)
+					}
+				}(s)
 			}
 		case <-shutdown:
 			if len(s.sessions) > 0 {

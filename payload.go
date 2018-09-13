@@ -9,7 +9,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/headers"
 )
 
-const notifyPayloadVersion = "2"
+const notifyPayloadVersion = "4"
 
 type payload struct {
 	*Event
@@ -24,7 +24,7 @@ func (p *payload) deliver() error {
 		return fmt.Errorf("bugsnag/payload.deliver: invalid api key")
 	}
 
-	buf, err := json.Marshal(p)
+	buf, err := p.MarshalJSON()
 
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
@@ -54,66 +54,68 @@ func (p *payload) deliver() error {
 }
 
 func (p *payload) MarshalJSON() ([]byte, error) {
-
-	severityReason := hash{
-		"type": p.handledState.SeverityReason,
-	}
-	if p.handledState.Framework != "" {
-		severityReason["attributes"] = hash{
-			"framework": p.handledState.Framework,
-		}
-	}
-
-	data := hash{
-		"apiKey": p.APIKey,
-
-		"notifier": hash{
-			"name":    "Bugsnag Go",
-			"url":     "https://github.com/bugsnag/bugsnag-go",
-			"version": VERSION,
-		},
-
-		"events": []hash{
-			{
-				"payloadVersion": notifyPayloadVersion,
-				"exceptions": []hash{
-					{
-						"errorClass": p.ErrorClass,
-						"message":    p.Message,
-						"stacktrace": p.Stacktrace,
+	return json.Marshal(reportJSON{
+		APIKey: p.APIKey,
+		Events: []eventJSON{
+			eventJSON{
+				App: &appJSON{
+					ReleaseStage: p.ReleaseStage,
+					Type:         p.AppType,
+					Version:      p.AppVersion,
+				},
+				Context: p.Context,
+				Device:  &deviceJSON{Hostname: p.Hostname},
+				Exceptions: []exceptionJSON{
+					exceptionJSON{
+						ErrorClass: p.ErrorClass,
+						Message:    p.Message,
+						Stacktrace: p.Stacktrace,
 					},
 				},
-				"severity":       p.Severity.String,
-				"severityReason": severityReason,
-				"unhandled":      p.handledState.Unhandled,
-				"app": hash{
-					"releaseStage": p.ReleaseStage,
-				},
-				"user":     p.User,
-				"metaData": p.MetaData.sanitize(p.ParamsFilters),
+				GroupingHash:   p.GroupingHash,
+				Metadata:       p.MetaData.sanitize(p.ParamsFilters),
+				PayloadVersion: notifyPayloadVersion,
+				Session:        p.makeSession(),
+				Severity:       p.Severity.String,
+				SeverityReason: p.severityReasonPayload(),
+				Unhandled:      p.handledState.Unhandled,
+				User:           p.User,
 			},
 		},
+		Notifier: notifierJSON{
+			Name:    "Bugsnag Go",
+			URL:     "https://github.com/bugsnag/bugsnag-go",
+			Version: VERSION,
+		},
+	})
+}
+
+func (p *payload) makeSession() *sessionJSON {
+	handled, unhandled := 1, 0
+	if p.handledState.Unhandled {
+		handled, unhandled = unhandled, handled
 	}
 
-	event := data["events"].([]hash)[0]
+	// In the case of an immediate crash on startup, the sessionTracker may
+	// not have been set up just yet. We therefore have to fall back to a
+	// payload without a 'session' property
+	// If a context has not been applied to the payload then assume that no
+	// session has started either
+	if sessionTracker == nil || p.Ctx == nil {
+		return nil
+	}
 
-	if p.Context != "" {
-		event["context"] = p.Context
+	session := sessionTracker.GetSession(p.Ctx)
+	return &sessionJSON{
+		ID:        session.ID,
+		StartedAt: session.StartedAt,
+		Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
 	}
-	if p.GroupingHash != "" {
-		event["groupingHash"] = p.GroupingHash
-	}
-	if p.Hostname != "" {
-		event["device"] = hash{
-			"hostname": p.Hostname,
-		}
-	}
-	if p.AppType != "" {
-		event["app"].(hash)["type"] = p.AppType
-	}
-	if p.AppVersion != "" {
-		event["app"].(hash)["version"] = p.AppVersion
-	}
-	return json.Marshal(data)
+}
 
+func (p *payload) severityReasonPayload() *severityReasonJSON {
+	if reason := p.handledState.SeverityReason; reason != "" {
+		return &severityReasonJSON{Type: reason}
+	}
+	return nil
 }
