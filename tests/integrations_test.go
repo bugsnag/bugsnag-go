@@ -26,20 +26,6 @@ func TestNegroniRequestPanicCallbackAltered(t *testing.T) {
 	pkill("negroni")
 }
 
-func TestGinRequestPanic(t *testing.T) {
-	startTestServer()
-	body := startPanickingApp(t, "./fixtures/gin.go", "http://localhost:9079", "default")
-	assertSeverityReasonEqual(t, body, "error", "unhandledErrorMiddleware", true)
-	pkill("gin")
-}
-
-func TestGinRequestPanicCallbackAltered(t *testing.T) {
-	startTestServer()
-	body := startPanickingApp(t, "./fixtures/gin.go", "http://localhost:9079", "beforenotify")
-	assertSeverityReasonEqual(t, body, "info", "userCallbackSetSeverity", true)
-	pkill("gin")
-}
-
 func TestMartiniRequestPanic(t *testing.T) {
 	startTestServer()
 	body := startPanickingApp(t, "./fixtures/martini.go", "http://localhost:3000", "default")
