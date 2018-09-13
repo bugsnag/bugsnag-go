@@ -56,13 +56,8 @@ type exceptionJSON struct {
 	Stacktrace []stackFrame `json:"stacktrace"`
 }
 
-type severityAttributesJSON struct {
-	Framework string `json:"framework,omitempty"`
-}
-
 type severityReasonJSON struct {
-	Attributes *severityAttributesJSON `json:"attributes,omitempty"`
-	Type       SeverityReason          `json:"type,omitempty"`
+	Type SeverityReason `json:"type,omitempty"`
 }
 
 type deviceJSON struct {

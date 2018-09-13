@@ -40,7 +40,7 @@ type logger struct{ msg string }
 func (l *logger) Printf(format string, v ...interface{}) { l.msg = format }
 
 // setup sets up a simple sessionTracker and returns a test event server for receiving the event payloads.
-// report payloads published to ts.URL will be put on the returned channel
+// report payloads published to the returned server's URL will be put on the returned channel
 func setup() (*httptest.Server, chan []byte) {
 	reports := make(chan []byte, 10)
 	sessionTracker = &testSessionTracker{}
@@ -119,7 +119,7 @@ func TestNotify(t *testing.T) {
 		GroupingHash:   "lol",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "warning",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledError},
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
 		Unhandled:      false,
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
@@ -174,7 +174,7 @@ func TestHandler(t *testing.T) {
 		GroupingHash:   "",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "info",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
 		User:           &User{Id: "127.0.0.1", Name: "", Email: ""},
 		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
@@ -240,7 +240,7 @@ func TestAutoNotify(t *testing.T) {
 		GroupingHash:   "",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "eggs"}},
@@ -278,7 +278,7 @@ func TestRecover(t *testing.T) {
 		GroupingHash:   "",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "warning",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonHandledPanic},
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      false,
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ham"}},
@@ -304,7 +304,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		GroupingHash:   "",
 		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
 		Severity:       "info",
-		SeverityReason: &severityReasonJSON{Attributes: &severityAttributesJSON{Framework: ""}, Type: SeverityReasonCallbackSpecified},
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonCallbackSpecified},
 		Unhandled:      false,
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
@@ -327,7 +327,7 @@ func TestNotifyWithoutError(t *testing.T) {
 	case r := <-reports:
 		t.Fatalf("Unexpected request made to bugsnag: %+v", r)
 	default:
-		for _, exp := range []string{"ERROR", "error", "bugsnag.Notify", "not notified"} {
+		for _, exp := range []string{"ERROR", "error", "Bugsnag", "not notified"} {
 			if got := l.msg; !strings.Contains(got, exp) {
 				t.Errorf("Expected to see '%s' in logged message but logged message was '%s'", exp, got)
 			}
@@ -418,18 +418,7 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 		{prop: "payload version", exp: "4", got: getString(event, "payloadVersion")},
 
 		{prop: "severity", exp: exp.Severity, got: getString(event, "severity")},
-
-		{
-			prop: "severity reason attribute: 'framework'",
-			exp:  exp.SeverityReason.Attributes.Framework,
-			got:  getString(event, "severityReason.attributes.framework"),
-		},
-
-		{
-			prop: "severity reason type",
-			exp:  string(exp.SeverityReason.Type),
-			got:  getString(event, "severityReason.type"),
-		},
+		{prop: "severity reason type", exp: string(exp.SeverityReason.Type), got: getString(event, "severityReason.type")},
 	} {
 		if tc.got != tc.exp {
 			t.Errorf("Wrong %s: expected '%v' but got '%v'", tc.prop, tc.exp, tc.got)

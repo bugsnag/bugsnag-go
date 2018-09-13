@@ -37,10 +37,11 @@ func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
 	return notifier.NotifySync(append(rawData, notifier.Config.Synchronous)...)
 }
 
-// NotifySync sends an error to Bugsnag. The synchronous parameter specifies
-// whether to send the report in the current context. Any rawData you pass here
-// will be sent to Bugsnag after being converted to JSON. e.g.
-// bugsnag.SeverityError,  bugsnag.Context, or bugsnag.MetaData.
+// NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
+// to send the report in the current context (by default false, i.e.
+// asynchronous). Any other rawData you pass here will be sent to Bugsnag after
+// being converted to JSON. E.g. bugsnag.SeverityError, bugsnag.Context, or
+// bugsnag.MetaData.
 func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
 	containsError := false
 	for _, datum := range rawData {
@@ -49,7 +50,7 @@ func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
 		}
 	}
 	if !containsError {
-		msg := "bugsnag.Notify was called without supplying an error. Bugsnag not notified"
+		msg := "attempted to notify Bugsnag without supplying an error. Bugsnag not notified"
 		notifier.Config.Logger.Printf("ERROR: " + msg)
 		return fmt.Errorf(msg)
 	}

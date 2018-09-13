@@ -114,17 +114,8 @@ func (p *payload) makeSession() *sessionJSON {
 }
 
 func (p *payload) severityReasonPayload() *severityReasonJSON {
-	reason, framework := p.handledState.SeverityReason, p.handledState.Framework
-	if reason == "" && framework == "" {
-		return nil
+	if reason := p.handledState.SeverityReason; reason != "" {
+		return &severityReasonJSON{Type: reason}
 	}
-	json := severityReasonJSON{}
-
-	if reason != "" {
-		json.Type = reason
-	}
-	if framework != "" {
-		json.Attributes = &severityAttributesJSON{Framework: framework}
-	}
-	return &json
+	return nil
 }

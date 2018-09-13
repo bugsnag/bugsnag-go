@@ -104,7 +104,7 @@ func AutoNotify(rawData ...interface{}) {
 // Usage:
 //  go func() {
 //      ctx := bugsnag.StartSession(context.Background())
-//		defer bugsnag.AutoNotify(ctx)
+//		defer bugsnag.Recover(ctx)
 //      // (possibly crashy code)
 //  }()
 // See also: bugsnag.AutoNotify()

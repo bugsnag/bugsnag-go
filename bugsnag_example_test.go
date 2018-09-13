@@ -7,25 +7,25 @@ import (
 	"net/http"
 	"time"
 
-	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go"
 )
 
-var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
-var testEndpoint string
+var exampleAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 
 func ExampleAutoNotify() {
-	config := bugsnag.Configuration{APIKey: testAPIKey}
+	bugsnag.Configure(bugsnag.Configuration{APIKey: exampleAPIKey})
 	createAccount := func(ctx context.Context) {
 		fmt.Println("Creating account and passing context around...")
 	}
 	ctx := bugsnag.StartSession(context.Background())
-	defer bugsnag.AutoNotify(ctx, config)
+	defer bugsnag.AutoNotify(ctx)
 	createAccount(ctx)
 	// Output:
 	// Creating account and passing context around...
 }
 
 func ExampleRecover() {
+	bugsnag.Configure(bugsnag.Configuration{APIKey: exampleAPIKey})
 	panicFunc := func() {
 		fmt.Println("About to panic")
 		panic("Oh noes")
@@ -33,14 +33,13 @@ func ExampleRecover() {
 
 	// Will recover when panicFunc panics
 	func() {
-		config := bugsnag.Configuration{APIKey: testAPIKey}
-		defer bugsnag.Recover(bugsnag.StartSession(context.Background()), config)
+		ctx := bugsnag.StartSession(context.Background())
+		defer bugsnag.Recover(ctx)
 		panicFunc()
 	}()
 
 	fmt.Println("Panic recovered")
-	// Output:
-	// About to panic
+	// Output: About to panic
 	// Panic recovered
 }
 

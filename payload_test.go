@@ -13,7 +13,7 @@ const expSmall = `{"apiKey":"","events":[{"app":{"releaseStage":""},"device":{},
 // The large payload has a timestamp in it which makes it awkward to assert against.
 // Instead, assert that the timestamp property exist, along with the rest of the expected payload
 const expLargePre = `{"apiKey":"166f5ad3590596f9aa8d601ea89af845","events":[{"app":{"releaseStage":"mega-production","type":"gin","version":"1.5.2"},"context":"/api/v2/albums","device":{"hostname":"super.duper.site"},"exceptions":[{"errorClass":"error class","message":"error message goes here","stacktrace":[{"method":"doA","file":"a.go","lineNumber":65},{"method":"fetchB","file":"b.go","lineNumber":99,"inProject":true},{"method":"incrementI","file":"i.go","lineNumber":651}]}],"groupingHash":"custom grouping hash","metaData":{"custom tab":{"my key":"my value"}},"payloadVersion":"4","session":{"startedAt":"`
-const expLargePost = `,"severity":"info","severityReason":{"attributes":{"framework":"gin"},"type":"unhandledError"},"unhandled":true,"user":{"id":"1234baerg134","name":"Kool Kidz on da bus","email":"typo@busgang.com"}}],"notifier":{"name":"Bugsnag Go","url":"https://github.com/bugsnag/bugsnag-go","version":"1.3.1"}}`
+const expLargePost = `,"severity":"info","severityReason":{"type":"unhandledError"},"unhandled":true,"user":{"id":"1234baerg134","name":"Kool Kidz on da bus","email":"typo@busgang.com"}}],"notifier":{"name":"Bugsnag Go","url":"https://github.com/bugsnag/bugsnag-go","version":"1.3.1"}}`
 
 func TestMarshalEmptyPayload(t *testing.T) {
 	payload := payload{&Event{}, &Configuration{}}
