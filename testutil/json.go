@@ -2,12 +2,33 @@
 package testutil
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
 	simplejson "github.com/bitly/go-simplejson"
 )
+
+// TestAPIKey is a fake API key that can be used for testing
+const TestAPIKey = "166f5ad3590596f9aa8d601ea89af845"
+
+// Setup sets up and returns a test event server for receiving the event payloads.
+// report payloads published to the returned server's URL will be put on the returned channel
+func Setup() (*httptest.Server, chan []byte) {
+	reports := make(chan []byte, 10)
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Bugsnag called")
+		if strings.Contains(r.URL.Path, "sessions") {
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		reports <- body
+	})), reports
+}
 
 // Get travels through a JSON object and returns the specified node
 func Get(j *simplejson.Json, path string) *simplejson.Json {

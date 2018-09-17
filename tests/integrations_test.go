@@ -10,22 +10,6 @@ import (
 // Starts an app, sends a request, and tests that the resulting bugsnag
 // error report has the correct values.
 
-func TestNegroniRequestPanic(t *testing.T) {
-	startTestServer()
-	body := startPanickingApp(t,
-		"./fixtures/negroni.go", "http://localhost:9078", "default")
-	assertSeverityReasonEqual(t, body, "error", "unhandledErrorMiddleware", true)
-	pkill("negroni")
-}
-
-func TestNegroniRequestPanicCallbackAltered(t *testing.T) {
-	startTestServer()
-	body := startPanickingApp(t,
-		"./fixtures/negroni.go", "http://localhost:9078", "beforenotify")
-	assertSeverityReasonEqual(t, body, "info", "userCallbackSetSeverity", true)
-	pkill("negroni")
-}
-
 func TestRevelRequestPanic(t *testing.T) {
 	startTestServer()
 	body := startRevelApp(t, "default")

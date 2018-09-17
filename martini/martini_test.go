@@ -3,11 +3,8 @@ package bugsnagmartini_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -17,24 +14,6 @@ import (
 	. "github.com/bugsnag/bugsnag-go/testutil"
 	"github.com/go-martini/martini"
 )
-
-const (
-	testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
-)
-
-// setup sets up and returns a test event server for receiving the event payloads.
-// report payloads published to the returned server's URL will be put on the returned channel
-func setup() (*httptest.Server, chan []byte) {
-	reports := make(chan []byte, 10)
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Bugsnag called")
-		if strings.Contains(r.URL.Path, "sessions") {
-			return
-		}
-		body, _ := ioutil.ReadAll(r.Body)
-		reports <- body
-	})), reports
-}
 
 func performHandledError(notifier *bugsnag.Notifier) {
 	ctx := bugsnag.StartSession(context.Background())
@@ -48,7 +27,7 @@ func performUnhandledCrash() string {
 }
 
 func TestMartini(t *testing.T) {
-	ts, reports := setup()
+	ts, reports := Setup()
 	defer ts.Close()
 
 	m := martini.Classic()
@@ -56,7 +35,7 @@ func TestMartini(t *testing.T) {
 	userID := "1234abcd"
 	m.Use(martini.Recovery())
 	config := bugsnag.Configuration{
-		APIKey:    testAPIKey,
+		APIKey:    TestAPIKey,
 		Endpoints: bugsnag.Endpoints{Notify: ts.URL, Sessions: ts.URL + "/sessions"},
 	}
 	bugsnag.Configure(config)
@@ -106,7 +85,7 @@ func TestMartini(t *testing.T) {
 				"version": "%s"
 			}
 		}
-		`, testAPIKey, hostname, userID, bugsnag.VERSION))
+		`, TestAPIKey, hostname, userID, bugsnag.VERSION))
 	})
 
 	t.Run("Notify", func(st *testing.T) {
@@ -148,7 +127,7 @@ func TestMartini(t *testing.T) {
 				"version": "%s"
 			}
 		}
-		`, testAPIKey, hostname, "987zyx", bugsnag.VERSION))
+		`, TestAPIKey, hostname, "987zyx", bugsnag.VERSION))
 	})
 
 }

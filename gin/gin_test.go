@@ -3,11 +3,8 @@ package bugsnaggin_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -18,40 +15,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
-	port       = "9079"
-)
-
-// setup sets up and returns a test event server for receiving the event payloads.
-// report payloads published to the returned server's URL will be put on the returned channel
-func setup() (*httptest.Server, chan []byte) {
-	reports := make(chan []byte, 10)
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Bugsnag called")
-		if strings.Contains(r.URL.Path, "sessions") {
-			return
-		}
-		body, _ := ioutil.ReadAll(r.Body)
-		reports <- body
-	})), reports
-}
-
 func TestGin(t *testing.T) {
-	ts, reports := setup()
+	ts, reports := Setup()
 	defer ts.Close()
 
 	g := gin.Default()
 
 	userID := "1234abcd"
 	g.Use(bugsnaggin.AutoNotify(bugsnag.Configuration{
-		APIKey:    testAPIKey,
+		APIKey:    TestAPIKey,
 		Endpoints: bugsnag.Endpoints{Notify: ts.URL, Sessions: ts.URL + "/sessions"},
 	}, bugsnag.User{Id: userID}))
 
 	g.GET("/unhandled", performUnhandledCrash)
 	g.GET("/handled", performHandledError)
-	go g.Run("localhost:9079") //This call blocks
+	go g.Run(":9079") //This call blocks
 
 	t.Run("AutoNotify", func(st *testing.T) {
 		time.Sleep(1 * time.Second)
