@@ -59,18 +59,18 @@ func AutoNotify(rawData ...interface{}) martini.Handler {
 
 	return func(r *http.Request, c martini.Context) {
 		request := r
+		notifier := bugsnag.New(append(rawData, request)...)
+		ctx := bugsnag.StartSession(r.Context())
+		// Replace the request with the new request with session info
+		c.Map(r.WithContext(ctx))
 		// Record a session if auto capture sessions is enabled
 		if bugsnag.Config.IsAutoCaptureSessions() {
-			ctx := bugsnag.StartSession(r.Context())
-			request = r.WithContext(ctx)
-
-			// Replace the request with the new request with session info
-			c.MapTo(request, (*http.Request)(nil))
+			defer notifier.AutoNotify(ctx, request)
+		} else {
+			defer notifier.AutoNotify(request)
 		}
 
 		// create a notifier that has the current request bound to it
-		notifier := bugsnag.New(append(rawData, request)...)
-		defer notifier.AutoNotify(request)
 		c.Map(notifier)
 		c.Next()
 	}

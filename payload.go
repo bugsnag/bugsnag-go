@@ -21,7 +21,7 @@ type hash map[string]interface{}
 func (p *payload) deliver() error {
 
 	if len(p.APIKey) != 32 {
-		return fmt.Errorf("bugsnag/payload.deliver: invalid api key")
+		return fmt.Errorf("bugsnag/payload.deliver: invalid api key: '%s'", p.APIKey)
 	}
 
 	buf, err := p.MarshalJSON()
