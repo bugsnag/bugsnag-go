@@ -1,7 +1,6 @@
 package bugsnaggin_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -115,7 +114,7 @@ func TestGin(t *testing.T) {
 }
 
 func performHandledError(c *gin.Context) {
-	ctx := bugsnag.StartSession(context.Background())
+	ctx := c.Request.Context()
 	bugsnag.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
 }
 
