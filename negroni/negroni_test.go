@@ -1,7 +1,6 @@
 package bugsnagnegroni_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -80,8 +79,7 @@ func unhandledCrashHandler(w http.ResponseWriter, req *http.Request) {
 	crash(struct{}{})
 }
 func handledCrashHandler(w http.ResponseWriter, req *http.Request) {
-	ctx := bugsnag.StartSession(context.Background())
-	bugsnag.Notify(ctx, fmt.Errorf("Ooopsie"))
+	bugsnag.Notify(req.Context(), fmt.Errorf("Ooopsie"))
 }
 
 func crash(a interface{}) string {
