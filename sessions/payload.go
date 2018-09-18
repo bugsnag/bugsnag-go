@@ -34,10 +34,10 @@ type sessionCountsPayload struct {
 
 // sessionPayload defines the top level payload object
 type sessionPayload struct {
-	Notifier      notifierPayload      `json:"notifier"`
-	App           appPayload           `json:"app"`
-	Device        devicePayload        `json:"device"`
-	SessionCounts sessionCountsPayload `json:"sessionCounts"`
+	Notifier      notifierPayload        `json:"notifier"`
+	App           appPayload             `json:"app"`
+	Device        devicePayload          `json:"device"`
+	SessionCounts []sessionCountsPayload `json:"sessionCounts"`
 }
 
 // makeSessionPayload creates a sessionPayload based off of the given sessions and config
@@ -66,9 +66,12 @@ func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguratio
 			OsName:   runtime.GOOS,
 			Hostname: hostname,
 		},
-		SessionCounts: sessionCountsPayload{
-			StartedAt:       sessions[0].StartedAt.UTC().Format(time.RFC3339),
-			SessionsStarted: len(sessions),
+		SessionCounts: []sessionCountsPayload{
+			{
+				//This timestamp assumes that we're sending these off once a minute
+				StartedAt:       sessions[0].StartedAt.UTC().Format(time.RFC3339),
+				SessionsStarted: len(sessions),
+			},
 		},
 	}
 }

@@ -81,15 +81,14 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 	hostname, _ := os.Hostname()
 
 	for prop, exp := range map[string]string{
-		"notifier.name":           "Bugsnag Go",
-		"notifier.url":            "https://github.com/bugsnag/bugsnag-go",
-		"notifier.version":        "",
-		"app.type":                "",
-		"app.releaseStage":        "production",
-		"app.version":             "",
-		"device.osName":           runtime.GOOS,
-		"device.hostname":         hostname,
-		"sessionCounts.startedAt": earliestTime,
+		"notifier.name":    "Bugsnag Go",
+		"notifier.url":     "https://github.com/bugsnag/bugsnag-go",
+		"notifier.version": "",
+		"app.type":         "",
+		"app.releaseStage": "production",
+		"app.version":      "",
+		"device.osName":    runtime.GOOS,
+		"device.hostname":  hostname,
 	} {
 		t.Run(prop, func(st *testing.T) {
 			if got := getString(root, prop); got != exp {
@@ -97,8 +96,12 @@ func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
 			}
 		})
 	}
-	if got, exp := getInt(root, "sessionCounts.sessionsStarted"), len(sessions); got != exp {
-		t.Errorf("Expected sessionCounts.sessionsStarted to be %d but was %d", exp, got)
+	sessionCounts := getIndex(root, "sessionCounts", 0)
+	if got, exp := getString(sessionCounts, "startedAt"), earliestTime; got != exp {
+		t.Errorf("Expected sessionCounts[0].startedAt to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := getInt(sessionCounts, "sessionsStarted"), len(sessions); got != exp {
+		t.Errorf("Expected sessionCounts[0].sessionsStarted to be %d but was %d", exp, got)
 	}
 }
 
@@ -127,15 +130,14 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 
 	for prop, exp := range map[string]string{
-		"notifier.name":           "Bugsnag Go",
-		"notifier.url":            "https://github.com/bugsnag/bugsnag-go",
-		"notifier.version":        "2.3.4-alpha",
-		"app.type":                "gin",
-		"app.releaseStage":        "staging",
-		"app.version":             "1.2.3-beta",
-		"device.osName":           runtime.GOOS,
-		"device.hostname":         "gce-1234-us-west-1",
-		"sessionCounts.startedAt": earliestTime,
+		"notifier.name":    "Bugsnag Go",
+		"notifier.url":     "https://github.com/bugsnag/bugsnag-go",
+		"notifier.version": "2.3.4-alpha",
+		"app.type":         "gin",
+		"app.releaseStage": "staging",
+		"app.version":      "1.2.3-beta",
+		"device.osName":    runtime.GOOS,
+		"device.hostname":  "gce-1234-us-west-1",
 	} {
 		t.Run(prop, func(st *testing.T) {
 			if got := getString(root, prop); got != exp {
@@ -143,8 +145,12 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 			}
 		})
 	}
-	if got, exp := getInt(root, "sessionCounts.sessionsStarted"), len(sessions); got != exp {
-		t.Errorf("Expected sessionCounts.sessionsStarted to be %d but was %d", exp, got)
+	sessionCounts := getIndex(root, "sessionCounts", 0)
+	if got, exp := getString(sessionCounts, "startedAt"), earliestTime; got != exp {
+		t.Errorf("Expected sessionCounts[0].startedAt to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := getInt(sessionCounts, "sessionsStarted"), len(sessions); got != exp {
+		t.Errorf("Expected sessionCounts[0].sessionsStarted to be %d but was %d", exp, got)
 	}
 }
 
