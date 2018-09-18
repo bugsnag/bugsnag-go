@@ -19,7 +19,7 @@ import (
 )
 
 // VERSION defines the version of this Bugsnag notifier
-const VERSION = "1.3.1"
+const VERSION = "1.4.0"
 
 var once sync.Once
 var middleware middlewareStack
