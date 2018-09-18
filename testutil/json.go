@@ -53,13 +53,6 @@ func getFirstString(j *simplejson.Json, path string) string {
 	return GetIndex(j, path, 0).MustString()
 }
 
-type stackFrame struct {
-	file       string
-	lineNumber int
-	method     string
-	inProject  bool
-}
-
 // AssertPayload compares the payload that was received by the event-server to
 // the expected report JSON payload
 func AssertPayload(t *testing.T, report *simplejson.Json, expPretty string) {
@@ -115,20 +108,5 @@ func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
 	}
 	if got := getInt(event, "session.events.handled"); got != expHandled {
 		t.Errorf("Expected %d handled events in session but was %d", expHandled, got)
-	}
-}
-
-func checkFrame(t *testing.T, frame *simplejson.Json, exp stackFrame) {
-	if got := getString(frame, "file"); got != exp.file {
-		t.Errorf("Expected frame file to be '%s' but was '%s'", exp.file, got)
-	}
-	if got := getString(frame, "method"); got != exp.method {
-		t.Errorf("Expected frame method to be '%s' but was '%s'", exp.method, got)
-	}
-	if got := getInt(frame, "lineNumber"); got != exp.lineNumber && exp.inProject { // Don't check files that vary per version of go
-		t.Errorf("Expected frame line number to be %d but was %d", exp.lineNumber, got)
-	}
-	if got := getBool(frame, "inProject"); got != exp.inProject {
-		t.Errorf("Expected frame inProject to be '%v' but was '%v'", exp.inProject, got)
 	}
 }

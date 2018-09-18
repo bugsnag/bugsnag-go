@@ -36,9 +36,10 @@ func Filter(c *revel.Controller, fc []revel.Filter) {
 	if bugsnag.Config.IsAutoCaptureSessions() {
 		ctx := bugsnag.StartSession(context.Background())
 		c.Args["context"] = ctx
+		defer bugsnag.AutoNotify(c, ctx, errorHandlingState)
+	} else {
+		defer bugsnag.AutoNotify(c, errorHandlingState)
 	}
-
-	defer bugsnag.AutoNotify(c, errorHandlingState)
 	fc[0](c, fc[1:])
 }
 
@@ -74,7 +75,7 @@ func init() {
 
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:              revel.Config.StringDefault("bugsnag.apikey", ""),
-			AutoCaptureSessions: revel.Config.BoolDefault("bugnsnag.autocapturesessions", true),
+			AutoCaptureSessions: revel.Config.BoolDefault("bugsnag.autocapturesessions", true),
 			Endpoints: bugsnag.Endpoints{
 				Notify:   revel.Config.StringDefault("bugsnag.endpoints.notify", ""),
 				Sessions: revel.Config.StringDefault("bugsnag.endpoints.sessions", ""),
