@@ -154,12 +154,19 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	return config
 }
 
+// IsAutoCaptureSessions identifies whether or not the notifier should
+// automatically capture sessions as requests come in. It's a convenience
+// wrapper that allows automatic session capturing to be enabled by default.
 func (config *Configuration) IsAutoCaptureSessions() bool {
-	val, ok := config.AutoCaptureSessions.(bool)
-	if !ok {
-		return false
+	if config.AutoCaptureSessions == nil {
+		return true // enabled by default
 	}
-	return val
+	if val, ok := config.AutoCaptureSessions.(bool); ok {
+		return val
+	}
+	// It has been configured to *something* (although not a valid value)
+	// assume the user wanted to disable this option.
+	return false
 }
 
 func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {

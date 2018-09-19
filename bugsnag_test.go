@@ -335,6 +335,21 @@ func TestNotifyWithoutError(t *testing.T) {
 	}
 }
 
+func TestConfigureTwice(t *testing.T) {
+	Configure(Configuration{})
+	if !Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be enabled by default")
+	}
+	Configure(Configuration{AutoCaptureSessions: false})
+	if Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be disabled when configured")
+	}
+	Configure(Configuration{AutoCaptureSessions: true})
+	if !Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be enabled when configured")
+	}
+}
+
 func generateSampleConfig(endpoint string) Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
