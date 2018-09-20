@@ -71,11 +71,25 @@ If you are a project maintainer, you can build and release a new version of
 `bugsnag-go` as follows:
 
 1. Commit all your changes.
-2. Update the version number in `bugsnag.go`.
-3. Add an entry to `CHANGELOG.md` and update the README if necessary.
-4. Commit tag and push
+1. Update the version number in `bugsnag.go`.
+1. Add an entry to `CHANGELOG.md` and update the README if necessary.
+1. Manually test the Revel integration manually until this has been maze-runner tested. See separate section for steps.
+1. Commit tag and push
 
     git commit -mv1.0.x && git tag v1.0.x && git push origin v1.0.x
 
-5. Update the setup guides for Go (and its frameworks) on docs.bugsnag.com with
+1. Update the setup guides for Go (and its frameworks) on docs.bugsnag.com with
    any new content.
+
+Manually testing Revel integration
+----------------------------------
+
+1. Install the [Revel CLI tool](https://revel.github.io/tutorial/gettingstarted.html)
+1. Install [json-server](https://github.com/typicode/json-server): `npm install -g json-server`.
+1. `cd` into the `examples/revelapp/` directory
+1. Run the `start-test-servers.sh` script
+1. Run `revel run`
+1. Visit `localhost:4321/handled` and verify that `payloads.json` now contains a report payload containing a handled payload, including a `session` sub-object containing 0 unhandled and 1 handled.
+1. Visit `localhost:4321/unhandled` and verify that `payloads.json` now contains an unhandled payload, including a `session` sub-object containing 1 unhandled and 0 handled.
+1. Let the application run for at least one minute and verify that sessions are being populated under the "sessions" array in `payloads.json`
+1. Make sure you do not commit the `payload.json` file.

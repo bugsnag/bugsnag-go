@@ -1,7 +1,17 @@
 package app
 
-import "github.com/revel/revel"
-import "github.com/bugsnag/bugsnag-go/revel"
+import (
+	"github.com/bugsnag/bugsnag-go/revel"
+	"github.com/revel/revel"
+)
+
+var (
+	// AppVersion revel app version (ldflags)
+	AppVersion string
+
+	// BuildTime revel app build-time (ldflags)
+	BuildTime string
+)
 
 func init() {
 	// Filters is the default set of global filters.
@@ -21,20 +31,30 @@ func init() {
 		revel.ActionInvoker,           // Invoke the action.
 	}
 
-	// register startup functions with OnAppStart
+	// Register startup functions with OnAppStart
+	// revel.DevMode and revel.RunMode only work inside of OnAppStart. See Example Startup Script
 	// ( order dependent )
-	// revel.OnAppStart(InitDB())
-	// revel.OnAppStart(FillCache())
+	// revel.OnAppStart(ExampleStartupScript)
+	// revel.OnAppStart(InitDB)
+	// revel.OnAppStart(FillCache)
 }
 
-// TODO turn this into revel.HeaderFilter
-// should probably also have a filter for CSRF
-// not sure if it can go in the same filter or not
+// HeaderFilter adds common security headers
+// There is a full implementation of a CSRF filter in
+// https://github.com/revel/modules/tree/master/csrf
 var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
-	// Add some common security headers
 	c.Response.Out.Header().Add("X-Frame-Options", "SAMEORIGIN")
 	c.Response.Out.Header().Add("X-XSS-Protection", "1; mode=block")
 	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
+	c.Response.Out.Header().Add("Referrer-Policy", "strict-origin-when-cross-origin")
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
+
+//func ExampleStartupScript() {
+//	// revel.DevMod and revel.RunMode work here
+//	// Use this script to check for dev mode and set dev/prod startup scripts here!
+//	if revel.DevMode == true {
+//		// Dev mode
+//	}
+//}
