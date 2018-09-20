@@ -23,6 +23,7 @@ type ctxKey int
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
 	GetSession(context.Context) *Session
+	FlushSessions()
 }
 
 type sessionTracker struct {
@@ -96,6 +97,16 @@ func (s *sessionTracker) processSessions() {
 				}
 			}
 			return
+		}
+	}
+}
+
+func (s *sessionTracker) FlushSessions() {
+	sessions := s.sessions
+	s.sessions = nil
+	if len(sessions) != 0 {
+		if err := s.publisher.publish(sessions); err != nil {
+			s.config.logf("%v", err)
 		}
 	}
 }

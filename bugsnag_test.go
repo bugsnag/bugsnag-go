@@ -60,6 +60,8 @@ func (t *testSessionTracker) GetSession(context.Context) *sessions.Session {
 	return &sessions.Session{}
 }
 
+func (t *testSessionTracker) FlushSessions() {}
+
 func TestConfigure(t *testing.T) {
 	Configure(Configuration{
 		APIKey: testAPIKey,
@@ -138,7 +140,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 93, InProject: true})
+	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 95, InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
 
