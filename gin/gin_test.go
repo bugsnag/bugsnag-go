@@ -49,8 +49,8 @@ func TestGin(t *testing.T) {
 					"device":{ "hostname": "%s" },
 					"exceptions":[
 						{
-							"errorClass":"*runtime.TypeAssertionError",
-							"message":"interface conversion: interface {} is struct {}, not string",
+							"errorClass":"*errors.errorString",
+							"message":"you shouldn't have done that",
 							"stacktrace":[]
 						}
 					],
@@ -119,9 +119,7 @@ func performHandledError(c *gin.Context) {
 }
 
 func performUnhandledCrash(c *gin.Context) {
-	c.String(http.StatusOK, "OK")
-	var a struct{}
-	crash(a)
+	panic("you shouldn't have done that")
 }
 
 func crash(a interface{}) string {

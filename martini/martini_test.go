@@ -20,10 +20,8 @@ func performHandledError(notifier *bugsnag.Notifier) {
 	notifier.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
 }
 
-func performUnhandledCrash() string {
-	var a struct{}
-	crash(a)
-	return "ok"
+func performUnhandledCrash() {
+	panic("something bad just happened")
 }
 
 func TestMartini(t *testing.T) {
@@ -64,8 +62,8 @@ func TestMartini(t *testing.T) {
 					"device":{ "hostname": "%s" },
 					"exceptions":[
 						{
-							"errorClass":"*runtime.TypeAssertionError",
-							"message":"interface conversion: interface {} is struct {}, not string",
+							"errorClass":"*errors.errorString",
+							"message":"something bad just happened",
 							"stacktrace":[]
 						}
 					],

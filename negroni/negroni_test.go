@@ -50,8 +50,8 @@ func TestNegroni(t *testing.T) {
 					"device":{ "hostname": "%s" },
 					"exceptions":[
 						{
-							"errorClass":"*runtime.TypeAssertionError",
-							"message":"interface conversion: interface {} is struct {}, not string",
+							"errorClass":"*errors.errorString",
+							"message":"something went terribly wrong",
 							"stacktrace":[]
 						}
 					],
@@ -76,7 +76,7 @@ func TestNegroni(t *testing.T) {
 }
 
 func unhandledCrashHandler(w http.ResponseWriter, req *http.Request) {
-	crash(struct{}{})
+	panic("something went terribly wrong")
 }
 func handledCrashHandler(w http.ResponseWriter, req *http.Request) {
 	bugsnag.Notify(req.Context(), fmt.Errorf("Ooopsie"))
