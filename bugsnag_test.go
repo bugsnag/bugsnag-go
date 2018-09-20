@@ -285,6 +285,48 @@ func TestRecover(t *testing.T) {
 	})
 }
 
+func TestRecoverCustomHandledState(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	var panicked interface{}
+
+	func() {
+		defer func() {
+			panicked = recover()
+		}()
+		handledState := HandledState{
+			SeverityReason:   SeverityReasonHandledPanic,
+			OriginalSeverity: SeverityError,
+			Unhandled:        true,
+		}
+		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL))
+
+		panic("at the disco?")
+	}()
+
+	if panicked != nil {
+		t.Errorf("Did not expect a panic but repanicked")
+	}
+	json, err := simplejson.NewJson(<-reports)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "error",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
+		Unhandled:      true,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "at the disco?"}},
+	})
+}
+
 func TestSeverityReasonNotifyCallback(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
