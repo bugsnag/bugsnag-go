@@ -54,13 +54,13 @@ func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
 		notifier.Config.Logger.Printf("ERROR: " + msg)
 		return fmt.Errorf(msg)
 	}
-	event, config, sync := newEvent(rawData, notifier)
+	event, config := newEvent(rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
 		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
-			if sync {
+			if config.Synchronous {
 				return (&payload{event, config}).deliver()
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.
