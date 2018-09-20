@@ -34,7 +34,12 @@ func New(rawData ...interface{}) *Notifier {
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
 func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
-	return notifier.NotifySync(append(rawData, notifier.Config.Synchronous)...)
+	// Ensure any passed in raw-data synchronous boolean value takes precedence
+	args := append(rawData, nil)
+	copy(args[1:], args)
+	args[0] = notifier.Config.Synchronous
+
+	return notifier.NotifySync(args...)
 }
 
 // NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
