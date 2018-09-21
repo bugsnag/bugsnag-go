@@ -60,6 +60,8 @@ func (t *testSessionTracker) GetSession(context.Context) *sessions.Session {
 	return &sessions.Session{}
 }
 
+func (t *testSessionTracker) FlushSessions() {}
+
 func TestConfigure(t *testing.T) {
 	Configure(Configuration{
 		APIKey: testAPIKey,
@@ -138,7 +140,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 93, InProject: true})
+	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 95, InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
 
@@ -282,6 +284,48 @@ func TestRecover(t *testing.T) {
 		Unhandled:      false,
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ham"}},
+	})
+}
+
+func TestRecoverCustomHandledState(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	var panicked interface{}
+
+	func() {
+		defer func() {
+			panicked = recover()
+		}()
+		handledState := HandledState{
+			SeverityReason:   SeverityReasonHandledPanic,
+			OriginalSeverity: SeverityError,
+			Unhandled:        true,
+		}
+		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL))
+
+		panic("at the disco?")
+	}()
+
+	if panicked != nil {
+		t.Errorf("Did not expect a panic but repanicked")
+	}
+	json, err := simplejson.NewJson(<-reports)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		GroupingHash:   "",
+		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Severity:       "error",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
+		Unhandled:      true,
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "at the disco?"}},
 	})
 }
 

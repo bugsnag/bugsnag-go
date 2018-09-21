@@ -34,7 +34,9 @@ func New(rawData ...interface{}) *Notifier {
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.
 func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
-	return notifier.NotifySync(append(rawData, notifier.Config.Synchronous)...)
+	// Ensure any passed in raw-data synchronous boolean value takes precedence
+	args := append([]interface{}{notifier.Config.Synchronous}, rawData...)
+	return notifier.NotifySync(args...)
 }
 
 // NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
@@ -54,13 +56,13 @@ func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
 		notifier.Config.Logger.Printf("ERROR: " + msg)
 		return fmt.Errorf(msg)
 	}
-	event, config, sync := newEvent(rawData, notifier)
+	event, config := newEvent(rawData, notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
 		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
-			if sync {
+			if config.Synchronous {
 				return (&payload{event, config}).deliver()
 			}
 			// Ensure that any errors are logged if they occur in a goroutine.

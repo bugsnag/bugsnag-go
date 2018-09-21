@@ -102,11 +102,18 @@ func AutoNotify(rawData ...interface{}) {
 // The rawData is used to send extra information along with
 // any panics that are handled this way
 // Usage:
-//  go func() {
-//      ctx := bugsnag.StartSession(context.Background())
-//		defer bugsnag.Recover(ctx)
-//      // (possibly crashy code)
-//  }()
+// go func() {
+//     ctx := bugsnag.StartSession(context.Background())
+//     defer bugsnag.Recover(ctx)
+//     // (possibly crashy code)
+// }()
+// If you wish that any panics caught by the call to Recover shall affect your
+// stability score (it does not by default):
+// go func() {
+//     ctx := bugsnag.StartSession(context.Background())
+//     defer bugsnag.Recover(ctx, bugsnag.HandledState{Unhandled: true})
+//     // (possibly crashy code)
+// }()
 // See also: bugsnag.AutoNotify()
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
