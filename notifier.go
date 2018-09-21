@@ -35,10 +35,7 @@ func New(rawData ...interface{}) *Notifier {
 // or bugsnag.MetaData.
 func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
 	// Ensure any passed in raw-data synchronous boolean value takes precedence
-	args := append(rawData, nil)
-	copy(args[1:], args)
-	args[0] = notifier.Config.Synchronous
-
+	args := append([]interface{}{notifier.Config.Synchronous}, rawData...)
 	return notifier.NotifySync(args...)
 }
 

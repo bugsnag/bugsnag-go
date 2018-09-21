@@ -23,7 +23,6 @@ func defaultPanicHandler() {
 		}
 		state := HandledState{SeverityReasonUnhandledPanic, SeverityError, true, ""}
 		Notify(toNotify, state, Configuration{Synchronous: true})
-		sessionTracker.FlushSessions()
 	})
 
 	if err != nil {
