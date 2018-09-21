@@ -105,8 +105,7 @@ type Event struct {
 	handledState HandledState
 }
 
-func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration, bool) {
-	sync := false
+func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration) {
 	config := notifier.Config
 	event := &Event{
 		RawData:  append(notifier.RawData, rawData...),
@@ -133,7 +132,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.Stacktrace = make([]stackFrame, len(err.StackFrames()))
 
 		case bool:
-			sync = bool(datum)
+			config = config.merge(&Configuration{Synchronous: bool(datum)})
 
 		case severity:
 			event.Severity = datum
@@ -184,5 +183,5 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		}
 	}
 
-	return event, config, sync
+	return event, config
 }

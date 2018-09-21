@@ -105,12 +105,14 @@ func (p *payload) makeSession() *sessionJSON {
 		return nil
 	}
 
-	session := sessionTracker.GetSession(p.Ctx)
-	return &sessionJSON{
-		ID:        session.ID,
-		StartedAt: session.StartedAt,
-		Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
+	if session := sessionTracker.GetSession(p.Ctx); session != nil {
+		return &sessionJSON{
+			ID:        session.ID,
+			StartedAt: session.StartedAt,
+			Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
+		}
 	}
+	return nil
 }
 
 func (p *payload) severityReasonPayload() *severityReasonJSON {

@@ -23,6 +23,7 @@ type ctxKey int
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
 	GetSession(context.Context) *Session
+	FlushSessions()
 }
 
 type sessionTracker struct {
@@ -49,7 +50,13 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 }
 
 func (s *sessionTracker) GetSession(ctx context.Context) *Session {
-	return ctx.Value(contextSessionKey).(*Session)
+	if s := ctx.Value(contextSessionKey); s != nil {
+		if session, ok := s.(*Session); ok && !session.StartedAt.IsZero() {
+			//It is not just getting back a default value
+			return session
+		}
+	}
+	return nil
 }
 
 func (s *sessionTracker) StartSession(ctx context.Context) context.Context {
@@ -90,6 +97,16 @@ func (s *sessionTracker) processSessions() {
 				}
 			}
 			return
+		}
+	}
+}
+
+func (s *sessionTracker) FlushSessions() {
+	sessions := s.sessions
+	s.sessions = nil
+	if len(sessions) != 0 {
+		if err := s.publisher.publish(sessions); err != nil {
+			s.config.logf("%v", err)
 		}
 	}
 }

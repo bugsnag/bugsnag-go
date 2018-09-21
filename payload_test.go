@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/bugsnag/bugsnag-go/sessions"
 )
 
 const expSmall = `{"apiKey":"","events":[{"app":{"releaseStage":""},"device":{},"exceptions":[{"errorClass":"","message":"","stacktrace":null}],"metaData":{},"payloadVersion":"4","severity":"","unhandled":false}],"notifier":{"name":"Bugsnag Go","url":"https://github.com/bugsnag/bugsnag-go","version":"1.4.0"}}`
@@ -16,8 +17,9 @@ const expLargePre = `{"apiKey":"166f5ad3590596f9aa8d601ea89af845","events":[{"ap
 const expLargePost = `,"severity":"info","severityReason":{"type":"unhandledError"},"unhandled":true,"user":{"id":"1234baerg134","name":"Kool Kidz on da bus","email":"typo@busgang.com"}}],"notifier":{"name":"Bugsnag Go","url":"https://github.com/bugsnag/bugsnag-go","version":"1.4.0"}}`
 
 func TestMarshalEmptyPayload(t *testing.T) {
-	payload := payload{&Event{}, &Configuration{}}
-	bytes, _ := payload.MarshalJSON()
+	sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
+	p := payload{&Event{Ctx: context.Background()}, &Configuration{}}
+	bytes, _ := p.MarshalJSON()
 	if got := string(bytes[:]); got != expSmall {
 		t.Errorf("Payload different to what was expected. \nGot: %s\nExp: %s", got, expSmall)
 	}
