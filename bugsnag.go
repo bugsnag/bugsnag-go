@@ -89,6 +89,7 @@ func AutoNotify(rawData ...interface{}) {
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = append([]interface{}{state}, rawData...)
 		defaultNotifier.NotifySync(append(rawData, errors.New(err, 2), true)...)
+		sessionTracker.FlushSessions()
 		panic(err)
 	}
 }
