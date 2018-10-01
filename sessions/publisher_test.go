@@ -32,7 +32,7 @@ func (nopCloser) Close() error { return nil }
 
 func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 	c.reqs = append(c.reqs, r)
-	return &http.Response{Body: nopCloser{}, StatusCode: 200}, nil
+	return &http.Response{Body: nopCloser{}, StatusCode: 202}, nil
 }
 
 func get(j *simplejson.Json, path string) *simplejson.Json {

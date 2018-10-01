@@ -52,8 +52,8 @@ func (p *publisher) publish(sessions []*Session) error {
 			p.config.logf("%v", err)
 		}
 	}(res)
-	if res.StatusCode != 200 {
-		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
+	if res.StatusCode != 202 {
+		return fmt.Errorf("bugsnag/session.publish expected 202 response status, got HTTP %s", res.Status)
 	}
 	return nil
 }
