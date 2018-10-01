@@ -87,6 +87,7 @@ func TestStartSession(t *testing.T) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		sessionsStarted += getInt(sessionCounts, "sessionsStarted")
+		w.WriteHeader(http.StatusAccepted)
 	}))
 	defer ts.Close()
 
