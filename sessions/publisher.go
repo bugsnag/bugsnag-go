@@ -29,6 +29,13 @@ type publisher struct {
 // publish builds a payload from the given sessions and publishes them to the
 // session server. Returns any errors that happened as part of publishing.
 func (p *publisher) publish(sessions []*Session) error {
+	if p.config.Endpoint == "" {
+		// Session tracking is disabled, likely because the notify endpoint was
+		// changed without changing the sessions endpoint
+		// We've already logged a warning in this case, so no need to spam the
+		// log every minute
+		return nil
+	}
 	p.config.mutex.Lock()
 	defer p.config.mutex.Unlock()
 	payload := makeSessionPayload(sessions, p.config)
