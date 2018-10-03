@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 (2018-10-05)
+
+### Bug fixes
+
+* Ensure error reports for fatal crashes gets sent
+  [#77](https://github.com/bugsnag/bugsnag-go/pull/77)
+
 ## 1.3.1 (2018-03-14)
 
 ### Bug fixes
