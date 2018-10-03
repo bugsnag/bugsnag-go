@@ -73,7 +73,7 @@ If you are a project maintainer, you can build and release a new version of
 1. Commit all your changes.
 1. Update the version number in `bugsnag.go`.
 1. Add an entry to `CHANGELOG.md` and update the README if necessary.
-1. Manually test the Revel integration manually until this has been maze-runner tested. See separate section for steps.
+1. Manually test the Revel integration until this has been [maze-runner](https://github.com/bugsnag/maze-runner) tested. See separate section for steps.
 1. Commit tag and push
 
     git commit -mv1.0.x && git tag v1.0.x && git push origin v1.0.x
