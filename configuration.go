@@ -103,6 +103,10 @@ type Configuration struct {
 	// Whether bugsnag should notify synchronously. This defaults to false which
 	// causes bugsnag-go to spawn a new goroutine for each notification.
 	Synchronous bool
+	// Whether the notifier should send all sessions recorded so far to Bugsnag
+	// when repanicking to ensure that no session information is lost in a
+	// fatal crash.
+	flushSessionsOnRepanic bool
 	// TODO: remember to update the update() function when modifying this struct
 }
 

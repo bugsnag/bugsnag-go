@@ -65,6 +65,7 @@ func AutoNotify(rawData ...interface{}) martini.Handler {
 			// Replace the request with the new request with session info
 			c.Map(r.WithContext(ctx))
 			// Record a session if auto capture sessions is enabled
+			notifier.FlushSessionsOnRepanic(false)
 			defer notifier.AutoNotify(ctx, request)
 		} else {
 			defer notifier.AutoNotify(request)

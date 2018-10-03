@@ -36,9 +36,13 @@ func Filter(c *revel.Controller, fc []revel.Filter) {
 	if bugsnag.Config.IsAutoCaptureSessions() {
 		ctx := bugsnag.StartSession(context.Background())
 		c.Args["context"] = ctx
-		defer bugsnag.AutoNotify(c, ctx, errorHandlingState)
+		notifier := bugsnag.New()
+		notifier.FlushSessionsOnRepanic(false)
+		defer notifier.AutoNotify(c, ctx, errorHandlingState)
 	} else {
-		defer bugsnag.AutoNotify(c, errorHandlingState)
+		notifier := bugsnag.New()
+		notifier.FlushSessionsOnRepanic(false)
+		defer notifier.AutoNotify(c, errorHandlingState)
 	}
 	fc[0](c, fc[1:])
 }

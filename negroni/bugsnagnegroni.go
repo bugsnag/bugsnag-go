@@ -33,9 +33,11 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.H
 		ctx := bugsnag.StartSession(r.Context())
 		request = r.WithContext(ctx)
 		notifier := bugsnag.New(append(h.rawData, request)...)
+		notifier.FlushSessionsOnRepanic(false)
 		defer notifier.AutoNotify(ctx, request)
 	} else {
 		notifier := bugsnag.New(append(h.rawData, request)...)
+		notifier.FlushSessionsOnRepanic(false)
 		defer notifier.AutoNotify(request)
 	}
 	next(rw, request)

@@ -30,6 +30,10 @@ func New(rawData ...interface{}) *Notifier {
 	}
 }
 
+func (notifier *Notifier) FlushSessionsOnRepanic(shouldFlush bool) {
+	notifier.Config.flushSessionsOnRepanic = shouldFlush
+}
+
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
 // or bugsnag.MetaData.

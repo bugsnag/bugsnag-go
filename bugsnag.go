@@ -208,6 +208,8 @@ func init() {
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
 		PanicHandler:        defaultPanicHandler,
 		Transport:           http.DefaultTransport,
+
+		flushSessionsOnRepanic: true,
 	})
 
 	hostname, err := os.Hostname()

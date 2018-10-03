@@ -35,6 +35,7 @@ func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
 
 		// create a notifier that has the current request bound to it
 		notifier := bugsnag.New(append(rawData, r)...)
+		notifier.FlushSessionsOnRepanic(false)
 		defer notifier.AutoNotify(ctx, r)
 		c.Next()
 	}
