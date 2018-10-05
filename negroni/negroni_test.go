@@ -62,6 +62,14 @@ func TestNegroni(t *testing.T) {
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
+					"request": {
+						"url": "/unhandled",
+						"httpMethod": "GET",
+						"referer": "",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],

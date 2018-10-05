@@ -13,7 +13,7 @@ func TestRequestInformationGetsExtracted(t *testing.T) {
 	contexts := make(chan context.Context, 1)
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ctx = attachRequestData(ctx, r)
+		ctx = AttachRequestData(ctx, r)
 		contexts <- ctx
 	})
 	ts := httptest.NewServer(hf)

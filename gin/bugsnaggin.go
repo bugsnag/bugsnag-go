@@ -31,6 +31,7 @@ func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
 		r := c.Copy().Request
 		ctx := r.Context()
 		ctx = bugsnag.StartSession(ctx)
+		ctx = bugsnag.AttachRequestData(ctx, r)
 		c.Request = r.WithContext(ctx)
 
 		// create a notifier that has the current request bound to it

@@ -61,6 +61,14 @@ func TestGin(t *testing.T) {
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
+					"request": {
+						"url": "/unhandled",
+						"httpMethod": "GET",
+						"referer": "",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],
@@ -100,6 +108,14 @@ func TestGin(t *testing.T) {
 					"severity":"warning",
 					"severityReason":{ "type":"handledError" },
 					"unhandled":false,
+					"request": {
+						"url": "/handled",
+						"httpMethod": "GET",
+						"referer": "",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],

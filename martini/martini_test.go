@@ -28,15 +28,17 @@ func TestMartini(t *testing.T) {
 	ts, reports := Setup()
 	defer ts.Close()
 
-	m := martini.Classic()
-
-	userID := "1234abcd"
-	m.Use(martini.Recovery())
 	config := bugsnag.Configuration{
 		APIKey:    TestAPIKey,
 		Endpoints: bugsnag.Endpoints{Notify: ts.URL, Sessions: ts.URL + "/sessions"},
 	}
 	bugsnag.Configure(config)
+
+	m := martini.Classic()
+
+	userID := "1234abcd"
+
+	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify(bugsnag.User{Id: userID}))
 
 	m.Get("/unhandled", performUnhandledCrash)
@@ -74,6 +76,13 @@ func TestMartini(t *testing.T) {
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
+					"request": {
+						"httpMethod": "GET",
+						"url": "/unhandled",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],

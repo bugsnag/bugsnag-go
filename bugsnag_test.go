@@ -182,6 +182,15 @@ func TestHandler(t *testing.T) {
 		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
 	})
 	event := getIndex(json, "events", 0)
+	if got, exp := getString(event, "request.headers.Accept-Encoding"), "gzip"; got != exp {
+		t.Errorf("expected Accept-Encoding header to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := getString(event, "request.httpMethod"), "GET"; got != exp {
+		t.Errorf("expected HTTP method to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := getString(event, "request.url"), "/ok?foo=bar"; got != exp {
+		t.Errorf("expected request URL to be '%s' but was '%s'", exp, got)
+	}
 	assertValidSession(t, event, unhandled)
 	for k, exp := range map[string]string{
 		"metaData.request.httpMethod": "GET",

@@ -31,6 +31,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.H
 	// Record a session if auto capture sessions is enabled
 	if bugsnag.Config.IsAutoCaptureSessions() {
 		ctx := bugsnag.StartSession(r.Context())
+		ctx = bugsnag.AttachRequestData(ctx, r)
 		request = r.WithContext(ctx)
 		notifier := bugsnag.New(append(h.rawData, request)...)
 		notifier.FlushSessionsOnRepanic(false)

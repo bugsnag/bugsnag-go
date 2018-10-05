@@ -10,6 +10,13 @@ const requestContextKey requestKey = 0
 
 type requestKey int
 
+// AttachRequestData returns a child of the given context with the request
+// object attached for later extraction by the notifier in order to
+// automatically record request data
+func AttachRequestData(ctx context.Context, r *http.Request) context.Context {
+	return context.WithValue(ctx, requestContextKey, r)
+}
+
 // extractRequestInfo looks for the request object that the notifier
 // automatically attaches to the context when using any of the supported
 // frameworks or bugsnag.HandlerFunc or bugsnag.Handler, and returns sub-object
@@ -34,13 +41,6 @@ func extractRequestInfoFromReq(req *http.Request) *requestJSON {
 	}
 }
 
-// attachRequestData returns a child of the given context with the request
-// object attached for later extraction by the notifier in order to
-// automatically record request data
-func attachRequestData(ctx context.Context, r *http.Request) context.Context {
-	return context.WithValue(ctx, requestContextKey, r)
-}
-
 func parseRequestHeaders(header map[string][]string) map[string]string {
 	headers := make(map[string]string)
 	for k, v := range header {
@@ -62,6 +62,7 @@ func contains(slice []string, e string) bool {
 	}
 	return false
 }
+
 func getRequestIfPresent(ctx context.Context) *http.Request {
 	if ctx == nil {
 		return nil

@@ -65,7 +65,6 @@ type deviceJSON struct {
 	Hostname string `json:"hostname,omitempty"`
 }
 
-//TODO: ensure that multiple values are allowed for the headers
 type requestJSON struct {
 	ClientIP   string            `json:"clientIp"`
 	Headers    map[string]string `json:"headers"`
