@@ -22,6 +22,7 @@ type eventJSON struct {
 	App            *appJSON            `json:"app"`
 	Context        string              `json:"context,omitempty"`
 	Device         *deviceJSON         `json:"device,omitempty"`
+	Request        *requestJSON        `json:"request,omitempty"`
 	Exceptions     []exceptionJSON     `json:"exceptions"`
 	GroupingHash   string              `json:"groupingHash,omitempty"`
 	Metadata       interface{}         `json:"metaData"`
@@ -62,4 +63,13 @@ type severityReasonJSON struct {
 
 type deviceJSON struct {
 	Hostname string `json:"hostname,omitempty"`
+}
+
+//TODO: ensure that multiple values are allowed for the headers
+type requestJSON struct {
+	ClientIP   string            `json:"clientIp"`
+	Headers    map[string]string `json:"headers"`
+	HTTPMethod string            `json:"httpMethod"`
+	URL        string            `json:"url"`
+	Referer    string            `json:"referer"`
 }
