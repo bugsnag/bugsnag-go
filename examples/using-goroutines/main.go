@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/bugsnag/bugsnag-go"
+	"context"
 	"sync"
+
+	"github.com/bugsnag/bugsnag-go"
 )
 
 func main() {
@@ -17,10 +19,11 @@ func runProcesses() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		ctx := bugsnag.StartSession(context.Background())
 		defer wg.Done()
 		// AutoNotify captures any panics, repanicking after error reports
 		// are sent
-		defer bugsnag.AutoNotify()
+		defer bugsnag.AutoNotify(ctx)
 
 		var object struct{}
 		crash(object)

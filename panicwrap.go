@@ -22,7 +22,8 @@ func defaultPanicHandler() {
 			defaultNotifier.Config.logf("bugsnag.handleUncaughtPanic: %v", err)
 		}
 		state := HandledState{SeverityReasonUnhandledPanic, SeverityError, true, ""}
-		Notify(toNotify, state, Configuration{Synchronous: true})
+		defaultNotifier.NotifySync(toNotify, true, state)
+
 	})
 
 	if err != nil {

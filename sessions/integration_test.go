@@ -80,13 +80,14 @@ func TestStartSession(t *testing.T) {
 				t.Errorf("Expected '%s' to be '%s' but was %s", tc.prop, tc.exp, tc.got)
 			}
 		}
-		sessionCounts := get(json, "sessionCounts")
+		sessionCounts := getIndex(json, "sessionCounts", 0)
 		if got := getString(sessionCounts, "startedAt"); len(got) != 20 {
 			t.Errorf("Expected 'sessionCounts.startedAt' to be valid timestamp but was %s", got)
 		}
 		mutex.Lock()
 		defer mutex.Unlock()
 		sessionsStarted += getInt(sessionCounts, "sessionsStarted")
+		w.WriteHeader(http.StatusAccepted)
 	}))
 	defer ts.Close()
 

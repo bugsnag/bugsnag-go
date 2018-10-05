@@ -9,7 +9,7 @@ import (
 
 func ConfigureRoutes(g *gin.Engine) {
 	g.GET("/crash", performUnhandledCrash)
-	g.GET("/handled", performHandledCrash)
+	g.GET("/handled", performHandledError)
 
 }
 
@@ -19,10 +19,10 @@ func performUnhandledCrash(c *gin.Context) {
 	crash(a)
 }
 
-func performHandledCrash(c *gin.Context) {
+func performHandledError(c *gin.Context) {
 	_, err := os.Open("some_nonexistent_file.txt")
 	if err != nil {
-		bugsnag.Notify(err)
+		bugsnag.Notify(c.Request.Context(), err)
 	}
 	c.String(http.StatusOK, "OK")
 }

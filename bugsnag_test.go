@@ -126,7 +126,7 @@ func TestNotify(t *testing.T) {
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
 	})
-	assertValidSession(t, event, false)
+	assertValidSession(t, event, handled)
 
 	for k, exp := range map[string]string{
 		"metaData.test.password":        "[REDACTED]",
@@ -140,7 +140,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 95, InProject: true})
+	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
 
@@ -182,7 +182,7 @@ func TestHandler(t *testing.T) {
 		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
 	})
 	event := getIndex(json, "events", 0)
-	assertValidSession(t, event, true)
+	assertValidSession(t, event, unhandled)
 	for k, exp := range map[string]string{
 		"metaData.request.httpMethod": "GET",
 		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
@@ -202,7 +202,7 @@ func TestHandler(t *testing.T) {
 
 	exception := getIndex(event, "exceptions", 0)
 	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "runtime/panic.go", Method: "gopanic", InProject: false})
-	checkFrame(t, getIndex(exception, "stacktrace", 3), stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", LineNumber: 24, InProject: true})
+	checkFrame(t, getIndex(exception, "stacktrace", 3), stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true})
 }
 
 func TestAutoNotify(t *testing.T) {
@@ -380,16 +380,17 @@ func TestNotifyWithoutError(t *testing.T) {
 }
 
 func TestConfigureTwice(t *testing.T) {
-	sessionTracker = nil
-
-	l := logger{}
-	Configure(Configuration{Logger: &l})
-	if l.msg != "" {
-		t.Errorf("unexpected log message: %s", l.msg)
-	}
 	Configure(Configuration{})
-	if got, exp := l.msg, configuredMultipleTimes; exp != got {
-		t.Errorf("unexpected log message: '%s', expected '%s'", got, exp)
+	if !Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be enabled by default")
+	}
+	Configure(Configuration{AutoCaptureSessions: false})
+	if Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be disabled when configured")
+	}
+	Configure(Configuration{AutoCaptureSessions: true})
+	if !Config.IsAutoCaptureSessions() {
+		t.Errorf("Expected auto capture sessions to be enabled when configured")
 	}
 }
 
@@ -496,7 +497,9 @@ func checkFrame(t *testing.T, frame *simplejson.Json, exp stackFrame) {
 	if got := getString(frame, "method"); got != exp.Method {
 		t.Errorf("Expected frame method to be '%s' but was '%s'", exp.Method, got)
 	}
-	if got := getInt(frame, "lineNumber"); got != exp.LineNumber && exp.InProject { // Don't check files that vary per version of go
+	// We can unfortunately not be more specific with this check as different
+	// versions of Go might add/remove stack frames
+	if got := getInt(frame, "lineNumber"); got == 0 {
 		t.Errorf("Expected frame line number to be %d but was %d", exp.LineNumber, got)
 	}
 	if got := getBool(frame, "inProject"); got != exp.InProject {

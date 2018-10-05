@@ -10,21 +10,16 @@ import (
 )
 
 func main() {
-	errorReporterConfig := bugsnag.Configuration{
-		APIKey: "YOUR API KEY",
-	}
+	config := bugsnag.Configuration{APIKey: "YOUR API KEY"}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(200)
-		w.Write([]byte("OK\n"))
-
 		var a struct{}
 		crash(a)
 	})
 	mux.HandleFunc("/handled", func(w http.ResponseWriter, req *http.Request) {
 		_, err := os.Open("some_nonexistent_file.txt")
 		if err != nil {
-			bugsnag.Notify(err, errorReporterConfig)
+			bugsnag.Notify(req.Context(), err, config)
 		}
 		w.WriteHeader(200)
 		w.Write([]byte("OK\n"))
@@ -32,7 +27,7 @@ func main() {
 
 	n := negroni.New()
 	n.Use(negroni.NewRecovery())
-	n.Use(bugsnagnegroni.AutoNotify(errorReporterConfig))
+	n.Use(bugsnagnegroni.AutoNotify(config))
 	n.UseHandler(mux)
 
 	log.Println("Serving on 9001")

@@ -51,8 +51,9 @@ type Configuration struct {
 	// bugsnag.StartSession() when appropriate for your application. See the
 	// official docs for instructions and examples of associating handled
 	// errors with sessions and ensuring error rate accuracy on the Bugsnag
-	// dashboard.
-	AutoCaptureSessions bool
+	// dashboard. This will default to true, but is stored as an interface to enable
+	// us to detect when this option has not been set.
+	AutoCaptureSessions interface{}
 
 	// The hostname of the current server. This defaults to the return value of
 	// os.Hostname() and is graphed in the Bugsnag dashboard.
@@ -102,6 +103,10 @@ type Configuration struct {
 	// Whether bugsnag should notify synchronously. This defaults to false which
 	// causes bugsnag-go to spawn a new goroutine for each notification.
 	Synchronous bool
+	// Whether the notifier should send all sessions recorded so far to Bugsnag
+	// when repanicking to ensure that no session information is lost in a
+	// fatal crash.
+	flushSessionsOnRepanic bool
 	// TODO: remember to update the update() function when modifying this struct
 }
 
@@ -145,11 +150,31 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Synchronous {
 		config.Synchronous = true
 	}
+
+	if other.AutoCaptureSessions != nil {
+		config.AutoCaptureSessions = other.AutoCaptureSessions
+	}
 	config.updateEndpoints(other.Endpoint, &other.Endpoints)
 	return config
 }
 
+// IsAutoCaptureSessions identifies whether or not the notifier should
+// automatically capture sessions as requests come in. It's a convenience
+// wrapper that allows automatic session capturing to be enabled by default.
+func (config *Configuration) IsAutoCaptureSessions() bool {
+	if config.AutoCaptureSessions == nil {
+		return true // enabled by default
+	}
+	if val, ok := config.AutoCaptureSessions.(bool); ok {
+		return val
+	}
+	// It has been configured to *something* (although not a valid value)
+	// assume the user wanted to disable this option.
+	return false
+}
+
 func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {
+
 	if endpoint != "" {
 		config.Logger.Printf("WARNING: the 'Endpoint' Bugsnag configuration parameter is deprecated in favor of 'Endpoints'")
 		config.Endpoints.Notify = endpoint

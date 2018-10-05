@@ -29,6 +29,13 @@ type publisher struct {
 // publish builds a payload from the given sessions and publishes them to the
 // session server. Returns any errors that happened as part of publishing.
 func (p *publisher) publish(sessions []*Session) error {
+	if p.config.Endpoint == "" {
+		// Session tracking is disabled, likely because the notify endpoint was
+		// changed without changing the sessions endpoint
+		// We've already logged a warning in this case, so no need to spam the
+		// log every minute
+		return nil
+	}
 	p.config.mutex.Lock()
 	defer p.config.mutex.Unlock()
 	payload := makeSessionPayload(sessions, p.config)
@@ -52,8 +59,8 @@ func (p *publisher) publish(sessions []*Session) error {
 			p.config.logf("%v", err)
 		}
 	}(res)
-	if res.StatusCode != 200 {
-		return fmt.Errorf("bugsnag/session.deliverSessions got HTTP %s", res.Status)
+	if res.StatusCode != 202 {
+		return fmt.Errorf("bugsnag/session.publish expected 202 response status, got HTTP %s", res.Status)
 	}
 	return nil
 }

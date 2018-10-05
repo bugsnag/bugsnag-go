@@ -326,3 +326,20 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 		}
 	})
 }
+
+func TestIsAutoCaptureSessions(t *testing.T) {
+	defaultConfig := Configuration{}
+	if !defaultConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be enabled by default, but was disabled")
+	}
+
+	enabledConfig := Configuration{AutoCaptureSessions: true}
+	if !enabledConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be enabled when so configured, but was disabled")
+	}
+
+	disabledConfig := Configuration{AutoCaptureSessions: false}
+	if disabledConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be disabled when so configured, but enabled")
+	}
+}
