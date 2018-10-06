@@ -139,6 +139,7 @@ func init() {
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
+		Shipper:             NewHTTPShipper(),
 		PanicHandler:        defaultPanicHandler,
 		Transport:           http.DefaultTransport,
 	})
