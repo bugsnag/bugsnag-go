@@ -65,7 +65,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 				},
 				Context: p.Context,
 				Device:  &deviceJSON{Hostname: p.Hostname},
-				Request: extractRequestInfo(p.Ctx),
+				Request: p.Request,
 				Exceptions: []exceptionJSON{
 					exceptionJSON{
 						ErrorClass: p.ErrorClass,

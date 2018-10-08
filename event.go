@@ -101,6 +101,8 @@ type Event struct {
 	MetaData MetaData
 	// Ctx is the context of the session the event occurred in. This allows Bugsnag to associate the event with the session.
 	Ctx context.Context
+	// Request is the request information that populates the Request tab in the dashboard.
+	Request *RequestJSON
 	// The reason for the severity and original value
 	handledState HandledState
 }
@@ -144,6 +146,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 
 		case context.Context:
 			event.Ctx = datum
+			event.Request = extractRequestInfo(datum)
 
 		case Configuration:
 			config = config.merge(&datum)

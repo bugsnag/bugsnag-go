@@ -21,7 +21,7 @@ func AttachRequestData(ctx context.Context, r *http.Request) context.Context {
 // automatically attaches to the context when using any of the supported
 // frameworks or bugsnag.HandlerFunc or bugsnag.Handler, and returns sub-object
 // supported by the notify API.
-func extractRequestInfo(ctx context.Context) *requestJSON {
+func extractRequestInfo(ctx context.Context) *RequestJSON {
 	if req := getRequestIfPresent(ctx); req != nil {
 		return extractRequestInfoFromReq(req)
 	}
@@ -31,8 +31,8 @@ func extractRequestInfo(ctx context.Context) *requestJSON {
 // extractRequestInfoFromReq extracts the request information the notify API
 // understands from the given HTTP request. Returns the sub-object supported by
 // the notify API.
-func extractRequestInfoFromReq(req *http.Request) *requestJSON {
-	return &requestJSON{
+func extractRequestInfoFromReq(req *http.Request) *RequestJSON {
+	return &RequestJSON{
 		ClientIP:   req.RemoteAddr,
 		HTTPMethod: req.Method,
 		URL:        req.RequestURI,
