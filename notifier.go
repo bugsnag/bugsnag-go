@@ -30,6 +30,14 @@ func New(rawData ...interface{}) *Notifier {
 	}
 }
 
+// FlushSessionsOnRepanic takes a boolean that indicates whether sessions
+// should be flushed when AutoNotify repanics. In the case of a fatal panic the
+// sessions might not get sent to Bugsnag before the application shuts down.
+// Many frameworks will have their own error handler, and for these frameworks
+// there is no need to flush sessions as the application will survive the panic
+// and the sessions can be sent off later. The default value is true, so this
+// needs only be called if you wish to inform Bugsnag that there is an error
+// handler that will take care of panics that AutoNotify will re-raise.
 func (notifier *Notifier) FlushSessionsOnRepanic(shouldFlush bool) {
 	notifier.Config.flushSessionsOnRepanic = shouldFlush
 }
