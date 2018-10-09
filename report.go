@@ -67,9 +67,9 @@ type deviceJSON struct {
 
 // RequestJSON is the request information that populates the Request tab in the dashboard.
 type RequestJSON struct {
-	ClientIP   string            `json:"clientIp"`
-	Headers    map[string]string `json:"headers"`
-	HTTPMethod string            `json:"httpMethod"`
-	URL        string            `json:"url"`
-	Referer    string            `json:"referer"`
+	ClientIP   string            `json:"clientIp,omitempty"`
+	Headers    map[string]string `json:"headers,omitempty"`
+	HTTPMethod string            `json:"httpMethod,omitempty"`
+	URL        string            `json:"url,omitempty"`
+	Referer    string            `json:"referer,omitempty"`
 }

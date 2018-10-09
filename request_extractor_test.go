@@ -4,12 +4,12 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
 
 func TestRequestInformationGetsExtracted(t *testing.T) {
-	sessionTracker = &testSessionTracker{}
 	contexts := make(chan context.Context, 1)
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -38,6 +38,23 @@ func TestRequestInformationGetsExtracted(t *testing.T) {
 	}
 	if got, exp := reqJSON.Headers["User-Agent"], "Go-http-client"; !strings.Contains(got, exp) {
 		t.Errorf("expected user agent to contain '%s' but was '%s'", exp, got)
+	}
+}
+
+func TestExtractingRequestJSON(t *testing.T) {
+	json := &RequestJSON{
+		ClientIP: "8.8.8.8",
+		Headers: map[string]string{
+			"most-goals": "Peter Crouch",
+		},
+		HTTPMethod: "GET",
+		URL:        "/my-name-is-url",
+		Referer:    "twitter",
+	}
+	ctx := AttachRequestJSONData(context.Background(), json)
+	reqJSON := extractRequestInfo(ctx)
+	if !reflect.DeepEqual(reqJSON, json) {
+		t.Errorf("Expected JSON object '%+v' to be identical to '%+v'", reqJSON, json)
 	}
 }
 

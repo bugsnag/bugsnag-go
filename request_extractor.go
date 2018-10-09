@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-const requestContextKey requestKey = 0
+const (
+	requestContextKey     requestKey = iota + 1
+	requestJSONContextKey requestKey = iota + 1
+)
 
 type requestKey int
 
@@ -17,11 +20,23 @@ func AttachRequestData(ctx context.Context, r *http.Request) context.Context {
 	return context.WithValue(ctx, requestContextKey, r)
 }
 
+// AttachRequestJSONData returns a child of the given context with the request
+// JSON object attached for later extraction by the notifier in order to
+// automatically record request data. Similar to AttachRequestData, but expects
+// that the request data is already extracted into a *bugsnag.RequestJSON
+// instead of a later extracting from a *http.Request
+func AttachRequestJSONData(ctx context.Context, json *RequestJSON) context.Context {
+	return context.WithValue(ctx, requestJSONContextKey, json)
+}
+
 // extractRequestInfo looks for the request object that the notifier
 // automatically attaches to the context when using any of the supported
 // frameworks or bugsnag.HandlerFunc or bugsnag.Handler, and returns sub-object
 // supported by the notify API.
 func extractRequestInfo(ctx context.Context) *RequestJSON {
+	if req := getRequestJSONIfPresent(ctx); req != nil {
+		return req
+	}
 	if req := getRequestIfPresent(ctx); req != nil {
 		return extractRequestInfoFromReq(req)
 	}
@@ -72,4 +87,20 @@ func getRequestIfPresent(ctx context.Context) *http.Request {
 		return nil
 	}
 	return val.(*http.Request)
+}
+
+// Certain frameworks (Revel) don't use the standard library to model HTTP
+// requests. In this case we extract the request information upfront and place
+// this sub-payload in the context directly. If for some reason the context
+// contains both a *http.Request object and a *bugsnag.RequestJSON then the
+// *bugsnag.RequestJSON will take priority.
+func getRequestJSONIfPresent(ctx context.Context) *RequestJSON {
+	if ctx == nil {
+		return nil
+	}
+	val := ctx.Value(requestJSONContextKey)
+	if val == nil {
+		return nil
+	}
+	return val.(*RequestJSON)
 }
