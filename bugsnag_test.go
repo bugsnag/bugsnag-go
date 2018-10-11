@@ -129,7 +129,7 @@ func TestNotify(t *testing.T) {
 	assertValidSession(t, event, handled)
 
 	for k, exp := range map[string]string{
-		"metaData.test.password":        "[REDACTED]",
+		"metaData.test.password":        "[FILTERED]",
 		"metaData.test.value":           "able",
 		"metaData.test.broken":          "[complex128]",
 		"metaData.test.recurse.Recurse": "[RECURSION]",

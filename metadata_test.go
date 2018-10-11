@@ -143,9 +143,9 @@ func TestMetaDataSanitize(t *testing.T) {
 			"string":   "string",
 			"unsafe":   "[unsafe.Pointer]",
 			"func":     "[func()]",
-			"password": "[REDACTED]",
+			"password": "[FILTERED]",
 			"array": []interface{}{map[string]interface{}{
-				"creditcard": "[REDACTED]",
+				"creditcard": "[FILTERED]",
 				"broken": map[string]interface{}{
 					"Me":   "[RECURSION]",
 					"Data": "ohai",
@@ -161,7 +161,7 @@ func TestMetaDataSanitize(t *testing.T) {
 				"Plan": map[string]interface{}{
 					"Premium": false,
 				},
-				"Password":        "[REDACTED]",
+				"Password":        "[FILTERED]",
 				"email":           "example@example.com",
 				"not_empty_email": "not_empty_email@example.com",
 			},

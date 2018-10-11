@@ -61,7 +61,7 @@ func parseRequestHeaders(header map[string][]string) map[string]string {
 	for k, v := range header {
 		// Headers can have multiple values, in which case we report them as csv
 		if contains(Config.ParamsFilters, k) {
-			headers[k] = "[REDACTED]"
+			headers[k] = "[FILTERED]"
 		} else {
 			headers[k] = strings.Join(v, ",")
 		}

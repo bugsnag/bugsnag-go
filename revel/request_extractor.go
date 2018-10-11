@@ -74,7 +74,7 @@ func extractHeaders(h headerExposer, paramsFilters []string) map[string]string {
 func addHeader(paramsFilters []string, m map[string]string, h headerExposer, headerName string) {
 	if val := h.GetAll(headerName); val != nil {
 		if contains(paramsFilters, strings.ToLower(headerName)) {
-			m[headerName] = "[REDACTED]"
+			m[headerName] = "[FILTERED]"
 		} else {
 			m[headerName] = strings.Join(val, ",")
 		}

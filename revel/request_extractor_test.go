@@ -58,14 +58,14 @@ func TestExtractingHeaders(t *testing.T) {
 	key := "Authorization"
 	te[key] = "Basic 34i3j4iom2323=="
 	m = extractHeaders(te, bugsnag.Config.ParamsFilters)
-	if got, exp := m[key], "[REDACTED]"; got != exp {
+	if got, exp := m[key], "[FILTERED]"; got != exp {
 		t.Errorf("Expected '%s' to be '%s' but was '%s'", key, exp, got)
 	}
 
 	key = "Cookie"
 	te[key] = "name=value"
 	m = extractHeaders(te, bugsnag.Config.ParamsFilters)
-	if got, exp := m[key], "[REDACTED]"; got != exp {
+	if got, exp := m[key], "[FILTERED]"; got != exp {
 		t.Errorf("Expected '%s' to be '%s' but was '%s'", key, exp, got)
 	}
 }
