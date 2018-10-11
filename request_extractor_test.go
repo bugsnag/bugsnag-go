@@ -18,17 +18,20 @@ func TestRequestInformationGetsExtracted(t *testing.T) {
 	})
 	ts := httptest.NewServer(hf)
 	defer ts.Close()
-	http.Get(ts.URL + "/1234abcd")
+	http.Get(ts.URL + "/1234abcd?fish=bird")
 
-	reqJSON := extractRequestInfo(<-contexts)
+	reqJSON, req := extractRequestInfo(<-contexts)
 	if reqJSON.ClientIP == "" {
 		t.Errorf("expected to find an IP address for the request but was blank")
 	}
 	if got, exp := reqJSON.HTTPMethod, "GET"; got != exp {
 		t.Errorf("expected HTTP method to be '%s' but was '%s'", exp, got)
 	}
-	if got, exp := reqJSON.URL, "/1234abcd"; got != exp {
+	if got, exp := req.URL.Path, "/1234abcd"; got != exp {
 		t.Errorf("expected request URL to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := reqJSON.URL, "/1234abcd?fish=bird"; !strings.Contains(got, exp) {
+		t.Errorf("expected request URL to contain '%s' but was '%s'", exp, got)
 	}
 	if got, exp := reqJSON.Referer, ""; got != exp {
 		t.Errorf("expected request referer to be '%s' but was '%s'", exp, got)
@@ -52,18 +55,18 @@ func TestExtractingRequestJSON(t *testing.T) {
 		Referer:    "twitter",
 	}
 	ctx := AttachRequestJSONData(context.Background(), json)
-	reqJSON := extractRequestInfo(ctx)
+	reqJSON, _ := extractRequestInfo(ctx)
 	if !reflect.DeepEqual(reqJSON, json) {
 		t.Errorf("Expected JSON object '%+v' to be identical to '%+v'", reqJSON, json)
 	}
 }
 
 func TestRequestExtractorCanHandleAbsentContext(t *testing.T) {
-	if got := extractRequestInfo(nil); got != nil {
+	if got, _ := extractRequestInfo(nil); got != nil {
 		//really just testing that nothing panics here
 		t.Errorf("expected nil contexts to give nil sub-objects, but was '%s'", got)
 	}
-	if got := extractRequestInfo(context.Background()); got != nil {
+	if got, _ := extractRequestInfo(context.Background()); got != nil {
 		//really just testing that nothing panics here
 		t.Errorf("expected contexts without requst info to give nil sub-objects, but was '%s'", got)
 	}

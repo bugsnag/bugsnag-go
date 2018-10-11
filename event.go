@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go/errors"
@@ -145,8 +146,10 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.Context = datum.String
 
 		case context.Context:
-			event.Ctx = datum
-			event.Request = extractRequestInfo(datum)
+			populateEventWithContext(datum, event)
+
+		case *http.Request:
+			populateEventWithRequest(datum, event)
 
 		case Configuration:
 			config = config.merge(&datum)
@@ -187,4 +190,35 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	}
 
 	return event, config
+}
+
+func populateEventWithContext(ctx context.Context, event *Event) {
+	event.Ctx = ctx
+	reqJSON, req := extractRequestInfo(ctx)
+	if event.Request == nil {
+		event.Request = reqJSON
+	}
+	populateEventWithRequest(req, event)
+
+}
+
+func populateEventWithRequest(req *http.Request, event *Event) {
+	if req == nil {
+		return
+	}
+
+	event.Request = extractRequestInfoFromReq(req)
+
+	if event.Context == "" {
+		event.Context = req.URL.Path
+	}
+
+	// Default user.id to IP so that the count of users affected works.
+	if event.User == nil {
+		ip := req.RemoteAddr
+		if idx := strings.LastIndex(ip, ":"); idx != -1 {
+			ip = ip[:idx]
+		}
+		event.User = &User{Id: ip}
+	}
 }

@@ -54,15 +54,12 @@ func TestGin(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9079/unhandled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
 					"request": {
-						"url": "/unhandled",
+						"url": "http://localhost:9079/unhandled",
 						"httpMethod": "GET",
 						"referer": "",
 						"headers": {
@@ -109,7 +106,7 @@ func TestGin(t *testing.T) {
 					"severityReason":{ "type":"handledError" },
 					"unhandled":false,
 					"request": {
-						"url": "/handled",
+						"url": "http://localhost:9079/handled",
 						"httpMethod": "GET",
 						"referer": "",
 						"headers": {

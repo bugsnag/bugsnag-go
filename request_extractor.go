@@ -33,24 +33,28 @@ func AttachRequestJSONData(ctx context.Context, json *RequestJSON) context.Conte
 // automatically attaches to the context when using any of the supported
 // frameworks or bugsnag.HandlerFunc or bugsnag.Handler, and returns sub-object
 // supported by the notify API.
-func extractRequestInfo(ctx context.Context) *RequestJSON {
+func extractRequestInfo(ctx context.Context) (*RequestJSON, *http.Request) {
 	if req := getRequestJSONIfPresent(ctx); req != nil {
-		return req
+		return req, nil
 	}
 	if req := getRequestIfPresent(ctx); req != nil {
-		return extractRequestInfoFromReq(req)
+		return extractRequestInfoFromReq(req), req
 	}
-	return nil
+	return nil, nil
 }
 
 // extractRequestInfoFromReq extracts the request information the notify API
 // understands from the given HTTP request. Returns the sub-object supported by
 // the notify API.
 func extractRequestInfoFromReq(req *http.Request) *RequestJSON {
+	proto := "http://"
+	if req.TLS != nil {
+		proto = "https://"
+	}
 	return &RequestJSON{
 		ClientIP:   req.RemoteAddr,
 		HTTPMethod: req.Method,
-		URL:        req.RequestURI,
+		URL:        proto + req.Host + req.RequestURI,
 		Referer:    req.Referer(),
 		Headers:    parseRequestHeaders(req.Header),
 	}
@@ -71,7 +75,7 @@ func parseRequestHeaders(header map[string][]string) map[string]string {
 
 func contains(slice []string, e string) bool {
 	for _, s := range slice {
-		if s == e {
+		if strings.ToLower(s) == strings.ToLower(e) {
 			return true
 		}
 	}

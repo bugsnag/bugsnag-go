@@ -58,13 +58,18 @@ func AutoNotify(rawData ...interface{}) martini.Handler {
 		rawData...)
 
 	return func(r *http.Request, c martini.Context) {
+		// Martini's request-based context for dependency injection means that we can
+		// attach request data to the notifier (one notifier <=> one request) itself.
+		// This means that request data will show up when doing just notifier.Notify(err)
 		notifier := bugsnag.New(append(rawData, r)...)
-		ctx := r.Context()
+
+		// In case users use bugsnag.Notify instead of the mapped notifier.
+		ctx := bugsnag.AttachRequestData(r.Context(), r)
+
 		if notifier.Config.IsAutoCaptureSessions() {
 			ctx = bugsnag.StartSession(ctx)
-			notifier.FlushSessionsOnRepanic(false)
 		}
-		ctx = bugsnag.AttachRequestData(ctx, r)
+		notifier.FlushSessionsOnRepanic(false)
 		c.Map(r.WithContext(ctx))
 		defer notifier.AutoNotify(ctx)
 		c.Map(notifier)

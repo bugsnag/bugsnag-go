@@ -1,7 +1,6 @@
 package bugsnagmartini_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,8 +14,8 @@ import (
 	"github.com/go-martini/martini"
 )
 
-func performHandledError(notifier *bugsnag.Notifier) {
-	ctx := bugsnag.StartSession(context.Background())
+func performHandledError(notifier *bugsnag.Notifier, r *http.Request) {
+	ctx := r.Context()
 	notifier.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
 }
 
@@ -69,16 +68,13 @@ func TestMartini(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9077/unhandled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
 					"request": {
 						"httpMethod": "GET",
-						"url": "/unhandled",
+						"url": "http://localhost:9077/unhandled",
 						"headers": {
 							"Accept-Encoding": "gzip"
 						}
@@ -118,12 +114,16 @@ func TestMartini(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9077/handled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
+					"request": {
+						"url": "http://localhost:9077/handled",
+						"httpMethod": "GET",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"unhandled":true,
 					"user":{ "id": "%s" }
 				}

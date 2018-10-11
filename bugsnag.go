@@ -171,13 +171,13 @@ func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := r
 		// Record a session if auto notify session is enabled
-		ctx := r.Context()
+		ctx := request.Context()
 		if notifier.Config.IsAutoCaptureSessions() {
 			ctx = StartSession(ctx)
 		}
 		ctx = AttachRequestData(ctx, request)
-		request = r.WithContext(ctx)
-		defer notifier.AutoNotify(request)
+		request = request.WithContext(ctx)
+		defer notifier.AutoNotify(ctx)
 		h(w, request)
 	}
 }

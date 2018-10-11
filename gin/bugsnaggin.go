@@ -29,15 +29,15 @@ func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
 	rawData = append(rawData, state)
 	return func(c *gin.Context) {
 		r := c.Copy().Request
-		ctx := r.Context()
-		ctx = bugsnag.StartSession(ctx)
-		ctx = bugsnag.AttachRequestData(ctx, r)
+		notifier := bugsnag.New(append(rawData, r)...)
+		ctx := bugsnag.AttachRequestData(r.Context(), r)
+		if notifier.Config.IsAutoCaptureSessions() {
+			ctx = bugsnag.StartSession(ctx)
+		}
 		c.Request = r.WithContext(ctx)
 
-		// create a notifier that has the current request bound to it
-		notifier := bugsnag.New(append(rawData, r)...)
 		notifier.FlushSessionsOnRepanic(false)
-		defer notifier.AutoNotify(ctx, r)
+		defer notifier.AutoNotify(ctx)
 		c.Next()
 	}
 }

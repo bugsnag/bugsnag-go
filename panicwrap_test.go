@@ -35,6 +35,7 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
+		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ruh roh"}},
 	})
@@ -71,6 +72,7 @@ func TestPanicHandlerUnhandledPanic(t *testing.T) {
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonUnhandledPanic},
 		Unhandled:      true,
+		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "panic", Message: "ruh roh"}},
 	})
