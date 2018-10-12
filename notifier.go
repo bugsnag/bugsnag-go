@@ -6,6 +6,8 @@ import (
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
+var publisher reportPublisher = new(defaultReportPublisher)
+
 // Notifier sends errors to Bugsnag.
 type Notifier struct {
 	Config  *Configuration
@@ -65,22 +67,7 @@ func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
-		config.logf("notifying bugsnag: %s", event.Message)
-		if config.notifyInReleaseStage() {
-			if config.Synchronous {
-				return (&payload{event, config}).deliver()
-			}
-			// Ensure that any errors are logged if they occur in a goroutine.
-			go func(event *Event, config *Configuration) {
-				err := (&payload{event, config}).deliver()
-				if err != nil {
-					config.logf("bugsnag.Notify: %v", err)
-				}
-			}(event, config)
-
-			return nil
-		}
-		return fmt.Errorf("not notifying in %s", config.ReleaseStage)
+		return publisher.publishReport(&payload{event, config})
 	})
 
 	if e != nil {

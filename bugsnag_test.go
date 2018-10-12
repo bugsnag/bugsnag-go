@@ -145,6 +145,41 @@ func TestNotify(t *testing.T) {
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
 }
 
+type testPublisher struct {
+	sync bool
+}
+
+func (tp *testPublisher) publishReport(p *payload) error {
+	tp.sync = p.Synchronous
+	return nil
+}
+
+func TestNotifySyncThenAsync(t *testing.T) {
+	ts, _ := setup()
+	defer ts.Close()
+
+	Configure(generateSampleConfig(ts.URL)) //async by default
+
+	pub := new(testPublisher)
+	publisher = pub
+	defer func() { publisher = new(defaultReportPublisher) }()
+
+	Notify(fmt.Errorf("oopsie"))
+	if pub.sync {
+		t.Errorf("Expected notify to be async by default")
+	}
+
+	defaultNotifier.NotifySync(fmt.Errorf("oopsie"), true)
+	if !pub.sync {
+		t.Errorf("Expected notify to be sent synchronously when calling NotifySync with true")
+	}
+
+	Notify(fmt.Errorf("oopsie"))
+	if pub.sync {
+		t.Errorf("Expected notify to be sent asynchronously when calling Notify regardless of previous NotifySync call")
+	}
+}
+
 func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()
