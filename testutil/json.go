@@ -84,6 +84,10 @@ func AssertPayload(t *testing.T, report *simplejson.Json, expPretty string) {
 		{got: event, exp: expEvent, prop: "severityReason.type"},
 		{got: event, exp: expEvent, prop: "metaData.request.httpMethod"},
 		{got: event, exp: expEvent, prop: "metaData.request.url"},
+		{got: event, exp: expEvent, prop: "request.httpMethod"},
+		{got: event, exp: expEvent, prop: "request.url"},
+		{got: event, exp: expEvent, prop: "request.referer"},
+		{got: event, exp: expEvent, prop: "request.headers.Accept-Encoding"},
 	} {
 		if got, exp := getString(tc.got, tc.prop), getString(tc.exp, tc.prop); got != exp {
 			t.Errorf("expected '%s' to be '%s' but was '%s'", tc.prop, exp, got)

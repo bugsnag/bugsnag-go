@@ -123,13 +123,14 @@ func TestNotify(t *testing.T) {
 		Severity:       "warning",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
 		Unhandled:      false,
+		Request:        &RequestJSON{},
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
 	})
 	assertValidSession(t, event, handled)
 
 	for k, exp := range map[string]string{
-		"metaData.test.password":        "[REDACTED]",
+		"metaData.test.password":        "[FILTERED]",
 		"metaData.test.value":           "able",
 		"metaData.test.broken":          "[complex128]",
 		"metaData.test.recurse.Recurse": "[RECURSION]",
@@ -142,6 +143,88 @@ func TestNotify(t *testing.T) {
 	exception := getIndex(event, "exceptions", 0)
 	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
+}
+
+func TestHandlerFunc(t *testing.T) {
+	eventserver, reports := setup()
+	defer eventserver.Close()
+	Configure(generateSampleConfig(eventserver.URL))
+
+	t.Run("unhandled", func(st *testing.T) {
+		ts := httptest.NewServer(HandlerFunc(crashyHandler))
+		defer ts.Close()
+
+		http.Get(ts.URL + "/unhandled")
+
+		json, _ := simplejson.NewJson(<-reports)
+		assertPayload(t, json, eventJSON{
+			App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+			Context:        "/unhandled",
+			Device:         &deviceJSON{Hostname: "web1"},
+			GroupingHash:   "",
+			Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+			Severity:       "error",
+			SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
+			Unhandled:      true,
+			Request: &RequestJSON{
+				Headers:    map[string]string{"Accept-Encoding": "gzip"},
+				HTTPMethod: "GET",
+				URL:        ts.URL + "/unhandled",
+			},
+			User:       &User{Id: "127.0.0.1", Name: "", Email: ""},
+			Exceptions: []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
+		})
+		event := getIndex(json, "events", 0)
+		if got, exp := getString(event, "request.headers.Accept-Encoding"), "gzip"; got != exp {
+			st.Errorf("expected Accept-Encoding header to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := getString(event, "request.httpMethod"), "GET"; got != exp {
+			st.Errorf("expected HTTP method to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := getString(event, "request.url"), "/unhandled"; !strings.Contains(got, exp) {
+			st.Errorf("expected request URL to contain '%s' but was '%s'", exp, got)
+		}
+		assertValidSession(st, event, unhandled)
+	})
+
+	t.Run("handled", func(st *testing.T) {
+		ts := httptest.NewServer(HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			Notify(fmt.Errorf("oopsie"), r.Context())
+		}))
+		defer ts.Close()
+
+		http.Get(ts.URL + "/handled")
+
+		json, _ := simplejson.NewJson(<-reports)
+		assertPayload(t, json, eventJSON{
+			App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+			Context:        "/handled",
+			Device:         &deviceJSON{Hostname: "web1"},
+			GroupingHash:   "",
+			Session:        &sessionJSON{Events: eventCountsJSON{Handled: 1, Unhandled: 0}},
+			Severity:       "warning",
+			SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+			Unhandled:      false,
+			Request: &RequestJSON{
+				Headers:    map[string]string{"Accept-Encoding": "gzip"},
+				HTTPMethod: "GET",
+				URL:        ts.URL + "/handled",
+			},
+			User:       &User{Id: "127.0.0.1", Name: "", Email: ""},
+			Exceptions: []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "oopsie"}},
+		})
+		event := getIndex(json, "events", 0)
+		if got, exp := getString(event, "request.headers.Accept-Encoding"), "gzip"; got != exp {
+			st.Errorf("expected Accept-Encoding header to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := getString(event, "request.httpMethod"), "GET"; got != exp {
+			st.Errorf("expected HTTP method to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := getString(event, "request.url"), "/handled"; !strings.Contains(got, exp) {
+			st.Errorf("expected request URL to contain '%s' but was '%s'", exp, got)
+		}
+		assertValidSession(st, event, handled)
+	})
 }
 
 func TestHandler(t *testing.T) {
@@ -179,25 +262,26 @@ func TestHandler(t *testing.T) {
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
 		User:           &User{Id: "127.0.0.1", Name: "", Email: ""},
-		Exceptions:     []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
+		Request: &RequestJSON{
+			Headers:    map[string]string{"Accept-Encoding": "gzip"},
+			HTTPMethod: "GET",
+			URL:        "http://" + l.Addr().String() + "/ok?foo=bar",
+		},
+		Exceptions: []exceptionJSON{{ErrorClass: "runtime.plainError", Message: "send on closed channel"}},
 	})
 	event := getIndex(json, "events", 0)
-	assertValidSession(t, event, unhandled)
-	for k, exp := range map[string]string{
-		"metaData.request.httpMethod": "GET",
-		"metaData.request.url":        "http://" + l.Addr().String() + "/ok?foo=bar",
-	} {
-		if got := getString(event, k); got != exp {
-			t.Errorf("Expected %s to be '%s' but was '%s'", k, exp, got)
-		}
+	if got, exp := getString(event, "request.headers.Accept-Encoding"), "gzip"; got != exp {
+		t.Errorf("expected Accept-Encoding header to be '%s' but was '%s'", exp, got)
 	}
-	for k, exp := range map[string]string{
-		"metaData.request.params.foo":              "bar",
-		"metaData.request.headers.Accept-Encoding": "gzip",
-	} {
-		if got := getFirstString(event, k); got != exp {
-			t.Errorf("Expected %s to be '%s' but was '%s'", k, exp, got)
-		}
+	if got, exp := getString(event, "request.httpMethod"), "GET"; got != exp {
+		t.Errorf("expected HTTP method to be '%s' but was '%s'", exp, got)
+	}
+	if got, exp := getString(event, "request.url"), "/ok?foo=bar"; !strings.Contains(got, exp) {
+		t.Errorf("expected request URL to be '%s' but was '%s'", exp, got)
+	}
+	assertValidSession(t, event, unhandled)
+	if got, exp := getFirstString(event, "metaData.request.params.foo"), "bar"; got != exp {
+		t.Errorf("Expected metadata params 'foo' to be '%s' but was '%s'", exp, got)
 	}
 
 	exception := getIndex(event, "exceptions", 0)
@@ -245,6 +329,7 @@ func TestAutoNotify(t *testing.T) {
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
 		User:           &User{},
+		Request:        &RequestJSON{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "eggs"}},
 	})
 }
@@ -282,6 +367,7 @@ func TestRecover(t *testing.T) {
 		Severity:       "warning",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      false,
+		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "ham"}},
 	})
@@ -324,6 +410,7 @@ func TestRecoverCustomHandledState(t *testing.T) {
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
+		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "at the disco?"}},
 	})
@@ -350,6 +437,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		Severity:       "info",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonCallbackSpecified},
 		Unhandled:      false,
+		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
 	})
@@ -464,6 +552,10 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 
 		{prop: "severity", exp: exp.Severity, got: getString(event, "severity")},
 		{prop: "severity reason type", exp: string(exp.SeverityReason.Type), got: getString(event, "severityReason.type")},
+
+		{prop: "request header 'Accept-Encoding'", exp: string(exp.Request.Headers["Accept-Encoding"]), got: getString(event, "request.headers.Accept-Encoding")},
+		{prop: "request HTTP method", exp: string(exp.Request.HTTPMethod), got: getString(event, "request.httpMethod")},
+		{prop: "request URL", exp: string(exp.Request.URL), got: getString(event, "request.url")},
 	} {
 		if tc.got != tc.exp {
 			t.Errorf("Wrong %s: expected '%v' but got '%v'", tc.prop, tc.exp, tc.got)

@@ -79,7 +79,7 @@ type Configuration struct {
 	// build.
 	SourceRoot string
 
-	// Any meta-data that matches these filters will be marked as [REDACTED]
+	// Any meta-data that matches these filters will be marked as [FILTERED]
 	// before sending a Notification to Bugsnag. It defaults to
 	// []string{"password", "secret"} so that request parameters like password,
 	// password_confirmation and auth_secret will not be sent to Bugsnag.

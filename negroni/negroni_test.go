@@ -55,13 +55,18 @@ func TestNegroni(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9078/unhandled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
+					"request": {
+						"url": "http://localhost:9078/unhandled",
+						"httpMethod": "GET",
+						"referer": "",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],

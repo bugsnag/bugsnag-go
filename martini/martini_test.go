@@ -1,7 +1,6 @@
 package bugsnagmartini_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,8 +14,8 @@ import (
 	"github.com/go-martini/martini"
 )
 
-func performHandledError(notifier *bugsnag.Notifier) {
-	ctx := bugsnag.StartSession(context.Background())
+func performHandledError(notifier *bugsnag.Notifier, r *http.Request) {
+	ctx := r.Context()
 	notifier.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
 }
 
@@ -28,15 +27,17 @@ func TestMartini(t *testing.T) {
 	ts, reports := Setup()
 	defer ts.Close()
 
-	m := martini.Classic()
-
-	userID := "1234abcd"
-	m.Use(martini.Recovery())
 	config := bugsnag.Configuration{
 		APIKey:    TestAPIKey,
 		Endpoints: bugsnag.Endpoints{Notify: ts.URL, Sessions: ts.URL + "/sessions"},
 	}
 	bugsnag.Configure(config)
+
+	m := martini.Classic()
+
+	userID := "1234abcd"
+
+	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify(bugsnag.User{Id: userID}))
 
 	m.Get("/unhandled", performUnhandledCrash)
@@ -67,13 +68,17 @@ func TestMartini(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9077/unhandled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
 					"unhandled":true,
+					"request": {
+						"httpMethod": "GET",
+						"url": "http://localhost:9077/unhandled",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"user":{ "id": "%s" }
 				}
 			],
@@ -109,12 +114,16 @@ func TestMartini(t *testing.T) {
 							"stacktrace":[]
 						}
 					],
-					"metaData":{
-						"request":{ "httpMethod":"GET", "url":"http://localhost:9077/handled" }
-					},
 					"payloadVersion":"4",
 					"severity":"error",
 					"severityReason":{ "type":"unhandledErrorMiddleware" },
+					"request": {
+						"url": "http://localhost:9077/handled",
+						"httpMethod": "GET",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
 					"unhandled":true,
 					"user":{ "id": "%s" }
 				}

@@ -27,19 +27,15 @@ func AutoNotify(rawData ...interface{}) negroni.Handler {
 }
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	request := r
 	// Record a session if auto capture sessions is enabled
+	ctx := bugsnag.AttachRequestData(r.Context(), r)
 	if bugsnag.Config.IsAutoCaptureSessions() {
-		ctx := bugsnag.StartSession(r.Context())
-		request = r.WithContext(ctx)
-		notifier := bugsnag.New(append(h.rawData, request)...)
-		notifier.FlushSessionsOnRepanic(false)
-		defer notifier.AutoNotify(ctx, request)
-	} else {
-		notifier := bugsnag.New(append(h.rawData, request)...)
-		notifier.FlushSessionsOnRepanic(false)
-		defer notifier.AutoNotify(request)
+		ctx = bugsnag.StartSession(ctx)
 	}
+	request := r.WithContext(ctx)
+	notifier := bugsnag.New(h.rawData...)
+	notifier.FlushSessionsOnRepanic(false)
+	defer notifier.AutoNotify(ctx)
 	next(rw, request)
 
 }

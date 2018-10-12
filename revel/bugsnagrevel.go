@@ -8,13 +8,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/revel/revel"
 )
-
-var once sync.Once
 
 // FrameworkName is the name of the framework this middleware applies to
 const FrameworkName string = "Revel"
@@ -33,17 +30,14 @@ var errorHandlingState = bugsnag.HandledState{
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
 	// Record a session if auto capture sessions is enabled
-	if bugsnag.Config.IsAutoCaptureSessions() {
-		ctx := bugsnag.StartSession(context.Background())
-		c.Args["context"] = ctx
-		notifier := bugsnag.New()
-		notifier.FlushSessionsOnRepanic(false)
-		defer notifier.AutoNotify(c, ctx, errorHandlingState)
-	} else {
-		notifier := bugsnag.New()
-		notifier.FlushSessionsOnRepanic(false)
-		defer notifier.AutoNotify(c, errorHandlingState)
+	notifier := bugsnag.New()
+	reqJSON := extractRequestData(c.Request, notifier.Config.ParamsFilters)
+	ctx := bugsnag.AttachRequestJSONData(context.Background(), reqJSON)
+	if notifier.Config.IsAutoCaptureSessions() {
+		ctx = bugsnag.StartSession(ctx)
 	}
+	c.Args["context"] = ctx
+	defer notifier.AutoNotify(c, ctx, errorHandlingState)
 	fc[0](c, fc[1:])
 }
 

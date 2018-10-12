@@ -22,6 +22,7 @@ type eventJSON struct {
 	App            *appJSON            `json:"app"`
 	Context        string              `json:"context,omitempty"`
 	Device         *deviceJSON         `json:"device,omitempty"`
+	Request        *RequestJSON        `json:"request,omitempty"`
 	Exceptions     []exceptionJSON     `json:"exceptions"`
 	GroupingHash   string              `json:"groupingHash,omitempty"`
 	Metadata       interface{}         `json:"metaData"`
@@ -62,4 +63,13 @@ type severityReasonJSON struct {
 
 type deviceJSON struct {
 	Hostname string `json:"hostname,omitempty"`
+}
+
+// RequestJSON is the request information that populates the Request tab in the dashboard.
+type RequestJSON struct {
+	ClientIP   string            `json:"clientIp,omitempty"`
+	Headers    map[string]string `json:"headers,omitempty"`
+	HTTPMethod string            `json:"httpMethod,omitempty"`
+	URL        string            `json:"url,omitempty"`
+	Referer    string            `json:"referer,omitempty"`
 }

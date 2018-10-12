@@ -147,11 +147,13 @@ func Handler(h http.Handler, rawData ...interface{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := r
 
-		ctx := StartSession(r.Context())
 		// Record a session if auto notify session is enabled
+		ctx := r.Context()
 		if Config.IsAutoCaptureSessions() {
-			request = r.WithContext(ctx)
+			ctx = StartSession(ctx)
 		}
+		ctx = AttachRequestData(ctx, request)
+		request = r.WithContext(ctx)
 		defer notifier.AutoNotify(ctx, request)
 		h.ServeHTTP(w, request)
 	})
@@ -169,11 +171,13 @@ func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request := r
 		// Record a session if auto notify session is enabled
-		if Config.IsAutoCaptureSessions() {
-			ctx := StartSession(r.Context())
-			request = r.WithContext(ctx)
+		ctx := request.Context()
+		if notifier.Config.IsAutoCaptureSessions() {
+			ctx = StartSession(ctx)
 		}
-		defer notifier.AutoNotify(request)
+		ctx = AttachRequestData(ctx, request)
+		request = request.WithContext(ctx)
+		defer notifier.AutoNotify(ctx)
 		h(w, request)
 	}
 }
@@ -200,7 +204,7 @@ func init() {
 		AppVersion:          "",
 		AutoCaptureSessions: true,
 		ReleaseStage:        "",
-		ParamsFilters:       []string{"password", "secret"},
+		ParamsFilters:       []string{"password", "secret", "authorization", "cookie"},
 		SourceRoot:          sourceRoot,
 		// * for app-engine
 		ProjectPackages:     []string{"main*"},
