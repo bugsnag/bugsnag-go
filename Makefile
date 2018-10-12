@@ -14,7 +14,7 @@ updatedeps:
 test: alldeps
 	#TODO: 2018-09-20 Not testing the 'errors' package as it relies on some very runtime-specific implementation details.
 	# The testing of 'errors' needs to be revisited
-	go test . ./gin ./martini ./negroni ./sessions ./headers ./revel
+	go test . ./gin ./martini ./negroni ./sessions ./headers
 	@go vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		go get golang.org/x/tools/cmd/vet; \
 	fi
