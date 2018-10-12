@@ -93,8 +93,8 @@ func TestNotify(t *testing.T) {
 	})
 
 	Notify(
-		StartSession(context.Background()),
 		fmt.Errorf("hello world"),
+		StartSession(context.Background()),
 		generateSampleConfig(ts.URL),
 		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Context{"testing"},
@@ -425,7 +425,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		return nil
 	})
 
-	Notify(StartSession(context.Background()), fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL), StartSession(context.Background()))
 
 	json, _ := simplejson.NewJson(<-reports)
 	assertPayload(t, json, eventJSON{
@@ -453,7 +453,7 @@ func TestNotifyWithoutError(t *testing.T) {
 	config.Logger = &l
 	Configure(config)
 
-	Notify(StartSession(context.Background()))
+	Notify(nil, StartSession(context.Background()))
 
 	select {
 	case r := <-reports:

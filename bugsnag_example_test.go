@@ -101,7 +101,7 @@ func ExampleNotify() {
 	_, err := net.Listen("tcp", ":80")
 
 	if err != nil {
-		bugsnag.Notify(ctx, err)
+		bugsnag.Notify(err, ctx)
 	}
 }
 
@@ -111,7 +111,7 @@ func ExampleNotify_details() {
 	_, err := net.Listen("tcp", ":80")
 
 	if err != nil {
-		bugsnag.Notify(ctx, err,
+		bugsnag.Notify(err, ctx,
 			// show as low-severity
 			bugsnag.SeverityInfo,
 			// set the context

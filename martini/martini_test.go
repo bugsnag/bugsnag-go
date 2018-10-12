@@ -16,7 +16,7 @@ import (
 
 func performHandledError(notifier *bugsnag.Notifier, r *http.Request) {
 	ctx := r.Context()
-	notifier.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
+	notifier.Notify(fmt.Errorf("Ooopsie"), ctx, bugsnag.User{Id: "987zyx"})
 }
 
 func performUnhandledCrash() {

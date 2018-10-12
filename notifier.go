@@ -44,11 +44,10 @@ func (notifier *Notifier) FlushSessionsOnRepanic(shouldFlush bool) {
 
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
-// or bugsnag.MetaData.
-func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
-	// Ensure any passed in raw-data synchronous boolean value takes precedence
-	args := append([]interface{}{notifier.Config.Synchronous}, rawData...)
-	return notifier.NotifySync(args...)
+// or bugsnag.MetaData. Any bools in rawData overrides the
+// notifier.Config.Synchronous flag.
+func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
+	return notifier.NotifySync(err, notifier.Config.Synchronous, rawData...)
 }
 
 // NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
@@ -56,19 +55,13 @@ func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
 // asynchronous). Any other rawData you pass here will be sent to Bugsnag after
 // being converted to JSON. E.g. bugsnag.SeverityError, bugsnag.Context, or
 // bugsnag.MetaData.
-func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
-	containsError := false
-	for _, datum := range rawData {
-		if _, ok := datum.(error); ok {
-			containsError = true
-		}
-	}
-	if !containsError {
+func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{}) (e error) {
+	if err == nil {
 		msg := "attempted to notify Bugsnag without supplying an error. Bugsnag not notified"
 		notifier.Config.Logger.Printf("ERROR: " + msg)
 		return fmt.Errorf(msg)
 	}
-	event, config := newEvent(rawData, notifier)
+	event, config := newEvent(append(rawData, err, sync), notifier)
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
@@ -108,7 +101,7 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(append(rawData, errors.New(err, 2))...)
+		notifier.Notify(errors.New(err, 2), rawData...)
 		panic(err)
 	}
 }
@@ -121,7 +114,7 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		rawData = notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(append(rawData, errors.New(err, 2))...)
+		notifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
 
