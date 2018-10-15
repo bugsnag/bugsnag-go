@@ -492,7 +492,7 @@ func TestNotifyWithoutError(t *testing.T) {
 
 	select {
 	case r := <-reports:
-		t.Fatalf("Unexpected request made to bugsnag: %+v", r)
+		t.Fatalf("Unexpected request made to bugsnag: %+v", string(r))
 	default:
 		for _, exp := range []string{"ERROR", "error", "Bugsnag", "not notified"} {
 			if got := l.msg; !strings.Contains(got, exp) {

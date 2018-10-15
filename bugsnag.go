@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -63,7 +64,13 @@ func StartSession(ctx context.Context) context.Context {
 // information about it in the dashboard, or set the severity of the
 // notification.
 func Notify(err error, rawData ...interface{}) error {
-	return defaultNotifier.Notify(err, rawData...)
+	if e := checkForEmptyError(err); e != nil {
+		return e
+	}
+	// Stripping one stackframe to not include this function in the stacktrace
+	// for a manual notification.
+	skipFrames := 1
+	return defaultNotifier.Notify(errors.New(err, skipFrames), rawData...)
 }
 
 // AutoNotify logs a panic on a goroutine and then repanics.
@@ -88,7 +95,12 @@ func AutoNotify(rawData ...interface{}) {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.NotifySync(errors.New(err, 2), true, rawData...)
+		// We strip the following stackframes as they don't add much info
+		// - runtime/$arch - e.g. runtime/asm_amd64.s#call32
+		// - runtime/panic.go#gopanic
+		// Panics have their own stacktrace, so no stripping of the current stack
+		skipFrames := 2
+		defaultNotifier.NotifySync(errors.New(err, skipFrames), true, rawData...)
 		sessionTracker.FlushSessions()
 		panic(err)
 	}
@@ -121,7 +133,12 @@ func Recover(rawData ...interface{}) {
 		severity := defaultNotifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		rawData = append([]interface{}{state}, rawData...)
-		defaultNotifier.Notify(errors.New(err, 2), rawData...)
+		// We strip the following stackframes as they don't add much info
+		// - runtime/$arch - e.g. runtime/asm_amd64.s#call32
+		// - runtime/panic.go#gopanic
+		// Panics have their own stacktrace, so no stripping of the current stack
+		skipFrames := 2
+		defaultNotifier.Notify(errors.New(err, skipFrames), rawData...)
 	}
 }
 
@@ -180,6 +197,18 @@ func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 		defer notifier.AutoNotify(ctx)
 		h(w, request)
 	}
+}
+
+// checkForEmptyError checks if the given error (to be reported to Bugsnag) is
+// nil. If it is, then log an error messageand return another error wrapping
+// this error message.
+func checkForEmptyError(err error) error {
+	if err != nil {
+		return nil
+	}
+	msg := "attempted to notify Bugsnag without supplying an error. Bugsnag not notified"
+	Config.Logger.Printf("ERROR: " + msg)
+	return fmt.Errorf(msg)
 }
 
 func init() {
