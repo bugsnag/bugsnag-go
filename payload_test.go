@@ -55,9 +55,6 @@ func makeLargePayload() *payload {
 		Framework:        "gin",
 	}
 
-	// TODO get rid of this once session tracking is started in the first call to
-	// StartSession instead of as part of Configure.
-	Configure(Configuration{APIKey: testAPIKey})
 	ctx := context.Background()
 	ctx = StartSession(ctx)
 
