@@ -199,7 +199,7 @@ func HandlerFunc(h http.HandlerFunc, rawData ...interface{}) http.HandlerFunc {
 }
 
 // checkForEmptyError checks if the given error (to be reported to Bugsnag) is
-// nil. If it is, then log an error messageand return another error wrapping
+// nil. If it is, then log an error message and return another error wrapping
 // this error message.
 func checkForEmptyError(err error) error {
 	if err != nil {
