@@ -2,7 +2,6 @@
 package testutil
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +20,6 @@ const TestAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 func Setup() (*httptest.Server, chan []byte) {
 	reports := make(chan []byte, 10)
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Bugsnag called")
 		if strings.Contains(r.URL.Path, "sessions") {
 			return
 		}

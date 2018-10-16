@@ -83,8 +83,9 @@ func TestNegroni(t *testing.T) {
 func unhandledCrashHandler(w http.ResponseWriter, req *http.Request) {
 	panic("something went terribly wrong")
 }
+
 func handledCrashHandler(w http.ResponseWriter, req *http.Request) {
-	bugsnag.Notify(req.Context(), fmt.Errorf("Ooopsie"))
+	bugsnag.Notify(fmt.Errorf("Ooopsie"), req.Context())
 }
 
 func crash(a interface{}) string {

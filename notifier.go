@@ -1,10 +1,10 @@
 package bugsnag
 
 import (
-	"fmt"
-
 	"github.com/bugsnag/bugsnag-go/errors"
 )
+
+var publisher reportPublisher = new(defaultReportPublisher)
 
 // Notifier sends errors to Bugsnag.
 type Notifier struct {
@@ -44,11 +44,16 @@ func (notifier *Notifier) FlushSessionsOnRepanic(shouldFlush bool) {
 
 // Notify sends an error to Bugsnag. Any rawData you pass here will be sent to
 // Bugsnag after being converted to JSON. e.g. bugsnag.SeverityError, bugsnag.Context,
-// or bugsnag.MetaData.
-func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
-	// Ensure any passed in raw-data synchronous boolean value takes precedence
-	args := append([]interface{}{notifier.Config.Synchronous}, rawData...)
-	return notifier.NotifySync(args...)
+// or bugsnag.MetaData. Any bools in rawData overrides the
+// notifier.Config.Synchronous flag.
+func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
+	if e := checkForEmptyError(err); e != nil {
+		return e
+	}
+	// Stripping one stackframe to not include this function in the stacktrace
+	// for a manual notification.
+	skipFrames := 1
+	return notifier.NotifySync(errors.New(err, skipFrames), notifier.Config.Synchronous, rawData...)
 }
 
 // NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
@@ -56,38 +61,18 @@ func (notifier *Notifier) Notify(rawData ...interface{}) (e error) {
 // asynchronous). Any other rawData you pass here will be sent to Bugsnag after
 // being converted to JSON. E.g. bugsnag.SeverityError, bugsnag.Context, or
 // bugsnag.MetaData.
-func (notifier *Notifier) NotifySync(rawData ...interface{}) (e error) {
-	containsError := false
-	for _, datum := range rawData {
-		if _, ok := datum.(error); ok {
-			containsError = true
-		}
+func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{}) error {
+	if e := checkForEmptyError(err); e != nil {
+		return e
 	}
-	if !containsError {
-		msg := "attempted to notify Bugsnag without supplying an error. Bugsnag not notified"
-		notifier.Config.Logger.Printf("ERROR: " + msg)
-		return fmt.Errorf(msg)
-	}
-	event, config := newEvent(rawData, notifier)
+	// Stripping one stackframe to not include this function in the stacktrace
+	// for a manual notification.
+	skipFrames := 1
+	event, config := newEvent(append(rawData, errors.New(err, skipFrames), sync), notifier)
 
 	// Never block, start throwing away errors if we have too many.
-	e = middleware.Run(event, config, func() error {
-		config.logf("notifying bugsnag: %s", event.Message)
-		if config.notifyInReleaseStage() {
-			if config.Synchronous {
-				return (&payload{event, config}).deliver()
-			}
-			// Ensure that any errors are logged if they occur in a goroutine.
-			go func(event *Event, config *Configuration) {
-				err := (&payload{event, config}).deliver()
-				if err != nil {
-					config.logf("bugsnag.Notify: %v", err)
-				}
-			}(event, config)
-
-			return nil
-		}
-		return fmt.Errorf("not notifying in %s", config.ReleaseStage)
+	e := middleware.Run(event, config, func() error {
+		return publisher.publishReport(&payload{event, config})
 	})
 
 	if e != nil {
@@ -108,7 +93,12 @@ func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityError)
 		state := HandledState{SeverityReasonHandledPanic, severity, true, ""}
 		rawData = notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(append(rawData, errors.New(err, 2))...)
+		// We strip the following stackframes as they don't add much
+		// information but would mess with the grouping algorithm
+		// { "file": "github.com/bugsnag/bugsnag-go/notifier.go", "lineNumber": 116, "method": "(*Notifier).AutoNotify" },
+		// { "file": "runtime/asm_amd64.s", "lineNumber": 573, "method": "call32" },
+		skipFrames := 2
+		notifier.NotifySync(errors.New(err, skipFrames), true, rawData...)
 		panic(err)
 	}
 }
@@ -121,7 +111,7 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 		severity := notifier.getDefaultSeverity(rawData, SeverityWarning)
 		state := HandledState{SeverityReasonHandledPanic, severity, false, ""}
 		rawData = notifier.appendStateIfNeeded(rawData, state)
-		notifier.Notify(append(rawData, errors.New(err, 2))...)
+		notifier.Notify(errors.New(err, 2), rawData...)
 	}
 }
 

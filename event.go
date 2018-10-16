@@ -128,7 +128,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		switch datum := datum.(type) {
 
 		case error, errors.Error:
-			err = errors.New(datum.(error), 4)
+			err = errors.New(datum.(error), 1)
 			event.Error = err
 			event.ErrorClass = err.TypeName()
 			event.Message = err.Error()

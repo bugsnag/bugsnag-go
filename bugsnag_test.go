@@ -93,8 +93,8 @@ func TestNotify(t *testing.T) {
 	})
 
 	Notify(
-		StartSession(context.Background()),
 		fmt.Errorf("hello world"),
+		StartSession(context.Background()),
 		generateSampleConfig(ts.URL),
 		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
 		Context{"testing"},
@@ -143,6 +143,41 @@ func TestNotify(t *testing.T) {
 	exception := getIndex(event, "exceptions", 0)
 	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", InProject: true})
 	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
+}
+
+type testPublisher struct {
+	sync bool
+}
+
+func (tp *testPublisher) publishReport(p *payload) error {
+	tp.sync = p.Synchronous
+	return nil
+}
+
+func TestNotifySyncThenAsync(t *testing.T) {
+	ts, _ := setup()
+	defer ts.Close()
+
+	Configure(generateSampleConfig(ts.URL)) //async by default
+
+	pub := new(testPublisher)
+	publisher = pub
+	defer func() { publisher = new(defaultReportPublisher) }()
+
+	Notify(fmt.Errorf("oopsie"))
+	if pub.sync {
+		t.Errorf("Expected notify to be async by default")
+	}
+
+	defaultNotifier.NotifySync(fmt.Errorf("oopsie"), true)
+	if !pub.sync {
+		t.Errorf("Expected notify to be sent synchronously when calling NotifySync with true")
+	}
+
+	Notify(fmt.Errorf("oopsie"))
+	if pub.sync {
+		t.Errorf("Expected notify to be sent asynchronously when calling Notify regardless of previous NotifySync call")
+	}
 }
 
 func TestHandlerFunc(t *testing.T) {
@@ -425,7 +460,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		return nil
 	})
 
-	Notify(StartSession(context.Background()), fmt.Errorf("hello world"), generateSampleConfig(ts.URL))
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL), StartSession(context.Background()))
 
 	json, _ := simplejson.NewJson(<-reports)
 	assertPayload(t, json, eventJSON{
@@ -453,11 +488,11 @@ func TestNotifyWithoutError(t *testing.T) {
 	config.Logger = &l
 	Configure(config)
 
-	Notify(StartSession(context.Background()))
+	Notify(nil, StartSession(context.Background()))
 
 	select {
 	case r := <-reports:
-		t.Fatalf("Unexpected request made to bugsnag: %+v", r)
+		t.Fatalf("Unexpected request made to bugsnag: %+v", string(r))
 	default:
 		for _, exp := range []string{"ERROR", "error", "Bugsnag", "not notified"} {
 			if got := l.msg; !strings.Contains(got, exp) {

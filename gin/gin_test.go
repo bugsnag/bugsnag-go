@@ -128,7 +128,7 @@ func TestGin(t *testing.T) {
 
 func performHandledError(c *gin.Context) {
 	ctx := c.Request.Context()
-	bugsnag.Notify(ctx, fmt.Errorf("Ooopsie"), bugsnag.User{Id: "987zyx"})
+	bugsnag.Notify(fmt.Errorf("Ooopsie"), ctx, bugsnag.User{Id: "987zyx"})
 }
 
 func performUnhandledCrash(c *gin.Context) {
