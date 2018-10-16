@@ -33,7 +33,7 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 		Endpoints: bugsnag.Endpoints{Notify: ts.URL, Sessions: ts.URL + "/sessions"},
 	})
 
-	// Expect the following frames to be ignored for *.Notify
+	// Expect the following frames to be present for *.Notify
 	/*
 		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func1" },
 		{ "file": "testing/testing.go", "method": "tRunner" },
@@ -49,7 +49,7 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 		assertStackframeCount(st, 3)
 	})
 
-	// Expect the following frames to be ignored for notifier.NotifySync
+	// Expect the following frames to be present for notifier.NotifySync
 	/*
 		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func2" },
 		{ "file": "testing/testing.go", "method": "tRunner" },
@@ -61,7 +61,7 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 		assertStackframeCount(st, 3)
 	})
 
-	// Expect the following frames to be ignored for *.AutoNotify
+	// Expect the following frames to be present for *.AutoNotify
 	/*
 		{ "file": "runtime/panic.go", "method": "gopanic" },
 		{ "file": "runtime/iface.go", "method": "panicdottypeE" },
@@ -87,7 +87,7 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 		assertStackframeCount(st, 6)
 	})
 
-	// Expect the following frames to be ignored for *.Recover
+	// Expect the following frames to be present for *.Recover
 	/*
 		{ "file": "runtime/panic.go", "method": "gopanic" },
 		{ "file": "runtime/iface.go", "method": "panicdottypeE" },
