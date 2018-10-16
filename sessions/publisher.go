@@ -36,6 +36,9 @@ func (p *publisher) publish(sessions []*Session) error {
 		// log every minute
 		return nil
 	}
+	if len(sessions) == 0 {
+		return fmt.Errorf("bugsnag/sessions/publisher.publish requested publication of 0")
+	}
 	p.config.mutex.Lock()
 	defer p.config.mutex.Unlock()
 	payload := makeSessionPayload(sessions, p.config)
