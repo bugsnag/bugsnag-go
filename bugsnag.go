@@ -54,15 +54,14 @@ func StartSession(ctx context.Context) context.Context {
 }
 
 // Notify sends an error.Error to Bugsnag along with the current stack trace.
-// Although it's not strictly enforced, it's highly recommended to pass a
-// context.Context object that has at one-point been returned from
-// bugsnag.StartSession. Doing so ensures your stability score remains accurate,
-// and future versions of Bugsnag may extract more useful information from this
-// context.
-// The remaining rawData is used to send extra information along with the
-// error. For example you can pass the current http.Request to Bugsnag to see
-// information about it in the dashboard, or set the severity of the
-// notification.
+// If at all possible, it is recommended to pass in a context.Context, e.g.
+// from a http.Request or bugsnag.StartSession() as Bugsnag will be able to
+// extract additional information in some cases. The rawData is used to send
+// extra information along with the error. For example you can pass the current
+// http.Request to Bugsnag to see information about it in the dashboard, or set
+// the severity of the notification. For a detailed list of the information
+// that can be extracted, see
+// https://docs.bugsnag.com/platforms/go/reporting-handled-errors/
 func Notify(err error, rawData ...interface{}) error {
 	if e := checkForEmptyError(err); e != nil {
 		return e
