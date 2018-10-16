@@ -1,9 +1,10 @@
 package sessions
 
 import (
-	"os"
 	"runtime"
 	"time"
+
+	"github.com/bugsnag/bugsnag-go/device"
 )
 
 // notifierPayload defines the .notifier subobject of the payload
@@ -48,7 +49,7 @@ func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguratio
 	}
 	hostname := config.Hostname
 	if hostname == "" {
-		hostname, _ = os.Hostname() //Ignore the hostname if this call errors
+		hostname = device.GetHostname()
 	}
 
 	return &sessionPayload{

@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/bugsnag/bugsnag-go/errors"
 	"github.com/bugsnag/bugsnag-go/sessions"
 
@@ -227,7 +228,7 @@ func init() {
 			Notify:   "https://notify.bugsnag.com",
 			Sessions: "https://sessions.bugsnag.com",
 		},
-		Hostname:            "",
+		Hostname:            device.GetHostname(),
 		AppType:             "",
 		AppVersion:          "",
 		AutoCaptureSessions: true,
@@ -243,11 +244,6 @@ func init() {
 
 		flushSessionsOnRepanic: true,
 	})
-
-	hostname, err := os.Hostname()
-	if err == nil {
-		Config.Hostname = hostname
-	}
 }
 
 func startSessionTracking() {
