@@ -23,7 +23,8 @@ import (
 // VERSION defines the version of this Bugsnag notifier
 const VERSION = "1.4.0"
 
-var once sync.Once
+var panicHandlerOnce sync.Once
+var sessionTrackerOnce sync.Once
 var middleware middlewareStack
 
 // Config is the configuration for the default bugsnag notifier.
@@ -43,14 +44,14 @@ var sessionTracker sessions.SessionTracker
 // called as early as possible in your initialization process.
 func Configure(config Configuration) {
 	Config.update(&config)
-	once.Do(Config.PanicHandler)
+	panicHandlerOnce.Do(Config.PanicHandler)
 }
 
 // StartSession creates new context from the context.Context instance with
 // Bugsnag session data attached. Will start the session tracker if not already
 // started
 func StartSession(ctx context.Context) context.Context {
-	startSessionTracking()
+	sessionTrackerOnce.Do(startSessionTracking)
 	return sessionTracker.StartSession(ctx)
 }
 
