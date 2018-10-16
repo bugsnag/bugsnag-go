@@ -16,15 +16,15 @@ type notifierPayload struct {
 
 // appPayload defines the .app subobject of the payload
 type appPayload struct {
-	Type         string `json:"type"`
-	ReleaseStage string `json:"releaseStage"`
-	Version      string `json:"version"`
+	Type         string `json:"type,omitempty"`
+	ReleaseStage string `json:"releaseStage,omitempty"`
+	Version      string `json:"version,omitempty"`
 }
 
 // devicePayload defines the .device subobject of the payload
 type devicePayload struct {
-	OsName   string `json:"osName"`
-	Hostname string `json:"hostname"`
+	OsName   string `json:"osName,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
 }
 
 // sessionCountsPayload defines the .sessionCounts subobject of the payload
@@ -35,9 +35,9 @@ type sessionCountsPayload struct {
 
 // sessionPayload defines the top level payload object
 type sessionPayload struct {
-	Notifier      notifierPayload        `json:"notifier"`
-	App           appPayload             `json:"app"`
-	Device        devicePayload          `json:"device"`
+	Notifier      *notifierPayload       `json:"notifier"`
+	App           *appPayload            `json:"app"`
+	Device        *devicePayload         `json:"device"`
 	SessionCounts []sessionCountsPayload `json:"sessionCounts"`
 }
 
@@ -53,17 +53,17 @@ func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguratio
 	}
 
 	return &sessionPayload{
-		Notifier: notifierPayload{
+		Notifier: &notifierPayload{
 			Name:    "Bugsnag Go",
 			URL:     "https://github.com/bugsnag/bugsnag-go",
 			Version: config.Version,
 		},
-		App: appPayload{
+		App: &appPayload{
 			Type:         config.AppType,
 			Version:      config.AppVersion,
 			ReleaseStage: releaseStage,
 		},
-		Device: devicePayload{
+		Device: &devicePayload{
 			OsName:   runtime.GOOS,
 			Hostname: hostname,
 		},
