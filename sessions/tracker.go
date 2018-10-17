@@ -89,14 +89,15 @@ func (s *sessionTracker) processSessions() {
 					}
 				}(s)
 			}
-		case <-shutdown:
+		case sig := <-shutdown:
+			signal.Stop(shutdown)
 			if len(s.sessions) > 0 {
 				err := s.publisher.publish(s.sessions)
 				if err != nil {
 					s.config.logf("%v", err)
 				}
 			}
-			return
+			syscall.Kill(syscall.Getpid(), sig.(syscall.Signal))
 		}
 	}
 }
@@ -111,8 +112,8 @@ func (s *sessionTracker) FlushSessions() {
 	}
 }
 
-func shutdownSignals() <-chan os.Signal {
-	c := make(chan os.Signal)
+func shutdownSignals() chan os.Signal {
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 	return c
 }
