@@ -11,7 +11,7 @@ The key files for integrating Bugsnag are:
 ## Run the example
 
 1. Change the API key in `conf.app` to a project you've created in [Bugsnag](https://app.bugsnag.com).
-1. Inside `bugsnag-go/examples/revel` do:
+1. Inside `bugsnag-go/examples/revelapp` do:
     ```bash
     revel run
     ```
