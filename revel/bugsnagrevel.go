@@ -60,6 +60,19 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	return nil
 }
 
+type bugsnagRevelLogger struct{}
+
+func (l *bugsnagRevelLogger) Printf(s string, params ...interface{}) {
+	if strings.HasPrefix(s, "ERROR") {
+		revel.AppLog.Errorf(s, params...)
+	} else if strings.HasPrefix(s, "WARN") {
+		revel.AppLog.Warnf(s, params...)
+	} else {
+		revel.AppLog.Infof(s, params...)
+	}
+
+}
+
 func init() {
 	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
@@ -82,7 +95,7 @@ func init() {
 			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
 			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
 			ProjectPackages: projectPackages,
-			Logger:          revel.ERROR,
+			Logger:          new(bugsnagRevelLogger),
 		})
 	})
 }
