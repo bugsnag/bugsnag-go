@@ -6,7 +6,6 @@ package bugsnagrevel
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go"
@@ -29,10 +28,9 @@ var errorHandlingState = bugsnag.HandledState{
 // bugsnag.endpoints, bugsnag.releasestage, bugsnag.apptype, bugsnag.appversion,
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
-	// Record a session if auto capture sessions is enabled
 	notifier := bugsnag.New()
-	reqJSON := extractRequestData(c.Request, notifier.Config.ParamsFilters)
-	ctx := bugsnag.AttachRequestJSONData(context.Background(), reqJSON)
+	ctx := bugsnag.AttachRequestData(context.Background(), findProperHTTPRequest(c))
+	// Record a session if auto capture sessions is enabled
 	if notifier.Config.IsAutoCaptureSessions() {
 		ctx = bugsnag.StartSession(ctx)
 	}
@@ -46,18 +44,27 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	for _, datum := range event.RawData {
 		if controller, ok := datum.(*revel.Controller); ok {
 			// make the request visible to the builtin HttpMiddleware
-			if version("0.18.0") {
-				event.RawData = append(event.RawData, controller.Request)
-			} else {
-				req := struct{ *http.Request }{}
-				event.RawData = append(event.RawData, req.Request)
-			}
+			event.RawData = append(event.RawData, controller.Request.In.GetRaw().(*http.Request))
 			event.Context = controller.Action
 			event.MetaData.AddStruct("Session", controller.Session)
 		}
 	}
 
 	return nil
+}
+
+func findProperHTTPRequest(c *revel.Controller) *http.Request {
+	var req *http.Request
+	rawReq := c.Request.In.GetRaw()
+
+	// This *should* always be a *http.Request, but the revel team must have
+	// made this an interface{} for a reason, and we might as well be defensive
+	// about it
+	switch rawReq.(type) {
+	case (*http.Request):
+		req = rawReq.(*http.Request) // Find the *proper* http request.
+	}
+	return req
 }
 
 type bugsnagRevelLogger struct{}
@@ -98,19 +105,4 @@ func init() {
 			Logger:          new(bugsnagRevelLogger),
 		})
 	})
-}
-
-// Very basic semantic versioning.
-// Returns true if given version matches or is above revel.Version
-func version(reqVersion string) bool {
-	req := strings.Split(reqVersion, ".")
-	cur := strings.Split(revel.Version, ".")
-	for i := 0; i < 2; i++ {
-		rV, _ := strconv.Atoi(req[i])
-		cV, _ := strconv.Atoi(cur[i])
-		if (rV < cV && i == 0) || (rV < cV && i == 1) {
-			return true
-		}
-	}
-	return false
 }
