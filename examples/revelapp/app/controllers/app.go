@@ -16,7 +16,7 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) Handled() revel.Result {
-	bugsnag.Notify(c.Args["context"], fmt.Errorf("oopsie"))
+	bugsnag.Notify(fmt.Errorf("oopsie"), c.Args["context"])
 	return c.Render()
 }
 

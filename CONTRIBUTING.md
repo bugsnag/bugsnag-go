@@ -89,7 +89,7 @@ Manually testing Revel integration
 1. `cd` into the `examples/revelapp/` directory
 1. Run the `start-test-servers.sh` script
 1. Run `revel run`
-1. Visit `localhost:4321/handled` and verify that `payloads.json` now contains a report payload containing a handled payload, including a `session` sub-object containing 0 unhandled and 1 handled.
-1. Visit `localhost:4321/unhandled` and verify that `payloads.json` now contains an unhandled payload, including a `session` sub-object containing 1 unhandled and 0 handled.
+1. Visit `localhost:9001/handled` and verify that `payloads.json` now contains a report payload containing a handled payload, including a `session` sub-object containing 0 unhandled and 1 handled.
+1. Visit `localhost:9001/unhandled` and verify that `payloads.json` now contains an unhandled payload, including a `session` sub-object containing 1 unhandled and 0 handled.
 1. Let the application run for at least one minute and verify that sessions are being populated under the "sessions" array in `payloads.json`
 1. Make sure you do not commit the `payload.json` file.

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/bugsnag/bugsnag-go"
-	"github.com/bugsnag/bugsnag-go/gin"
-	"github.com/gin-gonic/gin"
+	"github.com/bugsnag/bugsnag-go/martini"
+	"github.com/go-martini/martini"
 )
 
 // Insert your API key
@@ -15,16 +15,19 @@ const apiKey = "YOUR-API-KEY-HERE"
 
 func main() {
 	if len(apiKey) != 32 {
-		fmt.Println("Please set your API key in main.go before running example.")
+		fmt.Println("Please set the API key in main.go before running the example")
 		return
 	}
 
-	g := gin.Default()
+	bugsnag.Configure(bugsnag.Configuration{APIKey: apiKey})
+	m := martini.Classic()
 
-	g.Use(bugsnaggin.AutoNotify(bugsnag.Configuration{APIKey: apiKey}))
+	m.Use(martini.Recovery())
+	// Add bugsnag handler after martini.Recovery() to ensure panics get picked up
+	m.Use(bugsnagmartini.AutoNotify())
 
-	g.GET("/unhandled", performUnhandledCrash)
-	g.GET("/handled", performHandledError)
+	m.Get("/unhandled", performUnhandledCrash)
+	m.Get("/handled", performHandledError)
 
 	fmt.Println("=============================================================================")
 	fmt.Println("Visit http://localhost:9001/unhandled - To perform an unhandled crash")
@@ -32,18 +35,16 @@ func main() {
 	fmt.Println("=============================================================================")
 	fmt.Println("")
 
-	g.Run(":9001") // listen and serve on 0.0.0.0:9001
+	m.RunOnAddr(":9001")
 }
 
-func performUnhandledCrash(c *gin.Context) {
-	c.String(http.StatusOK, "OK")
+func performUnhandledCrash() {
 	// Invalid type assertion, will panic
 	func(a interface{}) string { return a.(string) }(struct{}{})
 }
 
-func performHandledError(c *gin.Context) {
-	c.String(http.StatusOK, "OK")
+func performHandledError(r *http.Request) {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
-		bugsnag.Notify(err, c.Request.Context())
+		bugsnag.Notify(err, r.Context())
 	}
 }
