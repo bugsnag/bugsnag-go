@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -31,6 +32,7 @@ type sessionTracker struct {
 	sessions       []*Session
 	config         *SessionTrackingConfiguration
 	publisher      sessionPublisher
+	sessionsMutex  sync.Mutex
 }
 
 // NewSessionTracker creates a new SessionTracker based on the provided config,
@@ -77,32 +79,56 @@ func (s *sessionTracker) processSessions() {
 	for {
 		select {
 		case session := <-s.sessionChannel:
-			s.sessions = append(s.sessions, session)
+			s.appendSession(session)
 		case <-tic:
-			oldSessions := s.sessions
-			s.sessions = nil
-			if len(oldSessions) > 0 {
-				go func(s *sessionTracker) {
-					err := s.publisher.publish(oldSessions)
-					if err != nil {
-						s.config.logf("%v", err)
-					}
-				}(s)
-			}
+			s.publishCollectedSessions()
 		case sig := <-shutdown:
-			signal.Stop(shutdown)
-			if len(s.sessions) > 0 {
-				err := s.publisher.publish(s.sessions)
-				if err != nil {
-					s.config.logf("%v", err)
-				}
-			}
-			syscall.Kill(syscall.Getpid(), sig.(syscall.Signal))
+			s.flushSessionsAndRepeatSignal(shutdown, sig.(syscall.Signal))
 		}
 	}
 }
 
+func (s *sessionTracker) appendSession(session *Session) {
+	s.sessionsMutex.Lock()
+	defer s.sessionsMutex.Unlock()
+
+	s.sessions = append(s.sessions, session)
+}
+
+func (s *sessionTracker) publishCollectedSessions() {
+	s.sessionsMutex.Lock()
+	defer s.sessionsMutex.Unlock()
+
+	oldSessions := s.sessions
+	s.sessions = nil
+	if len(oldSessions) > 0 {
+		go func(s *sessionTracker) {
+			err := s.publisher.publish(oldSessions)
+			if err != nil {
+				s.config.logf("%v", err)
+			}
+		}(s)
+	}
+}
+
+func (s *sessionTracker) flushSessionsAndRepeatSignal(shutdown chan<- os.Signal, sig syscall.Signal) {
+	s.sessionsMutex.Lock()
+	defer s.sessionsMutex.Unlock()
+
+	signal.Stop(shutdown)
+	if len(s.sessions) > 0 {
+		err := s.publisher.publish(s.sessions)
+		if err != nil {
+			s.config.logf("%v", err)
+		}
+	}
+	syscall.Kill(syscall.Getpid(), sig)
+}
+
 func (s *sessionTracker) FlushSessions() {
+	s.sessionsMutex.Lock()
+	defer s.sessionsMutex.Unlock()
+
 	sessions := s.sessions
 	s.sessions = nil
 	if len(sessions) != 0 {
