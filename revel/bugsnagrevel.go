@@ -84,25 +84,33 @@ func init() {
 	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
 
-		var projectPackages []string
-		if packages, ok := revel.Config.String("bugsnag.projectpackages"); ok {
-			projectPackages = strings.Split(packages, ",")
-		} else {
-			projectPackages = []string{revel.ImportPath + "/app/*", revel.ImportPath + "/app"}
-		}
-
+		ip := revel.ImportPath
+		c := revel.Config
 		bugsnag.Configure(bugsnag.Configuration{
-			APIKey:              revel.Config.StringDefault("bugsnag.apikey", ""),
-			AutoCaptureSessions: revel.Config.BoolDefault("bugsnag.autocapturesessions", true),
+			APIKey:   c.StringDefault("bugsnag.apikey", ""),
+			Endpoint: c.StringDefault("bugsnag.endpoint", ""),
 			Endpoints: bugsnag.Endpoints{
-				Notify:   revel.Config.StringDefault("bugsnag.endpoints.notify", ""),
-				Sessions: revel.Config.StringDefault("bugsnag.endpoints.sessions", ""),
+				Notify:   c.StringDefault("bugsnag.endpoints.notify", ""),
+				Sessions: c.StringDefault("bugsnag.endpoints.sessions", ""),
 			},
-			AppType:         revel.Config.StringDefault("bugsnag.apptype", ""),
-			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
-			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
-			ProjectPackages: projectPackages,
-			Logger:          new(bugsnagRevelLogger),
+			ReleaseStage:        c.StringDefault("bugsnag.releasestage", revel.RunMode),
+			AppType:             c.StringDefault("bugsnag.apptype", FrameworkName),
+			AppVersion:          c.StringDefault("bugsnag.appversion", ""),
+			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", true),
+			Hostname:            c.StringDefault("bugsnag.device.hostname", ""),
+			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", nil),
+			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", []string{ip + "/app/*", ip + "/app"}),
+			SourceRoot:          c.StringDefault("bugsnag.sourceroot", ""),
+			ParamsFilters:       getCsvsOrDefault("bugsnag.paramsfilters", []string{"password", "secret", "authorization", "cookie"}),
+			Logger:              new(bugsnagRevelLogger),
+			Synchronous:         c.BoolDefault("bugsnag.synchronous", false),
 		})
 	})
+}
+
+func getCsvsOrDefault(propertyKey string, d []string) []string {
+	if propString, ok := revel.Config.String(propertyKey); ok {
+		return strings.Split(propString, ",")
+	}
+	return d
 }
