@@ -87,7 +87,6 @@ func init() {
 	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
 
-		ip := revel.ImportPath
 		c := revel.Config
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:   c.StringDefault("bugsnag.apikey", ""),
@@ -102,7 +101,7 @@ func init() {
 			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", true),
 			Hostname:            c.StringDefault("bugsnag.device.hostname", ""),
 			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", nil),
-			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", []string{ip + "/app/*", ip + "/app"}),
+			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", []string{revel.ImportPath + "/app/**"}),
 			SourceRoot:          c.StringDefault("bugsnag.sourceroot", ""),
 			ParamsFilters:       getCsvsOrDefault("bugsnag.paramsfilters", []string{"password", "secret", "authorization", "cookie"}),
 			Logger:              new(bugsnagRevelLogger),
