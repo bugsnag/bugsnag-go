@@ -6,7 +6,6 @@ package bugsnagrevel
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go"
@@ -29,10 +28,9 @@ var errorHandlingState = bugsnag.HandledState{
 // bugsnag.endpoints, bugsnag.releasestage, bugsnag.apptype, bugsnag.appversion,
 // bugsnag.projectroot, bugsnag.projectpackages if needed.
 func Filter(c *revel.Controller, fc []revel.Filter) {
-	// Record a session if auto capture sessions is enabled
 	notifier := bugsnag.New()
-	reqJSON := extractRequestData(c.Request, notifier.Config.ParamsFilters)
-	ctx := bugsnag.AttachRequestJSONData(context.Background(), reqJSON)
+	ctx := bugsnag.AttachRequestData(context.Background(), findProperHTTPRequest(c))
+	// Record a session if auto capture sessions is enabled
 	if notifier.Config.IsAutoCaptureSessions() {
 		ctx = bugsnag.StartSession(ctx)
 	}
@@ -46,12 +44,6 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	for _, datum := range event.RawData {
 		if controller, ok := datum.(*revel.Controller); ok {
 			// make the request visible to the builtin HttpMiddleware
-			if version("0.18.0") {
-				event.RawData = append(event.RawData, controller.Request)
-			} else {
-				req := struct{ *http.Request }{}
-				event.RawData = append(event.RawData, req.Request)
-			}
 			event.Context = controller.Action
 			event.MetaData.AddStruct("Session", controller.Session)
 		}
@@ -60,44 +52,64 @@ func middleware(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	return nil
 }
 
+func findProperHTTPRequest(c *revel.Controller) *http.Request {
+	var req *http.Request
+	rawReq := c.Request.In.GetRaw()
+
+	// This *should* always be a *http.Request, but the revel team must have
+	// made this an interface{} for a reason, and we might as well be defensive
+	// about it
+	switch rawReq.(type) {
+	case (*http.Request):
+		req = rawReq.(*http.Request) // Find the *proper* http request.
+	}
+	return req
+}
+
+type bugsnagRevelLogger struct{}
+
+func (l *bugsnagRevelLogger) Printf(s string, params ...interface{}) {
+	if strings.HasPrefix(s, "ERROR") {
+		revel.AppLog.Errorf(s, params...)
+	} else if strings.HasPrefix(s, "WARN") {
+		revel.AppLog.Warnf(s, params...)
+	} else {
+		revel.AppLog.Infof(s, params...)
+	}
+
+}
+
 func init() {
 	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
 
-		var projectPackages []string
-		if packages, ok := revel.Config.String("bugsnag.projectpackages"); ok {
-			projectPackages = strings.Split(packages, ",")
-		} else {
-			projectPackages = []string{revel.ImportPath + "/app/*", revel.ImportPath + "/app"}
-		}
-
+		ip := revel.ImportPath
+		c := revel.Config
 		bugsnag.Configure(bugsnag.Configuration{
-			APIKey:              revel.Config.StringDefault("bugsnag.apikey", ""),
-			AutoCaptureSessions: revel.Config.BoolDefault("bugsnag.autocapturesessions", true),
+			APIKey:   c.StringDefault("bugsnag.apikey", ""),
+			Endpoint: c.StringDefault("bugsnag.endpoint", ""),
 			Endpoints: bugsnag.Endpoints{
-				Notify:   revel.Config.StringDefault("bugsnag.endpoints.notify", ""),
-				Sessions: revel.Config.StringDefault("bugsnag.endpoints.sessions", ""),
+				Notify:   c.StringDefault("bugsnag.endpoints.notify", ""),
+				Sessions: c.StringDefault("bugsnag.endpoints.sessions", ""),
 			},
-			AppType:         revel.Config.StringDefault("bugsnag.apptype", ""),
-			AppVersion:      revel.Config.StringDefault("bugsnag.appversion", ""),
-			ReleaseStage:    revel.Config.StringDefault("bugsnag.releasestage", revel.RunMode),
-			ProjectPackages: projectPackages,
-			Logger:          revel.ERROR,
+			ReleaseStage:        c.StringDefault("bugsnag.releasestage", revel.RunMode),
+			AppType:             c.StringDefault("bugsnag.apptype", FrameworkName),
+			AppVersion:          c.StringDefault("bugsnag.appversion", ""),
+			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", true),
+			Hostname:            c.StringDefault("bugsnag.device.hostname", ""),
+			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", nil),
+			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", []string{ip + "/app/*", ip + "/app"}),
+			SourceRoot:          c.StringDefault("bugsnag.sourceroot", ""),
+			ParamsFilters:       getCsvsOrDefault("bugsnag.paramsfilters", []string{"password", "secret", "authorization", "cookie"}),
+			Logger:              new(bugsnagRevelLogger),
+			Synchronous:         c.BoolDefault("bugsnag.synchronous", false),
 		})
 	})
 }
 
-// Very basic semantic versioning.
-// Returns true if given version matches or is above revel.Version
-func version(reqVersion string) bool {
-	req := strings.Split(reqVersion, ".")
-	cur := strings.Split(revel.Version, ".")
-	for i := 0; i < 2; i++ {
-		rV, _ := strconv.Atoi(req[i])
-		cV, _ := strconv.Atoi(cur[i])
-		if (rV < cV && i == 0) || (rV < cV && i == 1) {
-			return true
-		}
+func getCsvsOrDefault(propertyKey string, d []string) []string {
+	if propString, ok := revel.Config.String(propertyKey); ok {
+		return strings.Split(propString, ",")
 	}
-	return false
+	return d
 }
