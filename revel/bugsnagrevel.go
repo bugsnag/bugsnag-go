@@ -80,6 +80,10 @@ func (l *bugsnagRevelLogger) Printf(s string, params ...interface{}) {
 }
 
 func init() {
+	// To ensure that users can disable the default panic handler (by calling
+	// bugsnag.Configure before this function does) we must allow other
+	// callbacks to execute before this function.
+	order := 2
 	revel.OnAppStart(func() {
 		bugsnag.OnBeforeNotify(middleware)
 
@@ -104,7 +108,7 @@ func init() {
 			Logger:              new(bugsnagRevelLogger),
 			Synchronous:         c.BoolDefault("bugsnag.synchronous", false),
 		})
-	})
+	}, order)
 }
 
 func getCsvsOrDefault(propertyKey string, d []string) []string {
