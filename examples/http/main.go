@@ -1,23 +1,33 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/bugsnag/bugsnag-go"
 )
 
+// Insert your API key
+const apiKey = "YOUR-API-KEY-HERE"
+
 func main() {
+	if len(apiKey) != 32 {
+		fmt.Println("Please set the API key in main.go before running the example")
+		return
+	}
+
+	bugsnag.Configure(bugsnag.Configuration{APIKey: apiKey})
+
 	http.HandleFunc("/unhandled", unhandledCrash)
-	http.HandleFunc("/handledError", handledError)
+	http.HandleFunc("/handled", handledError)
 
-	// Insert your API key
-	bugsnag.Configure(bugsnag.Configuration{
-		APIKey: "YOUR-API-KEY-HERE",
-	})
+	fmt.Println("=============================================================================")
+	fmt.Println("Visit http://localhost:9001/unhandled - To perform an unhandled crash")
+	fmt.Println("Visit http://localhost:9001/handled   - To create a manual error notification")
+	fmt.Println("=============================================================================")
+	fmt.Println("")
 
-	log.Println("Serving on 9001")
 	http.ListenAndServe(":9001", bugsnag.Handler(nil))
 }
 
@@ -25,17 +35,13 @@ func unhandledCrash(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Write([]byte("OK\n"))
 
-	var a struct{}
-	crash(a)
+	// Invalid type assertion, will panic
+	func(a interface{}) string { return a.(string) }(struct{}{})
 }
 
 func handledError(w http.ResponseWriter, r *http.Request) {
-	_, err := os.Open("some_nonexistent_file.txt")
+	_, err := os.Open("nonexistent_file.txt")
 	if err != nil {
-		bugsnag.Notify(r.Context(), err)
+		bugsnag.Notify(err, r.Context())
 	}
-}
-
-func crash(a interface{}) string {
-	return a.(string)
 }

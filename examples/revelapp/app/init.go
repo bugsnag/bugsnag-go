@@ -30,13 +30,6 @@ func init() {
 		revel.CompressFilter,          // Compress the result.
 		revel.ActionInvoker,           // Invoke the action.
 	}
-
-	// Register startup functions with OnAppStart
-	// revel.DevMode and revel.RunMode only work inside of OnAppStart. See Example Startup Script
-	// ( order dependent )
-	// revel.OnAppStart(ExampleStartupScript)
-	// revel.OnAppStart(InitDB)
-	// revel.OnAppStart(FillCache)
 }
 
 // HeaderFilter adds common security headers
@@ -50,11 +43,3 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
-
-//func ExampleStartupScript() {
-//	// revel.DevMod and revel.RunMode work here
-//	// Use this script to check for dev mode and set dev/prod startup scripts here!
-//	if revel.DevMode == true {
-//		// Dev mode
-//	}
-//}
