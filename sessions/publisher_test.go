@@ -134,7 +134,7 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 		"notifier.url":     "https://github.com/bugsnag/bugsnag-go",
 		"notifier.version": "2.3.4-alpha",
 		"app.type":         "gin",
-		"app.releaseStage": "staging",
+		"app.releaseStage": "development",
 		"app.version":      "1.2.3-beta",
 		"device.osName":    runtime.GOOS,
 		"device.hostname":  "gce-1234-us-west-1",
@@ -154,16 +154,37 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 }
 
+func TestNoSessionsOutsideNotifyReleaseSTages(t *testing.T) {
+	sessions, _ := makeSessions()
+
+	testClient := testHTTPClient{}
+	config := makeHeavyConfig()
+	config.NotifyReleaseStages = []string{"staging", "production"}
+	publisher := publisher{
+		config: config,
+		client: &testClient,
+	}
+
+	err := publisher.publish(sessions)
+	if err != nil {
+		t.Error(err)
+	}
+	if got := len(testClient.reqs); got != 0 {
+		t.Errorf("Didn't expect any sessions being sent as as 'development' is outside of the notify release stages, but got %d sessions", got)
+	}
+}
+
 func makeHeavyConfig() *SessionTrackingConfiguration {
 	return &SessionTrackingConfiguration{
-		AppType:      "gin",
-		APIKey:       testAPIKey,
-		AppVersion:   "1.2.3-beta",
-		Version:      "2.3.4-alpha",
-		Endpoint:     sessionEndpoint,
-		Transport:    http.DefaultTransport,
-		ReleaseStage: "staging",
-		Hostname:     "gce-1234-us-west-1",
+		AppType:             "gin",
+		APIKey:              testAPIKey,
+		AppVersion:          "1.2.3-beta",
+		Version:             "2.3.4-alpha",
+		Endpoint:            sessionEndpoint,
+		Transport:           http.DefaultTransport,
+		ReleaseStage:        "development",
+		Hostname:            "gce-1234-us-west-1",
+		NotifyReleaseStages: []string{"development"},
 	}
 }
 

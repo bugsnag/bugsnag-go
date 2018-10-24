@@ -250,16 +250,17 @@ func init() {
 func startSessionTracking() {
 	if sessionTracker == nil {
 		sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
-			APIKey:          Config.APIKey,
-			Endpoint:        Config.Endpoints.Sessions,
-			Version:         VERSION,
-			PublishInterval: DefaultSessionPublishInterval,
-			Transport:       Config.Transport,
-			ReleaseStage:    Config.ReleaseStage,
-			Hostname:        Config.Hostname,
-			AppType:         Config.AppType,
-			AppVersion:      Config.AppVersion,
-			Logger:          Config.Logger,
+			APIKey:              Config.APIKey,
+			Endpoint:            Config.Endpoints.Sessions,
+			Version:             VERSION,
+			PublishInterval:     DefaultSessionPublishInterval,
+			Transport:           Config.Transport,
+			ReleaseStage:        Config.ReleaseStage,
+			Hostname:            Config.Hostname,
+			AppType:             Config.AppType,
+			AppVersion:          Config.AppVersion,
+			NotifyReleaseStages: Config.NotifyReleaseStages,
+			Logger:              Config.Logger,
 		})
 		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 	}
