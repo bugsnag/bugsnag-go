@@ -154,7 +154,7 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 }
 
-func TestNoSessionsOutsideNotifyReleaseSTages(t *testing.T) {
+func TestNoSessionsOutsideNotifyReleaseStages(t *testing.T) {
 	sessions, _ := makeSessions()
 
 	testClient := testHTTPClient{}
