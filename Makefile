@@ -23,7 +23,11 @@ test: alldeps
 		exit 1; \
 	fi
 
-ci: alldeps test
+maze:
+	bundle install
+	bundle exec bugsnag-maze-runner
+
+ci: alldeps test maze
 
 bench:
 	go test --bench=.*

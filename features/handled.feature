@@ -13,4 +13,4 @@ Scenario: A handled error sends a report
   And the event "severityReason.type" equals "handledError"
   And the exception "errorClass" equals "*errors.errorString"
   And the "file" of stack frame 0 equals "main.go"
-  And the "lineNumber" of stack frame 0 equals 22
+  And the "lineNumber" of stack frame 0 equals 19
