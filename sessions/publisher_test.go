@@ -174,6 +174,27 @@ func TestNoSessionsOutsideNotifyReleaseStages(t *testing.T) {
 	}
 }
 
+func TestReleaseStageNotSetSendsSessionsRegardlessOfNotifyReleaseStages(t *testing.T) {
+	sessions, _ := makeSessions()
+
+	testClient := testHTTPClient{}
+	config := makeHeavyConfig()
+	config.NotifyReleaseStages = []string{"staging", "production"}
+	config.ReleaseStage = ""
+	publisher := publisher{
+		config: config,
+		client: &testClient,
+	}
+
+	err := publisher.publish(sessions)
+	if err != nil {
+		t.Error(err)
+	}
+	if exp, got := 1, len(testClient.reqs); got != exp {
+		t.Errorf("Expected %d sessions sent when the release stage is \"\" regardless of notify release stage, but got %d", exp, got)
+	}
+}
+
 func makeHeavyConfig() *SessionTrackingConfiguration {
 	return &SessionTrackingConfiguration{
 		AppType:             "gin",

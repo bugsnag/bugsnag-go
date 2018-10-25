@@ -37,8 +37,9 @@ func (p *publisher) publish(sessions []*Session) error {
 		return nil
 	}
 	nrs, rs := p.config.NotifyReleaseStages, p.config.ReleaseStage
-	if rs == "" || nrs != nil && !contains(nrs, rs) {
-		// Don't want to send any sessions when notify release stages
+	if rs != "" && (nrs != nil && !contains(nrs, rs)) {
+		// Always send sessions if the release stage is not set, but don't send any
+		// sessions when notify release stages don't match the current release stage
 		return nil
 	}
 	if len(sessions) == 0 {
