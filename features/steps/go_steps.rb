@@ -4,8 +4,8 @@ When('I configure the bugsnag endpoint') do
   }
 end
 
-When('I run the app {string}') do |app_path|
-  run_command(@script_env, "cd features/fixtures/#{app_path}; go run main.go")
+When('I configure with the {string} configuration and send an error') do |testcase|
+  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\"")
 end
 
 Then("the request used payload v4 headers") do
