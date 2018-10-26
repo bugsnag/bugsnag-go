@@ -1,0 +1,112 @@
+- Revel test cases:
+
+  - Configuring with `Bugsnag.Configure`
+    - `AppVersion`
+    - `AppType`
+    - `APIKey`
+    - `Endpoint`
+    - `Endpoints`
+      - `Notify`
+      - `Sessions`
+    - `Hostname`
+    - `NotifyReleaseStages`
+    - `OnBeforeNotify`
+    - `ParamsFilters`
+    - `ProjectPackages`
+    - `ReleaseStage`
+    - `SourceRoot`
+    - `Synchronous`
+
+  - Configuring with config in `config/app.config`
+    - `AppVersion`
+    - `AppType`
+    - `APIKey`
+    - `Endpoint`
+    - `Endpoints`
+      - `Notify`
+      - `Sessions`
+    - `Hostname`
+    - `NotifyReleaseStages`
+    - `OnBeforeNotify`
+    - `ParamsFilters`
+    - `ProjectPackages`
+    - `ReleaseStage`
+    - `SourceRoot`
+    - `Synchronous`
+
+  - `bugsnag.Notify`
+    - Adding user info
+    - Adding metadata
+    - Adding session data in a context
+    - ~Adding request data in a `*http.Request`~
+    - Modify the Event object in a `OnBeforeNotify` middleware
+
+  - `bugsnag.AutoNotify` in a new goroutine
+  - `bugsnag.Recover` in a new goroutine
+
+- Other test cases:
+
+  - Configuring with `Bugsnag.Configure`
+    - `AppVersion`
+    - `AppType`
+    - `APIKey`
+    - `Endpoint`
+    - `Endpoints`
+      - `Notify`
+      - `Sessions`
+    - `Hostname`
+    - `NotifyReleaseStages`
+    - `OnBeforeNotify`
+    - `ParamsFilters`
+    - `ProjectPackages`
+    - `ReleaseStage`
+    - `SourceRoot`
+    - `Synchronous`
+    - `AutoCaptureSessions` + `bugsnag.StartSession`
+
+  - `bugsnag.Notify`
+    - Adding user info
+    - Adding metadata
+    - Adding session data in a context
+    - Adding request data in a `*http.Request`
+    - Modify the Event object in a `OnBeforeNotify` middleware
+
+  - Gin:
+    - `bugsnag.Notify`
+      - Adding user info
+      - Adding metadata
+      - Adding session data in a context
+      - Adding request data in a `*http.Request`
+      - Modify the Event object in a `OnBeforeNotify` middleware
+    - `bugsnag.AutoNotify` in a new goroutine
+    - `bugsnag.Recover` in a new goroutine
+
+  - Martini:
+    - `bugsnag.Notify`
+      - Adding user info
+      - Adding metadata
+      - Adding session data in a context
+      - Adding request data in a `*http.Request`
+      - Modify the Event object in a `OnBeforeNotify` middleware
+    - `bugsnag.AutoNotify` in a new goroutine
+    - `bugsnag.Recover` in a new goroutine
+
+  - Negroni:
+    - `bugsnag.Notify`
+      - Adding user info
+      - Adding metadata
+      - Adding session data in a context
+      - Adding request data in a `*http.Request`
+      - Modify the Event object in a `OnBeforeNotify` middleware
+    - `bugsnag.AutoNotify` in a new goroutine
+    - `bugsnag.Recover` in a new goroutine
+
+  - net/http:
+    - `bugsnag.Notify`
+      - Adding user info
+      - Adding metadata
+      - Adding session data in a context
+      - Adding request data in a `*http.Request`
+      - Modify the Event object in a `OnBeforeNotify` middleware
+    - `bugsnag.AutoNotify` in a new goroutine
+    - `bugsnag.Recover` in a new goroutine
