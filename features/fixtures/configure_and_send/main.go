@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	bugsnag "github.com/bugsnag/bugsnag-go"
 )
 
 func main() {
 	testcase := flag.String("case", "", "test case to run")
+	send := flag.String("send", "", "whether to send a session/error or both")
 	flag.Parse()
 
 	switch *testcase {
@@ -21,11 +25,21 @@ func main() {
 		caseAppType()
 	case "legacy endpoint":
 		caseLegacyEndpoint()
+	case "hostname":
+		caseHostname()
+	case "release stage":
+		caseNotifyReleaseStage()
 	default:
 		panic("No valid test case: " + *testcase)
 	}
 
-	sendError()
+	if *send == "error" {
+		sendError()
+	} else if *send == "session" {
+		sendSession()
+	} else {
+		panic("No valid send case: " + *send)
+	}
 }
 
 func newDefaultConfig() bugsnag.Configuration {
@@ -41,6 +55,11 @@ func newDefaultConfig() bugsnag.Configuration {
 func sendError() {
 	notifier := bugsnag.New()
 	notifier.NotifySync(fmt.Errorf("oops"), true)
+}
+
+func sendSession() {
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 10
+	bugsnag.StartSession(context.Background())
 }
 
 func caseDefault() {
@@ -65,4 +84,23 @@ func caseLegacyEndpoint() {
 		APIKey:   os.Getenv("API_KEY"),
 		Endpoint: os.Getenv("NOTIFY_ENDPOINT"),
 	})
+}
+
+func caseHostname() {
+	config := newDefaultConfig()
+	config.Hostname = os.Getenv("HOSTNAME")
+	bugsnag.Configure(config)
+}
+
+func caseNotifyReleaseStage() {
+	config := newDefaultConfig()
+	notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES")
+	if notifyReleaseStages != "" {
+		config.NotifyReleaseStages = strings.Split(notifyReleaseStages, ",")
+	}
+	releaseStage := os.Getenv("RELEASE_STAGE")
+	if releaseStage != "" {
+		config.ReleaseStage = releaseStage
+	}
+	bugsnag.Configure(config)
 }

@@ -4,8 +4,19 @@ When('I configure the bugsnag endpoint') do
   }
 end
 
+When('I configure the bugsnag sessions endpoint') do
+  steps %Q{
+    When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+    When I set environment variable "SESSIONS_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+  }
+end
+
 When('I configure with the {string} configuration and send an error') do |testcase|
-  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\"")
+  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=error")
+end
+
+When('I configure with the {string} configuration and send a session') do |testcase|
+  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=session")
 end
 
 Then("the request used payload v4 headers") do
