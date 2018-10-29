@@ -36,6 +36,12 @@ func (p *publisher) publish(sessions []*Session) error {
 		// log every minute
 		return nil
 	}
+	nrs, rs := p.config.NotifyReleaseStages, p.config.ReleaseStage
+	if rs != "" && (nrs != nil && !contains(nrs, rs)) {
+		// Always send sessions if the release stage is not set, but don't send any
+		// sessions when notify release stages don't match the current release stage
+		return nil
+	}
 	if len(sessions) == 0 {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish requested publication of 0")
 	}
@@ -66,4 +72,13 @@ func (p *publisher) publish(sessions []*Session) error {
 		return fmt.Errorf("bugsnag/session.publish expected 202 response status, got HTTP %s", res.Status)
 	}
 	return nil
+}
+
+func contains(coll []string, e string) bool {
+	for _, s := range coll {
+		if s == e {
+			return true
+		}
+	}
+	return false
 }
