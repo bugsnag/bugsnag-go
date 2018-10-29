@@ -1,6 +1,11 @@
 package app
 
 import (
+	"os"
+	"strconv"
+
+	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/revel"
 	"github.com/revel/revel"
 )
 
@@ -15,7 +20,8 @@ var (
 func init() {
 	// Filters is the default set of global filters.
 	revel.Filters = []revel.Filter{
-		revel.PanicFilter,             // Recover from panics and display an error page instead.
+		revel.PanicFilter, // Recover from panics and display an error page instead.
+		bugsnagrevel.Filter,
 		revel.RouterFilter,            // Use the routing table to select the right Action
 		revel.FilterConfiguringFilter, // A hook for adding or removing per-Action filters.
 		revel.ParamsFilter,            // Parse parameters into Controller.Params.
@@ -36,6 +42,26 @@ func init() {
 	// revel.OnAppStart(ExampleStartupScript)
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+
+	if os.Getenv("USE_CODE_CONFIG") == "" {
+		return
+	}
+	config := bugsnag.Configuration{
+		AppVersion:   os.Getenv("APP_VERSION"),
+		AppType:      os.Getenv("APP_TYPE"),
+		APIKey:       os.Getenv("API_KEY"),
+		Endpoint:     os.Getenv("ENDPOINT"),
+		Hostname:     os.Getenv("HOSTNAME"),
+		ReleaseStage: os.Getenv("RELEASE_STAGES"),
+	}
+	if stages := os.Getenv("NOTIFY_RELEASE_STAGES"); stages != "" {
+		config.NotifyReleaseStages = []string{stages}
+	}
+	if filters := os.Getenv("PARAMS_FILTERS"); filters != "" {
+		config.ParamsFilters = []string{filters}
+	}
+	config.Synchronous, _ = strconv.ParseBool(os.Getenv("SYNCHRONOUS"))
+	bugsnag.Configure(config)
 }
 
 // HeaderFilter adds common security headers
