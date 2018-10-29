@@ -184,7 +184,7 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 
 func (s sanitizer) shouldRedact(key string) bool {
 	for _, filter := range s.Filters {
-		if strings.Contains(strings.ToLower(filter), strings.ToLower(key)) {
+		if strings.Contains(strings.ToLower(key), strings.ToLower(filter)) {
 			return true
 		}
 	}
