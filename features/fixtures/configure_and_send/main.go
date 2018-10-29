@@ -16,6 +16,9 @@ func main() {
 	send := flag.String("send", "", "whether to send a session/error or both")
 	flag.Parse()
 
+	// Increase publish rate for testing
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 20
+
 	switch *testcase {
 	case "default":
 		caseDefault()
@@ -36,7 +39,8 @@ func main() {
 	if *send == "error" {
 		sendError()
 	} else if *send == "session" {
-		sendSession()
+		bugsnag.StartSession(context.Background())
+		time.Sleep(100 * time.Millisecond)
 	} else {
 		panic("No valid send case: " + *send)
 	}
@@ -55,11 +59,6 @@ func newDefaultConfig() bugsnag.Configuration {
 func sendError() {
 	notifier := bugsnag.New()
 	notifier.NotifySync(fmt.Errorf("oops"), true)
-}
-
-func sendSession() {
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 10
-	bugsnag.StartSession(context.Background())
 }
 
 func caseDefault() {
