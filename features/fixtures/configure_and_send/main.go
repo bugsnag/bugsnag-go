@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,8 +40,9 @@ func main() {
 		sentError = true
 	case "params filters":
 		caseParamsFilters()
-	case "project packages":
-		caseProjectPackages()
+	case "synchronous":
+		caseSynchronous()
+		sentError = true
 	default:
 		panic("No valid test case: " + *testcase)
 	}
@@ -150,11 +152,15 @@ func caseParamsFilters() {
 	bugsnag.Configure(config)
 }
 
-func caseProjectPackages() {
+func caseSynchronous() {
 	config := newDefaultConfig()
-	projectPackages := os.Getenv("PROJECT_PACKAGES")
-	if projectPackages != "" {
-		config.ProjectPackages = strings.Split(projectPackages, ",")
+	sync, err := strconv.ParseBool(os.Getenv("SYNCHRONOUS"))
+	if err != nil {
+		panic("Unknown synchronous flag: " + err.Error())
 	}
+	config.Synchronous = sync
 	bugsnag.Configure(config)
+
+	notifier := bugsnag.New()
+	notifier.Notify(fmt.Errorf("Generic error"))
 }
