@@ -24,8 +24,9 @@ test: alldeps
 	fi
 
 maze:
+	go get github.com/revel/revel
 	bundle install
-	bundle exec bugsnag-maze-runner
+	bundle exec bugsnag-maze-runner --verbose
 
 ci: alldeps test maze
 
