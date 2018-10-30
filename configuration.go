@@ -252,6 +252,9 @@ func (config *Configuration) notifyInReleaseStage() bool {
 	if config.NotifyReleaseStages == nil {
 		return true
 	}
+	if config.ReleaseStage == "" {
+		return true
+	}
 	for _, r := range config.NotifyReleaseStages {
 		if r == config.ReleaseStage {
 			return true

@@ -9,36 +9,41 @@ import (
 
 func TestNotifyReleaseStages(t *testing.T) {
 
-	var testCases = []struct {
-		stage      string
-		configured []string
-		notify     bool
-		msg        string
+	notify := " "
+
+	var tt = []struct {
+		releaseStage        string
+		notifyReleaseStages []string
+		expected            bool
 	}{
 		{
-			stage:  "production",
-			notify: true,
-			msg:    "Should notify in all release stages by default",
+			releaseStage: "production",
+			expected:     true,
 		},
 		{
-			stage:      "production",
-			configured: []string{"development", "production"},
-			notify:     true,
-			msg:        "Failed to notify in configured release stage",
+			releaseStage:        "production",
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            true,
 		},
 		{
-			stage:      "staging",
-			configured: []string{"development", "production"},
-			notify:     false,
-			msg:        "Failed to prevent notification in excluded release stage",
+			releaseStage:        "staging",
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            false,
+		},
+		{
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            true,
 		},
 	}
 
-	for _, testCase := range testCases {
-		Configure(Configuration{ReleaseStage: testCase.stage, NotifyReleaseStages: testCase.configured})
-
-		if Config.notifyInReleaseStage() != testCase.notify {
-			t.Error(testCase.msg)
+	for _, tc := range tt {
+		rs, nrs, exp := tc.releaseStage, tc.notifyReleaseStages, tc.expected
+		config := &Configuration{ReleaseStage: rs, NotifyReleaseStages: nrs}
+		if config.notifyInReleaseStage() != exp {
+			if !exp {
+				notify = " not "
+			}
+			t.Errorf("expected%sto notify when release stage is '%s' and notify release stages are '%+v'", notify, rs, nrs)
 		}
 	}
 }
