@@ -9,5 +9,10 @@ def replace_revel_conf(fixture:, property_name:, property_value:)
   old = property_name + '='
   new = old + property_value
   full_path = "features/fixtures/#{fixture}/conf/app.conf"
-  run_command("sed -i \"\" 's/\##{old}/#{new}/g' #{full_path}")
+  # 'sed' requires an extra flag for it to work properly on mac
+  if (/darwin/ =~ RUBY_PLATFORM).nil?
+    run_command("sed -i 's/\##{old}/#{new}/g' #{full_path}")
+  else
+    run_command("sed -i \"\" 's/\##{old}/#{new}/g' #{full_path}")
+  end
 end
