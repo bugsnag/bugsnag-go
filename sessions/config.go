@@ -85,6 +85,9 @@ func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfigurati
 	if config.Logger != nil {
 		c.Logger = config.Logger
 	}
+	if config.NotifyReleaseStages != nil {
+		c.NotifyReleaseStages = config.NotifyReleaseStages
+	}
 }
 
 func (c *SessionTrackingConfiguration) logf(fmt string, args ...interface{}) {
