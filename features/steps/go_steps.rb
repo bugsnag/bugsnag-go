@@ -1,18 +1,28 @@
-When('I configure the bugsnag endpoint') do
-  steps %Q{
-    When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
-  }
-end
-
-When('I configure the bugsnag sessions endpoint') do
+When('I configure the bugsnag endpoints') do
   steps %Q{
     When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
     When I set environment variable "SESSIONS_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
   }
 end
 
+When('I configure the bugsnag notify endpoint only') do
+  steps %Q{
+    When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+  }
+end
+
+When('I configure the bugsnag sessions endpoint only') do
+  steps %Q{
+    When I set environment variable "SESSIONS_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+  }
+end
+
 When('I configure with the {string} configuration and send an error') do |testcase|
   run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=error")
+end
+
+When('I configure with the {string} configuration and send an error with crash') do |testcase|
+  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=error",  must_pass: false)
 end
 
 When('I configure with the {string} configuration and send a session') do |testcase|

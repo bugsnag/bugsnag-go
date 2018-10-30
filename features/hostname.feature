@@ -2,7 +2,7 @@ Feature: Configuring hostname
 
 Scenario: An error report contains the configured hostname
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "HOSTNAME" to "server-1a"
   When I configure with the "hostname" configuration and send an error
   And I wait for 1 second
@@ -11,9 +11,9 @@ Scenario: An error report contains the configured hostname
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "device.hostname" equals "server-1a"
 
-Scenario: An session report contains the configured app type
+Scenario: An session report contains the configured hostname
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag sessions endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "HOSTNAME" to "server-1a"
   When I configure with the "hostname" configuration and send a session
   And I wait for 1 second

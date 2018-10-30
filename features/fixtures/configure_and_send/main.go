@@ -14,7 +14,7 @@ import (
 
 func main() {
 	testcase := flag.String("case", "", "test case to run")
-	send := flag.String("send", "", "whether to send a session/error or both")
+	send := flag.String("send", "", "whether to send a session or error")
 	flag.Parse()
 
 	// Increase publish rate for testing
@@ -43,6 +43,21 @@ func main() {
 	case "synchronous":
 		caseSynchronous()
 		sentError = true
+	case "user data":
+		caseUserData()
+		sentError = true
+	case "metadata":
+		caseMetaData()
+		sentError = true
+	case "auto notify":
+		caseAutoNotify()
+		sentError = true
+	case "recover":
+		caseRecover()
+		sentError = true
+	case "session":
+		caseSession()
+		sentError = true
 	default:
 		panic("No valid test case: " + *testcase)
 	}
@@ -53,6 +68,8 @@ func main() {
 		}
 	} else if *send == "session" {
 		bugsnag.StartSession(context.Background())
+
+		// Give some time for the session to be sent before exiting
 		time.Sleep(100 * time.Millisecond)
 	} else {
 		panic("No valid send case: " + *send)
@@ -163,4 +180,66 @@ func caseSynchronous() {
 
 	notifier := bugsnag.New()
 	notifier.Notify(fmt.Errorf("Generic error"))
+}
+
+func caseUserData() {
+	config := newDefaultConfig()
+	bugsnag.Configure(config)
+
+	notifier := bugsnag.New()
+	notifier.NotifySync(fmt.Errorf("oops"), true, bugsnag.User{
+		Id:    os.Getenv("USER_ID"),
+		Name:  os.Getenv("USER_NAME"),
+		Email: os.Getenv("USER_EMAIL"),
+	})
+}
+
+func caseMetaData() {
+	config := newDefaultConfig()
+	bugsnag.Configure(config)
+
+	notifier := bugsnag.New()
+
+	customerData := map[string]string{"Name": "Joe Bloggs", "Age": "21"}
+	notifier.NotifySync(fmt.Errorf("oops"), true, bugsnag.MetaData{
+		"Scheme": {
+			"Customer": customerData,
+			"Level":    "Blue",
+		},
+	})
+}
+
+func caseAutoNotify() {
+	config := newDefaultConfig()
+	bugsnag.Configure(config)
+
+	go func() {
+		defer bugsnag.AutoNotify()
+		panic("Go routine killed")
+	}()
+
+	time.Sleep(200 * time.Millisecond)
+}
+
+func caseRecover() {
+	config := newDefaultConfig()
+	bugsnag.Configure(config)
+
+	go func() {
+		defer bugsnag.Recover()
+		panic("Go routine killed")
+	}()
+
+	time.Sleep(200 * time.Millisecond)
+}
+
+func caseSession() {
+	config := newDefaultConfig()
+	bugsnag.Configure(config)
+
+	ctx := bugsnag.StartSession(context.Background())
+	notifier := bugsnag.New()
+	notifier.NotifySync(fmt.Errorf("oops"), true, ctx)
+
+	time.Sleep(200 * time.Millisecond)
 }

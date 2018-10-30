@@ -2,7 +2,7 @@ Feature: Configuring release stages and notify release stages
 
 Scenario: An error report is sent when release stage matches notify release stages
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   And I set environment variable "RELEASE_STAGE" to "stage2"
   When I configure with the "release stage" configuration and send an error
@@ -14,7 +14,7 @@ Scenario: An error report is sent when release stage matches notify release stag
 
 Scenario: An error report is sent when no notify release stages are specified
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "RELEASE_STAGE" to "stage2"
   When I configure with the "release stage" configuration and send an error
   And I wait for 1 second
@@ -25,7 +25,7 @@ Scenario: An error report is sent when no notify release stages are specified
   
 Scenario: An error report is sent regardless of notify release stages if release stage is not set
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   When I configure with the "release stage" configuration and send an error
   And I wait for 1 second
@@ -35,7 +35,7 @@ Scenario: An error report is sent regardless of notify release stages if release
 
 Scenario: An error report is not sent if the release stage doesn't match the notify release stages
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   And I set environment variable "RELEASE_STAGE" to "stage4"
   When I configure with the "release stage" configuration and send an error
@@ -46,7 +46,7 @@ Scenario: An error report is not sent if the release stage doesn't match the not
 
 Scenario: An session report is sent when release stage matches notify release stages
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag sessions endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   And I set environment variable "RELEASE_STAGE" to "stage2"
   When I configure with the "release stage" configuration and send a session
@@ -58,7 +58,7 @@ Scenario: An session report is sent when release stage matches notify release st
 
 Scenario: An session report is sent when no notify release stages are specified
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag sessions endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "RELEASE_STAGE" to "stage2"
   When I configure with the "release stage" configuration and send a session
   And I wait for 1 second
@@ -69,7 +69,7 @@ Scenario: An session report is sent when no notify release stages are specified
   
 Scenario: An session report is sent regardless of notify release stages if release stage is not set
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag sessions endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   When I configure with the "release stage" configuration and send a session
   And I wait for 1 second
@@ -79,7 +79,7 @@ Scenario: An session report is sent regardless of notify release stages if relea
 
 Scenario: An session report is not sent if the release stage doesn't match the notify release stages
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag sessions endpoint
+  And I configure the bugsnag endpoints
   And I set environment variable "NOTIFY_RELEASE_STAGES" to "stage1,stage2,stage3"
   And I set environment variable "RELEASE_STAGE" to "stage4"
   When I configure with the "release stage" configuration and send a session

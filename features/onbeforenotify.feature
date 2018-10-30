@@ -2,7 +2,7 @@ Feature: Configuring on before notify
 
 Scenario: Send three bugsnags and use on before notify to drop one and modify the message of another
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
+  And I configure the bugsnag endpoints
   When I configure with the "on before notify" configuration and send an error
   And I wait for 1 second
   Then I should receive 2 requests
