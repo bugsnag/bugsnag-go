@@ -1,4 +1,4 @@
-Feature: Configuring notify release stages
+Feature: Configuring release stages and notify release stages
 
 Scenario: An error report is sent when release stage matches notify release stages
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
