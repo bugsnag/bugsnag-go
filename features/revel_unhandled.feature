@@ -5,7 +5,7 @@ Scenario: An unhandled panic sends a report
     And I set the "revel-0.20.0" config variable "bugsnag.apikey" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
     And I configure the bugsnag endpoint in the config file for 'revel-0.20.0'
     When I run the script "features/fixtures/revel-0.20.0/run.sh"
-    And I wait for 2 seconds
+    And I wait for 4 seconds
     And I go to the route "/unhandled"
     And I wait for 1 seconds
     Then I should receive a request
@@ -15,7 +15,6 @@ Scenario: An unhandled panic sends a report
     And the event "app.type" equals "Revel"
     And the event "context" equals "App.Unhandled"
     And the event "request.httpMethod" equals "GET"
-    And the event "request.headers.X-Forwarded-For" equals "::1"
     And the event "request.url" equals "http://localhost:9020/unhandled"
     And the event "session.events.handled" equals 0
     And the event "session.events.unhandled" equals 1

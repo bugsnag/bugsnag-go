@@ -16,3 +16,10 @@ def replace_revel_conf(fixture:, property_name:, property_value:)
     run_command("sed -i \"\" 's/\##{old}/#{new}/g' #{full_path}")
   end
 end
+
+def go_version_is_unsupported
+  `go version`
+  a = /go1.7/ =~ `go version`
+  puts "go version matches /go1.7/: #{a}"
+  a
+end

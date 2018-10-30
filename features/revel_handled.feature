@@ -5,7 +5,7 @@ Scenario: A handled error contains request data when given context
     And I set the "revel-0.20.0" config variable "bugsnag.apikey" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
     And I configure the bugsnag endpoint in the config file for 'revel-0.20.0'
     When I run the script "features/fixtures/revel-0.20.0/run.sh"
-    And I wait for 2 seconds
+    And I wait for 4 seconds
     And I go to the route "/handled"
     And I wait for 1 seconds
     Then I should receive a request
@@ -15,7 +15,6 @@ Scenario: A handled error contains request data when given context
     And the event "app.type" equals "Revel"
     And the event "context" equals "/handled"
     And the event "request.httpMethod" equals "GET"
-    And the event "request.headers.X-Forwarded-For" equals "::1"
     And the event "request.url" equals "http://localhost:9020/handled"
     And the event "session.events.handled" equals 1
     And the event "session.events.unhandled" equals 0
