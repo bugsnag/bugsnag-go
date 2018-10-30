@@ -9,6 +9,6 @@ func PrefixedHeaders(apiKey, payloadVersion string) map[string]string {
 		"Content-Type":            "application/json",
 		"Bugsnag-Api-Key":         apiKey,
 		"Bugsnag-Payload-Version": payloadVersion,
-		"Bugsnag-Sent-At":         time.Now().Format(time.RFC3339),
+		"Bugsnag-Sent-At":         time.Now().UTC().Format(time.RFC3339),
 	}
 }

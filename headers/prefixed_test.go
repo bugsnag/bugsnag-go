@@ -1,6 +1,7 @@
 package headers
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -30,6 +31,9 @@ func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
 func TestTimeDependentBugsnagPrefixedHeaders(t *testing.T) {
 	headers := PrefixedHeaders(APIKey, testPayloadVersion)
 	sentAtString := headers["Bugsnag-Sent-At"]
+	if !strings.HasSuffix(sentAtString, "Z") {
+		t.Errorf("Error when setting Bugsnag-Sent-At header: %s, doesn't end with a Z", sentAtString)
+	}
 	sentAt, err := time.Parse(time.RFC3339, sentAtString)
 
 	if err != nil {

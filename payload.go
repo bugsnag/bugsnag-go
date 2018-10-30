@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/bugsnag/bugsnag-go/headers"
 )
@@ -109,7 +110,7 @@ func (p *payload) makeSession() *sessionJSON {
 	if session := sessionTracker.GetSession(p.Ctx); session != nil {
 		return &sessionJSON{
 			ID:        session.ID,
-			StartedAt: session.StartedAt,
+			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),
 			Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
 		}
 	}
