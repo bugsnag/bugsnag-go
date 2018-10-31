@@ -42,3 +42,23 @@ func (c App) Metadata() revel.Result {
 	})
 	return c.Render()
 }
+
+func (c App) OnBeforeNotify() revel.Result {
+	bugsnag.OnBeforeNotify(
+		func(event *bugsnag.Event, config *bugsnag.Configuration) error {
+			if event.Message == "Ignore this error" {
+				return fmt.Errorf("not sending errors to ignore")
+			}
+			// continue notifying as normal
+			if event.Message == "Change error message" {
+				event.Message = "Error message was changed"
+			}
+			return nil
+		})
+
+	notifier := bugsnag.New()
+	notifier.NotifySync(fmt.Errorf("Don't ignore this error"), true)
+	notifier.NotifySync(fmt.Errorf("Ignore this error"), true)
+	notifier.NotifySync(fmt.Errorf("Change error message"), true)
+	return c.Render()
+}
