@@ -32,3 +32,13 @@ func (c App) Configure() revel.Result {
 	bugsnag.Notify(fmt.Errorf("Oops"), c.Args["context"])
 	return c.Render()
 }
+
+func (c App) Metadata() revel.Result {
+	bugsnag.Notify(fmt.Errorf("Oops"), bugsnag.MetaData{
+		"Account": {
+			"Name":           "Company XYZ",
+			"Price(dollars)": "1 Million",
+		},
+	})
+	return c.Render()
+}

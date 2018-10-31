@@ -18,6 +18,7 @@ GET     /public/*filepath                       Static.Serve("public")
 GET /handled App.Handled
 GET /unhandled App.Unhandled
 GET /configure App.Configure
+GET /metadata App.Metadata
 
 # Catch all, this will route any request into the controller path
 #
