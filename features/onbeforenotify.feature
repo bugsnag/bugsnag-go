@@ -10,3 +10,14 @@ Scenario: Send three bugsnags and use on before notify to drop one and modify th
   And the "bugsnag-api-key" header equals "a35a2a72bd230ac0aa0f52715bbdc6aa" for request 1
   And the payload field "events.0.exceptions.0.message" equals "Don't ignore this error" for request 0
   And the payload field "events.0.exceptions.0.message" equals "Error message was changed" for request 1
+
+Scenario: Send three bugsnags and use on before notify to drop one and modify the message of another using net http
+  Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And I configure the bugsnag endpoints
+  When I run the http-net test server with the "on before notify" configuration
+  And I wait for 1 second
+  Then I should receive 3 requests
+  And the "bugsnag-api-key" header equals "a35a2a72bd230ac0aa0f52715bbdc6aa" for request 0 
+  And the "bugsnag-api-key" header equals "a35a2a72bd230ac0aa0f52715bbdc6aa" for request 1
+  And the payload field "events.0.exceptions.0.message" equals "Don't ignore this error" for request 0
+  And the payload field "events.0.exceptions.0.message" equals "Error message was changed" for request 1
