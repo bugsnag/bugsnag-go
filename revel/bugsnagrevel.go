@@ -100,7 +100,7 @@ func init() {
 			AppType:             c.StringDefault("bugsnag.apptype", defaultAppType()),
 			AppVersion:          c.StringDefault("bugsnag.appversion", config.AppVersion),
 			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", true),
-			Hostname:            c.StringDefault("bugsnag.device.hostname", config.Hostname),
+			Hostname:            c.StringDefault("bugsnag.hostname", config.Hostname),
 			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", config.NotifyReleaseStages),
 			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", defaultProjectPackages()),
 			SourceRoot:          c.StringDefault("bugsnag.sourceroot", config.SourceRoot),
