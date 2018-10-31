@@ -20,6 +20,7 @@ GET /unhandled App.Unhandled
 GET /configure App.Configure
 GET /metadata App.Metadata
 GET /onbeforenotify App.OnBeforeNotify
+GET /recover App.Recover
 
 # Catch all, this will route any request into the controller path
 #

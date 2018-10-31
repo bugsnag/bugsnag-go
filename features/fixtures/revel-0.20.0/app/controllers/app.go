@@ -62,3 +62,11 @@ func (c App) OnBeforeNotify() revel.Result {
 	notifier.NotifySync(fmt.Errorf("Change error message"), true)
 	return c.Render()
 }
+
+func (c App) Recover() revel.Result {
+	go func() {
+		defer bugsnag.Recover()
+		panic("Go routine killed")
+	}()
+	return c.Render()
+}
