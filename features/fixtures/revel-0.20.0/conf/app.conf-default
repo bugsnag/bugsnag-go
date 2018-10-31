@@ -122,8 +122,19 @@ module.static = github.com/revel/modules/static
 
 
 #bugsnag.apikey=
+#bugsnag.apptype=
+#bugsnag.appversion=
+#bugsnag.autocapturesessions=
+#bugsnag.endpoint=
 #bugsnag.endpoints.notify=
 #bugsnag.endpoints.sessions=
+#bugsnag.hostname=
+#bugsnag.notifyreleasestages=
+#bugsnag.paramsfilters=
+#bugsnag.projectpackages=
+#bugsnag.releasestage=
+#bugsnag.sourceroot=
+#bugsnag.synchronous=
 
 ################################################################################
 

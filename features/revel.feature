@@ -1,7 +1,6 @@
 Feature: Revel 0.20.0 integration
 
 Scenario: A handled error sends a report
-  skip_this_scenario if go_version_is_unsupported
   Given I work with a new 'revel-0.20.0' app
   And I set the "revel-0.20.0" config variable "bugsnag.apikey" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I configure the bugsnag endpoint in the config file for 'revel-0.20.0'
