@@ -29,6 +29,14 @@ When('I configure with the {string} configuration and send a session') do |testc
   run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=session")
 end
 
+When("I run the http-net test server with the {string} configuration") do |testcase|
+  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"")
+end
+
+When("I run the http-net test server with the {string} configuration and crashes") do |testcase|
+  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"",  must_pass: false)
+end
+
 Then("the request used payload v4 headers") do
   steps %Q{
     Then the "bugsnag-api-key" header is not null
