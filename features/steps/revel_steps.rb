@@ -17,6 +17,18 @@ When('I configure the bugsnag endpoint in the config file for {string}') do |fix
                      property_value: "http:\\/\\/localhost:#{MOCK_API_PORT}")
 end
 
+When('I configure the legacy bugsnag endpoint in the config file for {string}') do |fixture|
+  replace_revel_conf(fixture: fixture,
+                     property_name: 'bugsnag.endpoint',
+                     property_value: "http:\\/\\/localhost:#{MOCK_API_PORT}")
+end
+
+When('I configure the legacy bugsnag endpoint in as an environment variable') do
+  steps %(
+    Given I set environment variable "ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+  )
+end
+
 When('I go to the route {string}') do |route|
   steps %(
     When I open the URL "http://localhost:#{REVEL_PORT}#{route}"
