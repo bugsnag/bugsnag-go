@@ -18,8 +18,5 @@ def replace_revel_conf(fixture:, property_name:, property_value:)
 end
 
 def go_version_is_unsupported
-  `go version`
-  a = /go1.7/ =~ `go version`
-  puts "go version matches /go1.7/: #{a}"
-  a
+  /go1.7/ =~ `go version`
 end
