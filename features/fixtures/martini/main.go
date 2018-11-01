@@ -56,6 +56,7 @@ func main() {
 	m.Get("/metadata", metadata)
 	m.Get("/onbeforenotify", onbeforenotify)
 	m.Get("/recover", dontdie)
+	m.Get("/async", async)
 
 	m.RunOnAddr(":9030")
 }
@@ -84,6 +85,11 @@ func metadata() {
 func dontdie() {
 	defer bugsnag.Recover()
 	func(a interface{}) string { return a.(string) }(struct{}{})
+}
+
+func async() {
+	bugsnag.Notify(fmt.Errorf("If I show up it means I was sent synchronously"))
+	defer os.Exit(0)
 }
 
 func onbeforenotify() {
