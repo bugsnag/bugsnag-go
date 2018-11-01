@@ -1,4 +1,4 @@
 # Ignore maze runner generated files
 maze_output
 vendor
-*/martini
+features/fixtures/martini/martini
