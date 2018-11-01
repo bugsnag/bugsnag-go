@@ -57,6 +57,7 @@ func main() {
 	m.Get("/onbeforenotify", onbeforenotify)
 	m.Get("/recover", dontdie)
 	m.Get("/async", async)
+	m.Get("/user", user)
 
 	m.RunOnAddr(":9030")
 }
@@ -90,6 +91,14 @@ func dontdie() {
 func async() {
 	bugsnag.Notify(fmt.Errorf("If I show up it means I was sent synchronously"))
 	defer os.Exit(0)
+}
+
+func user() {
+	bugsnag.Notify(fmt.Errorf("oops"), bugsnag.User{
+		Id:    "test-user-id",
+		Name:  "test-user-name",
+		Email: "test-user-email",
+	})
 }
 
 func onbeforenotify() {
