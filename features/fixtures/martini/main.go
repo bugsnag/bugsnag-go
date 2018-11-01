@@ -55,6 +55,7 @@ func main() {
 	m.Get("/handled", performHandledError)
 	m.Get("/metadata", metadata)
 	m.Get("/onbeforenotify", onbeforenotify)
+	m.Get("/recover", dontdie)
 
 	m.RunOnAddr(":9030")
 }
@@ -78,6 +79,11 @@ func metadata() {
 			"Level":    "Blue",
 		},
 	})
+}
+
+func dontdie() {
+	defer bugsnag.Recover()
+	func(a interface{}) string { return a.(string) }(struct{}{})
 }
 
 func onbeforenotify() {
