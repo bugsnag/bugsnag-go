@@ -54,6 +54,7 @@ func main() {
 	m.Get("/unhandled", performUnhandledCrash)
 	m.Get("/handled", performHandledError)
 	m.Get("/metadata", metadata)
+	m.Get("/onbeforenotify", onbeforenotify)
 
 	m.RunOnAddr(":9030")
 }
@@ -71,10 +72,27 @@ func performHandledError(r *http.Request) {
 
 func metadata() {
 	customerData := map[string]string{"Name": "Joe Bloggs", "Age": "21"}
-	bugsnag.Notify(fmt.Errorf("oops"), true, bugsnag.MetaData{
+	bugsnag.Notify(fmt.Errorf("oops"), bugsnag.MetaData{
 		"Scheme": {
 			"Customer": customerData,
 			"Level":    "Blue",
 		},
 	})
+}
+
+func onbeforenotify() {
+	bugsnag.OnBeforeNotify(
+		func(event *bugsnag.Event, config *bugsnag.Configuration) error {
+			if event.Message == "Ignore this error" {
+				return fmt.Errorf("not sending errors to ignore")
+			}
+			// continue notifying as normal
+			if event.Message == "Change error message" {
+				event.Message = "Error message was changed"
+			}
+			return nil
+		})
+	bugsnag.Notify(fmt.Errorf("Ignore this error"))
+	bugsnag.Notify(fmt.Errorf("Don't ignore this error"))
+	bugsnag.Notify(fmt.Errorf("Change error message"))
 }
