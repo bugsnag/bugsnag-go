@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -52,6 +53,7 @@ func main() {
 
 	m.Get("/unhandled", performUnhandledCrash)
 	m.Get("/handled", performHandledError)
+	m.Get("/metadata", metadata)
 
 	m.RunOnAddr(":9030")
 }
@@ -65,4 +67,14 @@ func performHandledError(r *http.Request) {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
 		bugsnag.Notify(err, r.Context())
 	}
+}
+
+func metadata() {
+	customerData := map[string]string{"Name": "Joe Bloggs", "Age": "21"}
+	bugsnag.Notify(fmt.Errorf("oops"), true, bugsnag.MetaData{
+		"Scheme": {
+			"Customer": customerData,
+			"Level":    "Blue",
+		},
+	})
 }
