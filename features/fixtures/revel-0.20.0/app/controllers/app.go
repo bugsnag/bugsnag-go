@@ -74,6 +74,15 @@ func (c App) Recover() revel.Result {
 
 func (c App) Synchronous() revel.Result {
 	bugsnag.Notify(fmt.Errorf("Oops"), c.Args["context"])
-	os.Exit(0) // If asynchronously sending this will happen before the report is sent, and fail the test
+	os.Exit(0) // If asynchronously sending the app will die before the report is sent
+	return c.Render()
+}
+
+func (c App) User() revel.Result {
+	bugsnag.Notify(fmt.Errorf("oops"), true, bugsnag.User{
+		Id:    os.Getenv("USER_ID"),
+		Name:  os.Getenv("USER_NAME"),
+		Email: os.Getenv("USER_EMAIL"),
+	})
 	return c.Render()
 }
