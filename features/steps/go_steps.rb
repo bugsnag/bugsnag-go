@@ -29,13 +29,20 @@ When('I configure with the {string} configuration and send a session') do |testc
   run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=session")
 end
 
+When("I run the http-net test server with the {string} configuration") do |testcase|
+  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"")
+end
+
+When("I run the http-net test server with the {string} configuration and crashes") do |testcase|
+  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"",  must_pass: false)
+end
+
 Then('the request used payload v4 headers') do
   steps %(
     Then the "bugsnag-api-key" header is not null
     And the "bugsnag-payload-version" header equals "4"
+    And the "bugsnag-sent-at" header is a timestamp
   )
-  # TODO: format using zulu style RFC3339 by adding the following line above:
-  # And the "bugsnag-sent-at" header is a timestamp
 end
 
 Then('the request contained the api key {string}') do |api_key|

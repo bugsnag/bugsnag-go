@@ -58,6 +58,9 @@ func main() {
 	case "session":
 		caseSession()
 		sentError = true
+	case "session endpoint only":
+		caseSessionsEndpointOnly()
+		sentError = true
 	default:
 		panic("No valid test case: " + *testcase)
 	}
@@ -242,4 +245,23 @@ func caseSession() {
 	notifier.NotifySync(fmt.Errorf("oops"), true, ctx)
 
 	time.Sleep(200 * time.Millisecond)
+}
+
+func caseSessionsEndpointOnly() {
+	config := newDefaultConfig()
+
+	hasPaniced := false
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				hasPaniced = true
+			}
+		}()
+		bugsnag.Configure(config)
+	}()
+
+	// Ir we have not recovered from a panic, then panic to fail the test
+	if !hasPaniced {
+		panic("Should have paniced when configuring")
+	}
 }
