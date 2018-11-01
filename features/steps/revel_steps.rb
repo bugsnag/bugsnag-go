@@ -11,6 +11,15 @@ When('I work with a new {string} app') do |fixture|
   run_command("cp #{conf_path}-default #{conf_path}")
 end
 
+When('I configure the bugsnag sessions endpoint in the config file for {string}') do |fixture|
+  replace_revel_conf(fixture: fixture,
+                     property_name: 'bugsnag.endpoints.sessions',
+                     property_value: "http:\\/\\/localhost:#{MOCK_API_PORT}")
+  replace_revel_conf(fixture: fixture,
+                     property_name: 'bugsnag.endpoints.notify',
+                     property_value: 'http:\\/\\/localhost:80\\/somewhere-else')
+end
+
 When('I configure the bugsnag endpoint in the config file for {string}') do |fixture|
   replace_revel_conf(fixture: fixture,
                      property_name: 'bugsnag.endpoints.notify',

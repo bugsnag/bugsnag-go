@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"strconv"
+	"time"
 
 	bugsnag "github.com/bugsnag/bugsnag-go"
 	"github.com/bugsnag/bugsnag-go/revel"
@@ -42,6 +43,11 @@ func init() {
 	// revel.OnAppStart(ExampleStartupScript)
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+
+	if os.Getenv("DISABLE_REPORT_PAYLOADS") != "" {
+		// Increase publish rate for testing
+		bugsnag.DefaultSessionPublishInterval = time.Millisecond * 20
+	}
 
 	if os.Getenv("USE_CODE_CONFIG") == "" {
 		return
