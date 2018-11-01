@@ -52,7 +52,7 @@ func init() {
 		APIKey:       os.Getenv("API_KEY"),
 		Endpoint:     os.Getenv("ENDPOINT"),
 		Hostname:     os.Getenv("HOSTNAME"),
-		ReleaseStage: os.Getenv("RELEASE_STAGES"),
+		ReleaseStage: os.Getenv("RELEASE_STAGE"),
 	}
 	if stages := os.Getenv("NOTIFY_RELEASE_STAGES"); stages != "" {
 		config.NotifyReleaseStages = []string{stages}
