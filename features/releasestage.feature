@@ -147,4 +147,4 @@ Scenario: A Revel session report contains the configured app version
   And I go to the route "/configure"
   And I wait for 1 seconds
   Then I should receive a request
-  And the payload field "app.releasestage" equals "developmetnt"
+  And the payload field "app.releaseStage" equals "development"
