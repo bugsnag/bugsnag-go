@@ -1,19 +1,21 @@
+require 'net/http'
+
 When('I configure the bugsnag endpoints') do
   steps %Q{
-    When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
-    When I set environment variable "SESSIONS_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+    When I set environment variable "NOTIFY_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
+    When I set environment variable "SESSIONS_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
   }
 end
 
 When('I configure the bugsnag notify endpoint only') do
   steps %Q{
-    When I set environment variable "NOTIFY_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+    When I set environment variable "NOTIFY_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
   }
 end
 
 When('I configure the bugsnag sessions endpoint only') do
   steps %Q{
-    When I set environment variable "SESSIONS_ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+    When I set environment variable "SESSIONS_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
   }
 end
 

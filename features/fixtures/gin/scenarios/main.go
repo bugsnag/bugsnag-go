@@ -1,0 +1,50 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"time"
+
+	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/gin-gonic/gin"
+
+	"github.com/bugsnag/bugsnag-go/gin"
+)
+
+func main() {
+	testcase := flag.String("case", "", "test case to run")
+	flag.Parse()
+
+	// Increase publish rate for testing
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 20
+
+	switch *testcase {
+	case "default":
+		caseDefault()
+
+	default:
+		panic("No valid test case: " + *testcase)
+	}
+}
+
+func newDefaultConfig() bugsnag.Configuration {
+	return bugsnag.Configuration{
+		APIKey: os.Getenv("API_KEY"),
+		Endpoints: bugsnag.Endpoints{
+			Notify:   os.Getenv("NOTIFY_ENDPOINT"),
+			Sessions: os.Getenv("SESSIONS_ENDPOINT"),
+		},
+	}
+}
+
+func caseDefault() {
+	g := gin.Default()
+	g.Use(bugsnaggin.AutoNotify(newDefaultConfig()))
+
+	g.GET("/basic", func(c *gin.Context) {
+		bugsnag.Notify(fmt.Errorf("oops"))
+	})
+
+	g.Run(":4511")
+}
