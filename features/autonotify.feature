@@ -36,4 +36,4 @@ Scenario: Revel panics are captured automatically
   And the event "unhandled" is true
   And the exception "errorClass" equals "*runtime.TypeAssertionError"
   And the "file" of stack frame 8 equals "controllers/app.go"
-  And the "lineNumber" of stack frame 8 equals 25
+  And the "lineNumber" of stack frame 8 equals 26

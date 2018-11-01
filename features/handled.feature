@@ -37,4 +37,4 @@ Scenario: A handled error contains request data when given context
     And the event "severityReason.type" equals "handledError"
     And the exception "errorClass" equals "*errors.errorString"
     And the "file" of stack frame 0 equals "controllers/app.go"
-    And the "lineNumber" of stack frame 0 equals 19
+    And the "lineNumber" of stack frame 0 equals 20
