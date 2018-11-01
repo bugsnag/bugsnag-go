@@ -8,12 +8,6 @@ When('I go to the negroni route {string}') do |route|
   )
 end
 
-When('I set the legacy endpoint only') do
-  steps %(
-    When I set environment variable "ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
-  )
-end
-
 When('I am working with a new negroni app') do
   run_command('killall negroni || true')
 end

@@ -8,12 +8,6 @@ When('I go to the martini route {string}') do |route|
   )
 end
 
-When('I set the legacy endpoint only') do
-  steps %Q{
-    When I set environment variable "ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
-  }
-end
-
 When('I am working with a new martini app') do
   run_command('killall martini || true')
 end

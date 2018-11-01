@@ -52,3 +52,9 @@ Then("the request contained the api key {string}") do |api_key|
     And the payload field "apiKey" equals "#{api_key}"
   }
 end
+
+When('I set the legacy endpoint only') do
+  steps %(
+    When I set environment variable "ENDPOINT" to "http://localhost:#{MOCK_API_PORT}"
+  )
+end
