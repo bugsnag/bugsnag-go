@@ -1,6 +1,6 @@
 Feature: Configuring endpoint
 
-Scenario: An error report is sent when a martini request panics
+Scenario: An error report is sent when a martini is configured to use the legacy endpoint
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I set the legacy endpoint only
   And I am working with a new martini app
