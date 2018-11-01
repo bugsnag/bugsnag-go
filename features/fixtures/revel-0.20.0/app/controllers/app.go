@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/revel/revel"
@@ -68,5 +69,11 @@ func (c App) Recover() revel.Result {
 		defer bugsnag.Recover()
 		panic("Go routine killed")
 	}()
+	return c.Render()
+}
+
+func (c App) Synchronous() revel.Result {
+	bugsnag.Notify(fmt.Errorf("Oops"), c.Args["context"])
+	os.Exit(0) // If asynchronously sending this will happen before the report is sent, and fail the test
 	return c.Render()
 }
