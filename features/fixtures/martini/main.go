@@ -36,6 +36,10 @@ func main() {
 		config.NotifyReleaseStages = []string{stages}
 	}
 
+	if acs, _ := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS")); acs {
+		config.AutoCaptureSessions = acs
+	}
+
 	if filters := os.Getenv("PARAMS_FILTERS"); filters != "" {
 		config.ParamsFilters = []string{filters}
 	}
