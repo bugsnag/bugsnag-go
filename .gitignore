@@ -3,3 +3,4 @@ maze_output
 vendor
 features/fixtures/martini/martini
 features/fixtures/negroni/negroni
+features/fixtures/gin/gin

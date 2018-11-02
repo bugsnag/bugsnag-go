@@ -7,16 +7,11 @@ After do
 end
 
 def kill_apps
+  %w[gin martini revel negroni].each do |framework|
     begin
-      run_command('killall martini || true')
+      run_command("killall #{framework} || true")
     rescue SignalException
+      # This can be raised in cases where the app isn't running
     end
-    begin
-      run_command('killall negroni || true')
-    rescue SignalException
-    end
-    begin
-      run_command('killall revel || true')
-    rescue SignalException
-    end
+  end
 end
