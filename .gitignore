@@ -1,3 +1,4 @@
 # Ignore maze runner generated files
 maze_output
 vendor
+features/fixtures/revel/conf/app.conf

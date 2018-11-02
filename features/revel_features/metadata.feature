@@ -1,9 +1,9 @@
 Feature: Sending meta data
 
 Scenario: Revel integration can add metadata
-  And I work with a new 'revel' app
-  And I set the "revel" config variable "bugsnag.apikey" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint in the config file for 'revel'
+  And I work with a new revel app
+  And I set the revel config variable "bugsnag.apikey" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And I configure the bugsnag endpoint in the config file for revel
   When I run the script "features/fixtures/revel/run.sh"
   And I wait for 4 seconds
   And I go to the route "/metadata"
