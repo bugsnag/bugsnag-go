@@ -9,7 +9,10 @@ When('I go to the martini route {string}') do |route|
 end
 
 When('I am working with a new martini app') do
-  run_command('killall martini || true')
+  begin
+    run_command('killall martini || true')
+  rescue SignalException
+  end
 end
 
 When('I send a request to {string} on the martini app that might fail') do |path|

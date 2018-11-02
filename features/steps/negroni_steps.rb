@@ -1,4 +1,4 @@
-NEGRONI_PORT = 9030
+NEGRONI_PORT = 9040
 
 When('I go to the negroni route {string}') do |route|
   steps %(
@@ -9,7 +9,10 @@ When('I go to the negroni route {string}') do |route|
 end
 
 When('I am working with a new negroni app') do
-  run_command('killall negroni || true')
+  begin
+    run_command('killall negroni || true')
+  rescue SignalException
+  end
 end
 
 When('I send a request to {string} on the negroni app that might fail') do |path|
