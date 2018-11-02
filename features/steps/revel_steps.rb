@@ -7,7 +7,6 @@ end
 When('I work with a new {string} app') do |fixture|
   skip_this_scenario if go_version_is_unsupported
   conf_path = "features/fixtures/#{fixture}/conf/app.conf"
-  run_command('killall revel || true')
   run_command("cp #{conf_path}-default #{conf_path}")
 end
 
