@@ -2,7 +2,6 @@ Feature: Session data inside an error report using a session context
 
 Scenario: An error report contains a session count when part of a session for martini
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I am working with a new martini app
   And I configure the bugsnag notify endpoint only
   When I run the script "features/fixtures/martini/run.sh"
   And I go to the martini route "/handled"

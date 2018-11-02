@@ -2,7 +2,6 @@ Feature: Using recover
 
 Scenario: Recovering for negroni apps
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I am working with a new negroni app
   And I configure the bugsnag notify endpoint only
   When I run the script "features/fixtures/negroni/run.sh"
   And I go to the negroni route "/recover"

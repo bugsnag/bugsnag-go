@@ -2,7 +2,6 @@ Feature: Configuring app type
 
 Scenario: A negroni error report contains the configured app type
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I am working with a new negroni app
   And I configure the bugsnag notify endpoint only
   And I set environment variable "APP_TYPE" to "background-queue"
   When I run the script "features/fixtures/negroni/run.sh"

@@ -8,13 +8,6 @@ When('I go to the martini route {string}') do |route|
   )
 end
 
-When('I am working with a new martini app') do
-  begin
-    run_command('killall martini || true')
-  rescue SignalException
-  end
-end
-
 When('I send a request to {string} on the martini app that might fail') do |path|
   run_command(@script_env,
               "curl http://localhost:#{MARTINI_PORT}#{path}",

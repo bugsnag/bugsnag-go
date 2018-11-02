@@ -2,7 +2,6 @@ Feature: Configure auto capture sessions
 
 Scenario: Disabling auto capture sessions for negroni
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I am working with a new negroni app
   And I configure the bugsnag endpoints
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I run the script "features/fixtures/negroni/run.sh"

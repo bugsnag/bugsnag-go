@@ -8,13 +8,6 @@ When('I go to the negroni route {string}') do |route|
   )
 end
 
-When('I am working with a new negroni app') do
-  begin
-    run_command('killall negroni || true')
-  rescue SignalException
-  end
-end
-
 When('I send a request to {string} on the negroni app that might fail') do |path|
   run_command(@script_env,
               "curl http://localhost:#{NEGRONI_PORT}#{path}",
