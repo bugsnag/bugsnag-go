@@ -7,9 +7,6 @@ before_install:
 - gem install bundler
 - bundle --version
 
-script:
-  - bundle install
-
 env:
   - GO_VERSION=1.11
   - GO_VERSION=1.10
@@ -28,6 +25,8 @@ jobs:
       sevices:
       - docker
       rmv: 2.4.1
-      script: bundle exec bugsnag-maze-runner -c features/gintest.feature
+      script:
+        - bundle install 
+        - bundle exec bugsnag-maze-runner -c features/gintest.feature
 
 
