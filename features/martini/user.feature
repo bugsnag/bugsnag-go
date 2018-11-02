@@ -1,6 +1,6 @@
 Feature: Sending user data
 
-:Scenario => An error report contains custom user data for martini
+Scenario: An error report contains custom user data for martini
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I configure the bugsnag notify endpoint only
   When I run the script "features/fixtures/martini/run.sh"
