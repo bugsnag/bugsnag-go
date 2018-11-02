@@ -1,11 +1,12 @@
 GIT
   remote: https://github.com/bugsnag/maze-runner
-  revision: 24f53756011b1247a166b70fe65ddf1c40b4fc89
+  revision: 0cd14ddb7c4a0cb294f583f84671f7f01a17f1cc
   specs:
     bugsnag-maze-runner (1.0.0)
       cucumber (~> 3.1.0)
       cucumber-expressions (= 5.0.15)
       minitest (~> 5.0)
+      os (~> 1.0.0)
       rack (~> 2.0.0)
       rake (~> 12.3.0)
       test-unit (~> 3.2.0)
@@ -48,7 +49,6 @@ PLATFORMS
 
 DEPENDENCIES
   bugsnag-maze-runner!
-  os (~> 1.0)
 
 BUNDLED WITH
    1.17.1

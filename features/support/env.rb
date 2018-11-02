@@ -1,10 +1,16 @@
-require 'os'
-# Any 'run once' setup should go here as this file is evaluated
-# when the environment loads.
-# Any helper functions added here will be available in step
-# definitions
+require 'fileutils'
 
-require_relative '../lib/install_dependencies.rb'
+testBuildFolder = 'features/fixtures/testbuild'
+
+Dir.mkdir testBuildFolder
+
+# Copy the existing air
+`find . -name '*.go' \
+        -not -path "./examples/*" \
+        -not -path "./testutil/*" \
+        -not -path "./features/*" \
+        -not -name '*_test.go' | cpio -pdm #{testBuildFolder}`
+
 
 # Scenario hooks
 Before do
@@ -17,14 +23,5 @@ end
 
 at_exit do
 # Runs when the test run is completed
-end
-
-def current_ip
-  if OS.mac?
-    'host.docker.internal'
-  else
-    ip_addr = `ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\\.){3}[0-9]*' | grep -v '127.0.0.1'`
-    ip_list = /((?:[0-9]*\.){3}[0-9]*)/.match(ip_addr)
-    ip_list.captures.first
-  end
+  FileUtils.rm_rf(testBuildFolder)
 end

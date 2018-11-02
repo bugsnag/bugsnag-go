@@ -32,8 +32,8 @@ func newDefaultConfig() bugsnag.Configuration {
 	return bugsnag.Configuration{
 		APIKey: os.Getenv("API_KEY"),
 		Endpoints: bugsnag.Endpoints{
-			Notify:   os.Getenv("NOTIFY_ENDPOINT"),
-			Sessions: os.Getenv("SESSIONS_ENDPOINT"),
+			Notify:   os.Getenv("BUGSNAG_ENDPOINT"),
+			Sessions: os.Getenv("BUGSNAG_ENDPOINT"),
 		},
 	}
 }

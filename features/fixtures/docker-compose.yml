@@ -2,15 +2,16 @@ version: '3.4'
 services:
   gin-default:
     build:
-      context: gin
+      context: .
+      dockerfile: gin/Dockerfile
       args:
        - GO_VERSION
        - GIN_VERSION
     ports:
       - "4511:4511"
     environment:
+      - CASE
       - API_KEY
-      - NOTIFY_ENDPOINT
-      - SESSIONS_ENDPOINT
+      - BUGSNAG_ENDPOINT
     restart: "no"
     command: go run main.go -case=default
