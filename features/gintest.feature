@@ -8,7 +8,8 @@ Scenario Outline: An error report was sent from the gin framework
   Given I set environment variable "GO_VERSION" to "<go version>"
   And I set environment variable "GIN_VERSION" to "<gin version>"
   And I start the service "gin-default"
-  And I wait for 3 seconds
+  And I wait for the app to open port "4511"
+  And I wait for 1 seconds
   Then I open the URL "http://localhost:4511/basic"
   And I wait for 1 seconds
   Then I should receive 2 requests

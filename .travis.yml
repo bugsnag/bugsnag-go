@@ -1,13 +1,27 @@
 sudo: false
-language: go
+language: ruby
 
-go:
-  - "1.7"
-  - "1.8"
-  - "1.9"
-  - "1.10"
-  - "1.11"
-  - master
+before_install:
+- gem update --system
+- gem --version
+- gem install bundler
+- bundle --version
 
 script:
-  - make ci
+  - bundle install
+  - bundle exec bugsnag-maze-runner
+
+jobs:
+  include:
+    - stage: test
+      addons:
+        apt:
+          packages:
+          - docker-ce
+      sudo: required
+      sevices:
+      - docker
+      rmv: 2.4.1
+      script: bundle exec bugsnag-maze-runner -c features/gintest.feature
+
+

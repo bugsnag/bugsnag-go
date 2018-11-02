@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -44,6 +45,9 @@ func caseDefault() {
 
 	g.GET("/basic", func(c *gin.Context) {
 		bugsnag.Notify(fmt.Errorf("oops"))
+	})
+	g.GET("/", func(c *gin.Context) {
+		log.Println("ping")
 	})
 
 	g.Run(":4511")
