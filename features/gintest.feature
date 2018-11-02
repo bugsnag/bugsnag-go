@@ -5,8 +5,7 @@ Background:
   And I configure the bugsnag endpoint
 
 Scenario Outline: An error report was sent from the gin framework
-  Given I set environment variable "GO_VERSION" to "<go version>"
-  And I set environment variable "GIN_VERSION" to "<gin version>"
+  Given I set environment variable "GIN_VERSION" to "<gin version>"
   And I start the service "gin-default"
   And I wait for the app to open port "4511"
   And I wait for 1 seconds
@@ -17,14 +16,7 @@ Scenario Outline: An error report was sent from the gin framework
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
   Examples:
-  | go version     | gin version |
-  | 1.11           | v1.3.0      |
-  | 1.10           | v1.3.0      |
-  | 1.9            | v1.3.0      |
-  | 1.8            | v1.3.0      |
-  | 1.7            | v1.3.0      |
-  | 1.11           | v1.2        |
-  | 1.10           | v1.2        |
-  | 1.9            | v1.2        |
-  | 1.8            | v1.2        |
-  | 1.7            | v1.2        |
+  | gin version |
+  | v1.3.0      |
+  | v1.2.0      |
+
