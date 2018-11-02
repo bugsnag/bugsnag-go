@@ -1,0 +1,1 @@
+Feature: Configuring synchronous flag
