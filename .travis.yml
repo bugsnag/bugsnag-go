@@ -1,4 +1,4 @@
-sudo: false
+sudo: required
 language: ruby
 
 before_install:
@@ -18,17 +18,16 @@ env:
   - GO_VERSION=1.8
   - GO_VERSION=1.7
 
-jobs:
-  include:
-  - stage: test
-    addons:
-      apt:
-        packages:
-        - docker-ce
-    sudo: required
-    sevices:
-    - docker
-    rmv: 2.4.1
-    script: bundle exec bugsnag-maze-runner -c features/gintest.feature
+sevices:
+  - docker
+
+stages:
+  - gin
+
+addons:
+  apt:
+    packages:
+    - docker-ce
+    
 
 
