@@ -1,6 +1,48 @@
 version: '3.4'
 services:
-  gin-default:
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+       - GO_VERSION
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+
+  nethttp:
+    build:
+      context: .
+      dockerfile: net_http/Dockerfile
+      args:
+       - GO_VERSION
+    ports:
+      - "4512:4512"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+    command: go run main.go
+
+  gin:
     build:
       context: .
       dockerfile: gin/Dockerfile
@@ -10,8 +52,16 @@ services:
     ports:
       - "4511:4511"
     environment:
-      - CASE
       - API_KEY
       - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
     restart: "no"
-    command: go run main.go -case=default
+    command: go run main.go

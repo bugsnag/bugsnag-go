@@ -1,44 +1,56 @@
 require 'net/http'
 
-When('I configure the bugsnag endpoints') do
-  steps %Q{
-    When I set environment variable "NOTIFY_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
-    When I set environment variable "SESSIONS_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
-  }
-end
-
-When('I configure the bugsnag notify endpoint only') do
-  steps %Q{
-    When I set environment variable "NOTIFY_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
-  }
-end
-
-When('I configure the bugsnag sessions endpoint only') do
-  steps %Q{
-    When I set environment variable "SESSIONS_ENDPOINT" to "http://#{current_ip}:#{MOCK_API_PORT}"
-  }
-end
-
-When('I configure with the {string} configuration and send an error') do |testcase|
-  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=error")
-end
-
-When('I configure with the {string} configuration and send an error with crash') do |testcase|
-  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=error",  must_pass: false)
-end
-
-When('I configure with the {string} configuration and send a session') do |testcase|
-  run_command(@script_env, "cd features/fixtures/configure_and_send; go run main.go -case=\"#{testcase}\" -send=session")
-end
-
-When("I run the http-net test server with the {string} configuration") do |testcase|
-  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"")
-end
-
-When("I run the http-net test server with the {string} configuration and crashes") do |testcase|
-  run_command(@script_env, "cd features/fixtures/http_net; go run main.go -case=\"#{testcase}\"",  must_pass: false)
-end
-
 When(/^I wait for the app to open port "(.*)"$/) do |port|
   wait_for_port(port)
 end
+
+Then(/^the session contained the api key "(.*)"$/) do |api_key|
+  step "the \"bugsnag-api-key\" header equals \"#{api_key}\""
+end
+
+Then(/^the session in request (\d+) contained the api key "(.*)"$/) do |request_index, api_key|
+  step "the \"bugsnag-api-key\" header equals \"#{api_key}\" for request #{request_index}"
+end
+
+Then(/^the request (\d+) contained the api key "(.*)"$/) do |request_index, api_key|
+  steps %Q{
+    Then the "bugsnag-api-key" header equals "#{api_key}" for request #{request_index}
+    And the payload field "apiKey" equals "#{api_key}" for request #{request_index}
+  }
+end
+
+Then(/^the events unhandled sessions count equals (\d+) for request (\d+)$/) do |count, request_index|
+  step "the payload field \"events.0.session.events.unhandled\" equals #{count} for request #{request_index}"
+end
+
+Then(/^the events handled sessions count equals (\d+) for request (\d+)$/) do |count, request_index|
+  step "the payload field \"events.0.session.events.handled\" equals #{count} for request #{request_index}"
+end
+
+Then(/^the number of sessions started equals (\d+) in request (\d+)$/) do |count, request_index|
+  step "the payload field \"sessionCounts.0.sessionsStarted\" equals #{count} for request #{request_index}"
+end
+
+Then(/^I wait to receive (\d+) requests?$/) do |request_count|
+  max_attempts = 50
+  attempts = 0
+  received = false
+  until (attempts >= max_attempts) || received
+    attempts += 1
+    received = (stored_requests.size == request_count)
+    sleep 0.2
+  end
+  raise "Requests not received in 10s (received #{stored_requests.size})" unless received
+  # Wait an extra second to ensure there are no further requests
+  sleep 1
+  assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
+end
+
+When("I run the go service {string} with the test case {string}") do |service, testcase|
+  run_service_with_command(service, "go run main.go -test=\"#{testcase}\"")
+end
+
+When(/^I curl the URL "([^"]+)"$/) do |url|
+  `curl -v #{url}`
+end
+

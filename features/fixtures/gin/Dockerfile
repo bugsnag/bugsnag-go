@@ -1,7 +1,5 @@
 ARG GO_VERSION
-FROM golang:$GO_VERSION as notifier_builder
-
-WORKDIR /app
+FROM golang:${GO_VERSION:-1.11} as notifier_builder
 
 ENV GOPATH /app
 
@@ -14,8 +12,11 @@ FROM notifier_builder
 
 # Switch to correct verison of gin
 ARG GIN_VERSION
-RUN (cd /app/src/github.com/gin-gonic/gin && git checkout $GIN_VERSION && go install)
+RUN (cd /app/src/github.com/gin-gonic/gin && git checkout $GIN_VERSION)
+RUN go get -v -d ./...
+RUN (cd /app/src/github.com/gin-gonic/gin && go install)
+
 
 # Copy test scenarios
-COPY ./gin/scenarios /app/src/test
+COPY ./gin /app/src/test
 WORKDIR /app/src/test

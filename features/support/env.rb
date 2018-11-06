@@ -4,6 +4,7 @@ require 'timeout'
 
 testBuildFolder = 'features/fixtures/testbuild'
 
+FileUtils.rm_rf(testBuildFolder)
 Dir.mkdir testBuildFolder
 
 # Copy the existing air
@@ -12,7 +13,6 @@ Dir.mkdir testBuildFolder
         -not -path "./testutil/*" \
         -not -path "./features/*" \
         -not -name '*_test.go' | cpio -pdm #{testBuildFolder}`
-
 
 # Scenario hooks
 Before do
@@ -24,8 +24,7 @@ After do
 end
 
 at_exit do
-# Runs when the test run is completed
-  FileUtils.rm_rf(testBuildFolder)
+
 end
 
 def port_open?(ip, port, seconds=1)
