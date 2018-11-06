@@ -16,5 +16,5 @@ Scenario: An session report contains the configured app type when running a go a
   When I run the go service "app" with the test case "session"
   Then I wait to receive a request
   And the request is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And the session "app.type" equals "background-queue"
+  And the payload field "app.type" equals "background-queue"
 
