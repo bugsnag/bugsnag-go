@@ -4,6 +4,7 @@ Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I configure the bugsnag endpoint
   And I have built the service "nethttp"
+  And I stop the service "nethttp"
   And I set environment variable "SERVER_PORT" to "4512"
 
 Scenario: A session is not sent if auto capture sessions is off
