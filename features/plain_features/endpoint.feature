@@ -8,14 +8,12 @@ Background:
 Scenario: An error report is sent successfully using the legacy endpoint
   When I run the go service "app" with the test case "endpoint legacy"
   Then I wait to receive a request
-  And the request is valid for the error reporting API
-  And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
 Scenario: An error report is sent successfully using the notify endpoint only
   When I run the go service "app" with the test case "endpoint notify"
   Then I wait to receive a request
-  And the request is valid for the error reporting API
-  And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
 Scenario: Configuring Bugsnag will panic if the sessions endpoint is configured without the notify endpoint
   When I run the go service "app" with the test case "endpoint session" 
