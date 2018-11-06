@@ -7,8 +7,7 @@ Background:
 
 Scenario: An error report is sent when an unhandled crash occurs
   When I run the go service "app" with the test case "unhandled"
-  And I wait for 1 second
-  Then I should receive 1 request
+  Then I wait to receive a request
   And the request is valid for the error reporting API
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "errorClass" equals "panic"
@@ -16,8 +15,7 @@ Scenario: An error report is sent when an unhandled crash occurs
 
 Scenario: An error report is sent when a go routine crashes which is protected by auto notify
   When I run the go service "app" with the test case "autonotify"
-  And I wait for 1 second
-  Then I should receive 2 requests
+  Then I wait to receive 2 requests
   And the request 0 is valid for the error reporting API
   And the request 0 contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the request 1 is valid for the error reporting API

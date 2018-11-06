@@ -8,16 +8,14 @@ Background:
 
 Scenario: An error report contains the configured app type when running a go app
   When I run the go service "app" with the test case "handled"
-  And I wait for 1 second
-  Then I should receive a request
+  Then I wait to receive a request
   And the request is valid for the error reporting API
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "app.version" equals "3.1.2"
 
 Scenario: An session report contains the configured app type when running a go app
   When I run the go service "app" with the test case "session"
-  And I wait for 1 second
-  Then I should receive a request
+  Then I wait to receive a request
   And the request is valid for the session tracking API
   And the session contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the payload field "app.version" equals "3.1.2"

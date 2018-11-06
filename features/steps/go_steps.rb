@@ -31,6 +31,10 @@ Then(/^the number of sessions started equals (\d+) in request (\d+)$/) do |count
   step "the payload field \"sessionCounts.0.sessionsStarted\" equals #{count} for request #{request_index}"
 end
 
+Then(/^I wait to receive a request$/) do
+  step "I wait to receive 1 request"
+end
+
 Then(/^I wait to receive (\d+) requests?$/) do |request_count|
   max_attempts = 50
   attempts = 0

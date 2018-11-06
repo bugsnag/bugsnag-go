@@ -7,8 +7,7 @@ Background:
 
 Scenario: An error report is sent when a go routine crashes but recovers
   When I run the go service "app" with the test case "recover"
-  And I wait for 1 second
-  Then I should receive a request
+  Then I wait to receive a request
   And the request is valid for the error reporting API
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "errorClass" equals "*errors.errorString"

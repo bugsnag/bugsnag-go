@@ -8,14 +8,13 @@ Background:
 Scenario: An error report is sent asynchrously but exits immediately so is not sent
   Given I set environment variable "SYNCHRONOUS" to "false"
   When I run the go service "app" with the test case "send and exit"
-  And I wait for 1 second
+  And I wait for 3 second
   Then I should receive no requests
 
 Scenario: An error report is report synchronously so it will send before exiting
   Given I set environment variable "SYNCHRONOUS" to "true"
   When I run the go service "app" with the test case "send and exit"
-  And I wait for 1 second
-  Then I should receive a request
+  Then I wait to receive a request
   And the request is valid for the error reporting API
   And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
