@@ -16,8 +16,7 @@ Scenario: An error report contains custom user data
   And I wait for 2 seconds
   And I open the URL "http://localhost:4512/user"
   Then I wait to receive 2 requests
-  And the request is valid for the error reporting API
-  And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "user.id" equals "test-user-id"
   And the event "user.name" equals "test-user-name"
   And the event "user.email" equals "test-user-email"

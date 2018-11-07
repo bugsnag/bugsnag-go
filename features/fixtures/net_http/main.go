@@ -97,9 +97,6 @@ func autonotify(w http.ResponseWriter, r *http.Request) {
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(r.Context())
-
-	// Give enough time for the panic to happen
-	time.Sleep(500 * time.Millisecond)
 }
 
 func onBeforeNotify(w http.ResponseWriter, r *http.Request) {

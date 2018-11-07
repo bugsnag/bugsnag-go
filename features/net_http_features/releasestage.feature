@@ -14,12 +14,10 @@ Scenario: An error report and session is sent with configured release stage
   And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   Then I wait to receive 2 requests
-  And the request 0 is valid for the error reporting API
-  And the request 0 contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request 0 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "app.releaseStage" equals "my-stage" for request 0
 
-  And the request 1 is valid for the session tracking API
-  And the session in request 1 contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request 1 is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the payload field "app.releaseStage" equals "my-stage" for request 1
 
   And the events handled sessions count equals 1 for request 0

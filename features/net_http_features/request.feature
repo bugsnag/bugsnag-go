@@ -13,8 +13,7 @@ Scenario: An error report will automatically contain request information
   And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   Then I wait to receive 2 requests
-  And the request is valid for the error reporting API
-  And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "request.clientIp" is not null
   And the event "request.headers.User-Agent" equals "Ruby"
   And the event "request.httpMethod" equals "GET"

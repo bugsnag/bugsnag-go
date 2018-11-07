@@ -12,22 +12,18 @@ Scenario: A error report contains the configured app type when using a net http 
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I start the service "nethttp"
   And I wait for the app to open port "4512"
-  And I wait for 1 seconds
+  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
-  And I wait for 1 seconds
-  Then I should receive a request
-  And the request is valid for the error reporting API
-  And the request contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  Then I wait to receive a request
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "app.version" equals "3.1.2"
 
 Scenario: A session report contains the configured app type when using a net http app
   When I start the service "nethttp"
   And I wait for the app to open port "4512"
-  And I wait for 1 seconds
+  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/session"
-  And I wait for 1 seconds
-  Then I should receive a request
-  And the request is valid for the session tracking API
-  And the session contained the api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  Then I wait to receive a request
+  And the request is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the payload field "app.version" equals "3.1.2"
 
