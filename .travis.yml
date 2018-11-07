@@ -69,3 +69,15 @@ jobs:
     - script: bundle exec bugsnag-maze-runner -c features/martini_features
       env: GO_VERSION=1.7
 
+    - stage: negroni tests
+      script: bundle exec bugsnag-maze-runner -c features/negroni_features
+      env: GO_VERSION=1.11
+    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
+      env: GO_VERSION=1.10
+    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
+      env: GO_VERSION=1.9
+    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
+      env: GO_VERSION=1.8
+    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
+      env: GO_VERSION=1.7
+
