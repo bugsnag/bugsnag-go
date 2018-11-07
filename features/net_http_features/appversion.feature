@@ -1,4 +1,4 @@
-Feature: Configuring app type
+Feature: Configuring app version
 
 Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
