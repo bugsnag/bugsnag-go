@@ -22,11 +22,19 @@ jobs:
   include:
     - stage: plain go app tests
       script: bundle exec bugsnag-maze-runner -c features/plain_features
-    - env: GO_VERSION=1.11
+      env: GO_VERSION=1.11
     - env: GO_VERSION=1.10
     - env: GO_VERSION=1.9
     - env: GO_VERSION=1.8
     - env: GO_VERSION=1.7
+    - stage: net/http tests
+      script: bundle exec bugsnag-maze-runner -c features/net_http_features
+      env: GO_VERSION=1.11
+    - env: GO_VERSION=1.10
+    - env: GO_VERSION=1.9
+    - env: GO_VERSION=1.8
+    - env: GO_VERSION=1.7
+
   
     
 
