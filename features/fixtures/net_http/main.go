@@ -71,7 +71,7 @@ func configureBasicBugsnag() {
 	bugsnag.Configure(config)
 
 	// Increase publish rate for testing
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 100
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
 }
 
 func handledError(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +81,6 @@ func handledError(w http.ResponseWriter, r *http.Request) {
 }
 
 func unhandledCrash(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(500)
 	// Invalid type assertion, will panic
 	func(a interface{}) string {
 		return a.(string)
