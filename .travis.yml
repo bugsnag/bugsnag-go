@@ -7,6 +7,9 @@ before_install:
 - gem install bundler
 - bundle --version
 
+install:
+- bundle install
+
 sevices:
   - docker
 
@@ -18,26 +21,12 @@ addons:
 jobs:
   include:
     - stage: plain go app tests
-      script: bundle install && bundle exec bugsnag-maze-runner -c features/plain_features
-      env:
-        matrix:
-          - GO_VERSION=1.11
-          - GO_VERSION=1.10
-          - GO_VERSION=1.9
-          - GO_VERSION=1.8
-          - GO_VERSION=1.7
-    - stage: net/http tests
-      script: bundle install && bundle exec bugsnag-maze-runner -c features/net_http_features
-      env:
-        matrix:
-          - GO_VERSION=1.11
-          - GO_VERSION=1.10
-          - GO_VERSION=1.9
-          - GO_VERSION=1.8
-          - GO_VERSION=1.7
+      script: bundle exec bugsnag-maze-runner -c features/plain_features
+    - env: GO_VERSION=1.11
+    - env: GO_VERSION=1.10
+    - env: GO_VERSION=1.9
+    - env: GO_VERSION=1.8
+    - env: GO_VERSION=1.7
+  
     
-stages:
-  - plain go app tests
-  - net/http tests
-
 
