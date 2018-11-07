@@ -32,9 +32,8 @@ jobs:
     - script: bundle exec bugsnag-maze-runner -c features/plain_features
       env: GO_VERSION=1.7
 
+
     - stage: net/http tests
-      script: bundle exec bugsnag-maze-runner -c features/net_http_features
-      env: GO_VERSION=1.11
       script: bundle exec bugsnag-maze-runner -c features/net_http_features
       env: GO_VERSION=1.11
     - script: bundle exec bugsnag-maze-runner -c features/net_http_features
@@ -46,6 +45,15 @@ jobs:
     - script: bundle exec bugsnag-maze-runner -c features/net_http_features
       env: GO_VERSION=1.7
 
-  
-    
+    - stage: gin tests
+      script: bundle exec bugsnag-maze-runner -c features/gin_features
+      env: GO_VERSION=1.11
+    - script: bundle exec bugsnag-maze-runner -c features/gin_features
+      env: GO_VERSION=1.10
+    - script: bundle exec bugsnag-maze-runner -c features/gin_features
+      env: GO_VERSION=1.9
+    - script: bundle exec bugsnag-maze-runner -c features/gin_features
+      env: GO_VERSION=1.8
+    - script: bundle exec bugsnag-maze-runner -c features/gin_features
+      env: GO_VERSION=1.7
 

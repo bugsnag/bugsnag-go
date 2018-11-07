@@ -12,6 +12,8 @@ FROM notifier_builder
 
 # Switch to correct verison of gin
 ARG GIN_VERSION
+RUN test -n "$GIN_VERSION"
+
 RUN (cd /app/src/github.com/gin-gonic/gin && git checkout $GIN_VERSION)
 RUN go get -v -d ./...
 RUN (cd /app/src/github.com/gin-gonic/gin && go install)
