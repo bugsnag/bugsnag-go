@@ -112,3 +112,29 @@ services:
       - SERVER_PORT
     restart: "no"
     command: go run main.go
+
+  revel:
+    build:
+      context: .
+      dockerfile: revel/Dockerfile
+      args:
+       - GO_VERSION
+       - REVEL_VERSION
+       - REVEL_CMD_VERSION
+    ports:
+      - "4515:4515"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+      - USE_CODE_CONFIG
+    restart: "no"
+    command: ./test/run.sh

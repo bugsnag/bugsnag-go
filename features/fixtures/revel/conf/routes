@@ -15,6 +15,14 @@ GET     /favicon.ico                            404
 # Map static resources from the /app/public folder to the /public path
 GET     /public/*filepath                       Static.Serve("public")
 
+GET /handled App.Handled
+GET /unhandled App.Unhandled
+GET /session App.Session
+GET /autonotify App.AutoNotify
+GET /onbeforenotify App.OnBeforeNotify
+GET /recover App.Recover
+GET /user App.User
+
 # Catch all, this will route any request into the controller path
 #
 #                    **** WARNING ****

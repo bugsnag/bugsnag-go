@@ -19,8 +19,8 @@ Scenario Outline: An error report and session is sent when request crashes but i
 
   And the request 1 is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
-  And the events handled sessions count equals 1 for request 0
-  And the number of sessions started equals 1 in request 1
+  And the event handled sessions count equals 1 for request 0
+  And the number of sessions started equals 1 for request 1
 
   Examples:
   | negroni version |

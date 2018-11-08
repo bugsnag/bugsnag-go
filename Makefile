@@ -32,5 +32,13 @@ ci: alldeps test maze
 bench:
 	go test --bench=.*
 
+testplain:
+	bundle exec bugsnag-maze-runner -c features/plain_features
 
-.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps
+testnethttp:
+  bundle exec bugsnag-maze-runner -c features/net_http_features
+
+testgin:
+	bundle exec bugsnag-maze-runner -c features/gin_features
+
+.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testplain testnethttp testgin

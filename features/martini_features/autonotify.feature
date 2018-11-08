@@ -33,5 +33,5 @@ Scenario: An error report is sent when a go routine crashes which is protected b
   # And the event "unhandled" is true for request 2
   # And the exception "errorClass" equals "panic" for request 2
   # And the exception "message" equals "Go routine killed with auto notify [recovered]" for request 2
-  And the events unhandled sessions count equals 1 for request 0
-  And the number of sessions started equals 1 in request 1
+  And the event unhandled sessions count equals 1 for request 0
+  And the number of sessions started equals 1 for request 1

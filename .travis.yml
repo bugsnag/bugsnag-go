@@ -21,63 +21,61 @@ addons:
 jobs:
   include:
     - stage: plain go app tests
-      script: bundle exec bugsnag-maze-runner -c features/plain_features
+      script: make testplain
       env: GO_VERSION=1.11
-    - script: bundle exec bugsnag-maze-runner -c features/plain_features
+    - if: branch = master
+      script: make testplain
       env: GO_VERSION=1.10
-    - script: bundle exec bugsnag-maze-runner -c features/plain_features
+    - if: branch = master
+      script: make testplain
       env: GO_VERSION=1.9
-    - script: bundle exec bugsnag-maze-runner -c features/plain_features
+    - if: branch = master
+      script: make testplain
       env: GO_VERSION=1.8
-    - script: bundle exec bugsnag-maze-runner -c features/plain_features
+    - if: branch = master
+      script: make testplain
       env: GO_VERSION=1.7
 
 
     - stage: net/http tests
-      script: bundle exec bugsnag-maze-runner -c features/net_http_features
+      script: make testnethttp
       env: GO_VERSION=1.11
-    - script: bundle exec bugsnag-maze-runner -c features/net_http_features
+    - if: branch = master
+      script: make testnethttp
       env: GO_VERSION=1.10
-    - script: bundle exec bugsnag-maze-runner -c features/net_http_features
+    - if: branch = master
+      script: make testnethttp
       env: GO_VERSION=1.9
-    - script: bundle exec bugsnag-maze-runner -c features/net_http_features
+    - if: branch = master
+      script: make testnethttp
       env: GO_VERSION=1.8
-    - script: bundle exec bugsnag-maze-runner -c features/net_http_features
+    - if: branch = master
+      script: make testnethttp
       env: GO_VERSION=1.7
 
-    - stage: gin tests
-      script: bundle exec bugsnag-maze-runner -c features/gin_features
-      env: GO_VERSION=1.11
-    - script: bundle exec bugsnag-maze-runner -c features/gin_features
-      env: GO_VERSION=1.10
-    - script: bundle exec bugsnag-maze-runner -c features/gin_features
-      env: GO_VERSION=1.9
-    - script: bundle exec bugsnag-maze-runner -c features/gin_features
-      env: GO_VERSION=1.8
-    - script: bundle exec bugsnag-maze-runner -c features/gin_features
-      env: GO_VERSION=1.7
-
-    - stage: martini tests
-      script: bundle exec bugsnag-maze-runner -c features/martini_features
-      env: GO_VERSION=1.11
-    - script: bundle exec bugsnag-maze-runner -c features/martini_features
-      env: GO_VERSION=1.10
-    - script: bundle exec bugsnag-maze-runner -c features/martini_features
-      env: GO_VERSION=1.9
-    - script: bundle exec bugsnag-maze-runner -c features/martini_features
-      env: GO_VERSION=1.8
-    - script: bundle exec bugsnag-maze-runner -c features/martini_features
-      env: GO_VERSION=1.7
-
-    - stage: negroni tests
-      script: bundle exec bugsnag-maze-runner -c features/negroni_features
-      env: GO_VERSION=1.11
-    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
-      env: GO_VERSION=1.10
-    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
-      env: GO_VERSION=1.9
-    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
-      env: GO_VERSION=1.8
-    - script: bundle exec bugsnag-maze-runner -c features/negroni_features
-      env: GO_VERSION=1.7
-
+      
+    - stage: gin tests (v1.3.0)
+      script: make testgin
+      env: 
+        - GO_VERSION=1.11
+        - GIN_VERISON=v1.3.0
+    - if: branch = master
+      script: make testgin
+      env: 
+        - GO_VERSION=1.10
+        - GIN_VERISON=v1.3.0
+    - if: branch = master
+      script: make testgin
+      env: 
+        - GO_VERSION=1.9
+        - GIN_VERISON=v1.3.0
+    - if: branch = master
+      script: make testgin
+      env: 
+        - GO_VERSION=1.8
+        - GIN_VERISON=v1.3.0
+    - if: branch = master
+      script: make testgin
+      env: 
+        - GO_VERSION=1.17
+        - GIN_VERISON=v1.3.0

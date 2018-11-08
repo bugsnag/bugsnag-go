@@ -1,5 +1,9 @@
 ARG GO_VERSION
-FROM golang:${GO_VERSION:-1.11}
+FROM golang:${GO_VERSION}-alpine as notifier_builder
+
+RUN apk update && \
+    apk upgrade && \
+    apk add git
 
 ENV GOPATH /app
 

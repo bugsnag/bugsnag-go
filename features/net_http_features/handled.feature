@@ -18,6 +18,5 @@ Scenario: A handled error sends a report
   And the event "severityReason.type" equals "handledError" for request 0
   And the exception "errorClass" equals "*os.PathError" for request 0
   And the "file" of stack frame 0 equals "main.go" for request 0
-  And the events handled sessions count equals 1 for request 0
-  And the number of sessions started equals 1 in request 1
-  
+  And the event handled sessions count equals 1 for request 0
+  And the number of sessions started equals 1 for request 1

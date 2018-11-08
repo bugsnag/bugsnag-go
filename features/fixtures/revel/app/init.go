@@ -1,6 +1,14 @@
 package app
 
 import (
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/revel"
 	"github.com/revel/revel"
 )
 
@@ -15,7 +23,8 @@ var (
 func init() {
 	// Filters is the default set of global filters.
 	revel.Filters = []revel.Filter{
-		revel.PanicFilter,             // Recover from panics and display an error page instead.
+		revel.PanicFilter, // Recover from panics and display an error page instead.
+		bugsnagrevel.Filter,
 		revel.RouterFilter,            // Use the routing table to select the right Action
 		revel.FilterConfiguringFilter, // A hook for adding or removing per-Action filters.
 		revel.ParamsFilter,            // Parse parameters into Controller.Params.
@@ -36,6 +45,43 @@ func init() {
 	// revel.OnAppStart(ExampleStartupScript)
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
+
+	if os.Getenv("USE_CODE_CONFIG") == "" {
+		return
+	}
+
+	log.Println("CONFIGURING")
+	config := bugsnag.Configuration{
+		APIKey: os.Getenv("API_KEY"),
+		Endpoints: bugsnag.Endpoints{
+			Notify:   os.Getenv("BUGSNAG_ENDPOINT"),
+			Sessions: os.Getenv("BUGSNAG_ENDPOINT"),
+		},
+		AppVersion: os.Getenv("APP_VERSION"),
+		AppType:    os.Getenv("APP_TYPE"),
+		Hostname:   os.Getenv("HOSTNAME"),
+	}
+
+	if notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES"); notifyReleaseStages != "" {
+		config.NotifyReleaseStages = strings.Split(notifyReleaseStages, ",")
+	}
+
+	if releaseStage := os.Getenv("RELEASE_STAGE"); releaseStage != "" {
+		config.ReleaseStage = releaseStage
+	}
+
+	if filters := os.Getenv("PARAMS_FILTERS"); filters != "" {
+		config.ParamsFilters = []string{filters}
+	}
+
+	acs, err := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS"))
+	if err == nil {
+		log.Println("SETTING AUTO CAPTURE " + strconv.FormatBool(acs))
+		config.AutoCaptureSessions = acs
+	}
+	bugsnag.Configure(config)
 }
 
 // HeaderFilter adds common security headers
