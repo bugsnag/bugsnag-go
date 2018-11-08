@@ -47,7 +47,7 @@ func main() {
 	bugsnag.Configure(config)
 
 	// Increase publish rate for testing
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 100
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
 
 	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify())
