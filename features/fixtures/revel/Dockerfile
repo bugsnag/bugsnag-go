@@ -14,7 +14,7 @@ RUN go get -v -d ./...
 
 FROM notifier_builder
 
-# Switch to correct verison of revel
+# Switch to correct version of revel
 ARG REVEL_VERSION
 RUN test -n "$REVEL_VERSION"
 

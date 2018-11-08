@@ -14,7 +14,7 @@ RUN go get -v -d ./...
 
 FROM notifier_builder
 
-# Switch to correct verison of negroni
+# Switch to correct version of negroni
 ARG NEGRONI_VERSION
 RUN test -n "$NEGRONI_VERSION"
 

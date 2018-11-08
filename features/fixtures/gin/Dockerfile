@@ -14,7 +14,7 @@ RUN go get -v -d ./...
 
 FROM notifier_builder
 
-# Switch to correct verison of gin
+# Switch to correct version of gin
 ARG GIN_VERSION
 RUN test -n "$GIN_VERSION"
 
