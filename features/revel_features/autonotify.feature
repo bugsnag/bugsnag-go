@@ -6,10 +6,8 @@ Background:
   And I set environment variable "SERVER_PORT" to "4515"
   And I set environment variable "USE_CODE_CONFIG" to "true"
   
-Scenario Outline: An error report is sent when an unhandled crash occurs
-  Given I set environment variable "REVEL_VERSION" to "<revel version>"
-  And I set environment variable "REVEL_CMD_VERSION" to "<revel cmd>"
-  And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+Scenario: An error report is sent when an unhandled crash occurs
+  Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I start the service "revel"
   And I wait for the app to open port "4515"
   And I wait for 4 seconds
@@ -20,16 +18,7 @@ Scenario Outline: An error report is sent when an unhandled crash occurs
   And the exception "errorClass" equals "*runtime.TypeAssertionError"
   And the exception "message" matches "interface conversion: interface ({} )?is struct {}, not string"
 
-  Examples:
-  | revel version | revel cmd |
-  | v0.21.0       | v0.21.1   |
-  | v0.20.0       | v0.20.2   |
-  | v0.19.1       | v0.19.0   |
-  | v0.18.0       | v0.18.0   |
-
-Scenario Outline: An error report is sent when a go routine crashes which is protected by auto notify
-  Given I set environment variable "REVEL_VERSION" to "<revel version>"
-  And I set environment variable "REVEL_CMD_VERSION" to "<revel cmd>"
+Scenario: An error report is sent when a go routine crashes which is protected by auto notify
   When I start the service "revel"
   And I wait for the app to open port "4515"
   And I wait for 4 seconds
@@ -47,10 +36,3 @@ Scenario Outline: An error report is sent when a go routine crashes which is pro
   # And the exception "message" equals "Go routine killed with auto notify [recovered]" for request 2
   And the event unhandled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-
-  Examples:
-  | revel version | revel cmd |
-  | v0.21.0       | v0.21.1   |
-  | v0.20.0       | v0.20.2   |
-  | v0.19.1       | v0.19.0   |
-  | v0.18.0       | v0.18.0   |

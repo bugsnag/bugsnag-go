@@ -5,8 +5,7 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4514"
 
-Scenario Outline: A handled error sends a report
-  Given I set environment variable "NEGRONI_VERSION" to "<negroni version>"
+Scenario: A handled error sends a report
   When I start the service "negroni"
   And I wait for the app to open port "4514"
   And I wait for 2 seconds
@@ -21,9 +20,3 @@ Scenario Outline: A handled error sends a report
   And the "file" of stack frame 0 equals "main.go" for request 0
   And the event handled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-
-  Examples:
-  | negroni version |
-  | v1.0.0          |
-  | v0.3.0          |
-  | v0.2.0          |

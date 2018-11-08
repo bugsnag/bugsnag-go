@@ -6,7 +6,6 @@ Background:
   And I set environment variable "SERVER_PORT" to "4514"
 
 Scenario Outline: An error report and session is sent when request crashes but is recovered
-  Given I set environment variable "NEGRONI_VERSION" to "<negroni version>"
   When I start the service "negroni"
   And I wait for the app to open port "4514"
   And I wait for 2 seconds
@@ -21,10 +20,4 @@ Scenario Outline: An error report and session is sent when request crashes but i
 
   And the event handled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-
-  Examples:
-  | negroni version |
-  | v1.0.0          |
-  | v0.3.0          |
-  | v0.2.0          |
 

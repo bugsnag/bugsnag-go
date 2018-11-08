@@ -5,9 +5,8 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4511"
 
-Scenario Outline: An error report and session is sent with configured release stage
-  Given I set environment variable "GIN_VERSION" to "<gin version>"
-  And I set environment variable "RELEASE_STAGE" to "my-stage"
+Scenario: An error report and session is sent with configured release stage
+  Given I set environment variable "RELEASE_STAGE" to "my-stage"
   When I start the service "gin"
   And I wait for the app to open port "4511"
   And I wait for 2 seconds
@@ -21,10 +20,3 @@ Scenario Outline: An error report and session is sent with configured release st
 
   And the event handled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-
-  Examples:
-  | gin version |
-  | v1.3.0      |
-  | v1.2        |
-  | v1.1        |
-  | v1.0        |

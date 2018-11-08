@@ -36,9 +36,18 @@ testplain:
 	bundle exec bugsnag-maze-runner -c features/plain_features
 
 testnethttp:
-  bundle exec bugsnag-maze-runner -c features/net_http_features
+	bundle exec bugsnag-maze-runner -c features/net_http_features
 
 testgin:
 	bundle exec bugsnag-maze-runner -c features/gin_features
 
-.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testplain testnethttp testgin
+testmartini:
+	bundle exec bugsnag-maze-runner -c features/martini_features
+
+testnegroni:
+	bundle exec bugsnag-maze-runner -c features/negroni_features
+
+testrevel:
+	bundle exec bugsnag-maze-runner -c features/revel_features
+
+.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testplain testnethttp testgin testmartini testrevel

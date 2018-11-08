@@ -6,9 +6,7 @@ Background:
   And I set environment variable "SERVER_PORT" to "4515"
   And I set environment variable "USE_CODE_CONFIG" to "true"
 
-Scenario Outline: An error report will automatically contain request information
-  Given I set environment variable "REVEL_VERSION" to "<revel version>"
-  And I set environment variable "REVEL_CMD_VERSION" to "<revel cmd>"
+Scenario: An error report will automatically contain request information
   When I start the service "revel"
   And I wait for the app to open port "4515"
   And I wait for 4 seconds
@@ -20,10 +18,3 @@ Scenario Outline: An error report will automatically contain request information
   And the event "request.httpMethod" equals "GET"
   And the event "request.url" ends with "/handled"
   And the event "request.url" starts with "http://"
-    
-  Examples:
-  | revel version | revel cmd |
-  | v0.21.0       | v0.21.1   |
-  | v0.20.0       | v0.20.2   |
-  | v0.19.1       | v0.19.0   |
-  | v0.18.0       | v0.18.0   |

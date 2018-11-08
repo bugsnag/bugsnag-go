@@ -6,9 +6,7 @@ Background:
   And I set environment variable "SERVER_PORT" to "4515"
   And I set environment variable "USE_CODE_CONFIG" to "true"
 
-Scenario Outline: A handled error sends a report
-  Given I set environment variable "REVEL_VERSION" to "<revel version>"
-  And I set environment variable "REVEL_CMD_VERSION" to "<revel cmd>"
+Scenario: A handled error sends a report
   When I start the service "revel"
   And I wait for the app to open port "4515"
   And I wait for 4 seconds
@@ -23,10 +21,3 @@ Scenario Outline: A handled error sends a report
   And the "file" of stack frame 0 equals "controllers/app.go" for request 0
   And the event handled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-
-  Examples:
-  | revel version | revel cmd |
-  | v0.21.0       | v0.21.1   |
-  | v0.20.0       | v0.20.2   |
-  | v0.19.1       | v0.19.0   |
-  | v0.18.0       | v0.18.0   |

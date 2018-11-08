@@ -6,8 +6,7 @@ Background:
   And I set environment variable "SERVER_PORT" to "4511"
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
 
-Scenario Outline: Send three bugsnags and use on before notify to drop one and modify the message of another
-  Given I set environment variable "GIN_VERSION" to "<gin version>"
+Scenario: Send three bugsnags and use on before notify to drop one and modify the message of another
   When I start the service "gin"
   And I wait for the app to open port "4511"
   And I wait for 2 seconds
@@ -19,11 +18,4 @@ Scenario Outline: Send three bugsnags and use on before notify to drop one and m
   
   And the request 1 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "message" equals "Error message was changed" for request 1
-
-  Examples:
-  | gin version |
-  | v1.3.0      |
-  | v1.2        |
-  | v1.1        |
-  | v1.0        |
   

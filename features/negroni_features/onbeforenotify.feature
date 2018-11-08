@@ -6,8 +6,7 @@ Background:
   And I set environment variable "SERVER_PORT" to "4514"
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
 
-Scenario Outline: Send three bugsnags and use on before notify to drop one and modify the message of another
-  Given I set environment variable "NEGRONI_VERSION" to "<negroni version>"
+Scenario: Send three bugsnags and use on before notify to drop one and modify the message of another
   When I start the service "negroni"
   And I wait for the app to open port "4514"
   And I wait for 2 seconds
@@ -19,10 +18,3 @@ Scenario Outline: Send three bugsnags and use on before notify to drop one and m
   
   And the request 1 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "message" equals "Error message was changed" for request 1
-
-  Examples:
-  | negroni version |
-  | v1.0.0          |
-  | v0.3.0          |
-  | v0.2.0          |
-  

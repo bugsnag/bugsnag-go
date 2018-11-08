@@ -5,8 +5,7 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4514"
 
-Scenario Outline: An error report will automatically contain request information
-  Given I set environment variable "NEGRONI_VERSION" to "<negroni version>"
+Scenario: An error report will automatically contain request information
   When I start the service "negroni"
   And I wait for the app to open port "4514"
   And I wait for 2 seconds
@@ -18,9 +17,3 @@ Scenario Outline: An error report will automatically contain request information
   And the event "request.httpMethod" equals "GET"
   And the event "request.url" ends with "/handled"
   And the event "request.url" starts with "http://"
-    
-  Examples:
-  | negroni version |
-  | v1.0.0          |
-  | v0.3.0          |
-  | v0.2.0          |
