@@ -27,27 +27,32 @@ maze:
 	bundle install
 	bundle exec bugsnag-maze-runner
 
-ci: alldeps test maze
+ci: alldeps test
 
 bench:
 	go test --bench=.*
 
-testplain:
+testsetup:
+	gem update --system
+	gem install bundler
+	bundle install
+
+testplain: testsetup
 	bundle exec bugsnag-maze-runner -c features/plain_features
 
-testnethttp:
+testnethttp: testsetup
 	bundle exec bugsnag-maze-runner -c features/net_http_features
 
-testgin:
+testgin: testsetup
 	bundle exec bugsnag-maze-runner -c features/gin_features
 
-testmartini:
+testmartini: testsetup
 	bundle exec bugsnag-maze-runner -c features/martini_features
 
-testnegroni:
+testnegroni: testsetup
 	bundle exec bugsnag-maze-runner -c features/negroni_features
 
-testrevel:
+testrevel: testsetup
 	bundle exec bugsnag-maze-runner -c features/revel_features
 
-.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testplain testnethttp testgin testmartini testrevel
+.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testsetup testplain testnethttp testgin testmartini testrevel

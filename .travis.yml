@@ -1,14 +1,5 @@
 sudo: required
-language: ruby
-
-before_install:
-- gem update --system
-- gem --version
-- gem install bundler
-- bundle --version
-
-install:
-- bundle install
+language: go
 
 sevices:
   - docker
@@ -20,6 +11,18 @@ addons:
 
 jobs:
   include:
+    - stage: gotest
+      script: make ci
+      go: 1.7
+    - script: make ci
+      go: 1.8
+    - script: make ci
+      go: 1.9
+    - script: make ci
+      go: 1.10
+    - script: make ci
+      go: 1.11
+
     - stage: plain go app tests
       script: make testplain
       env: GO_VERSION=1.11

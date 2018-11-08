@@ -66,7 +66,6 @@ func (c App) OnBeforeNotify() revel.Result {
 func (c App) Recover() revel.Result {
 	defer bugsnag.Recover(c.Args["context"])
 	panic("Request killed but recovered")
-	return c.Render()
 }
 
 func (c App) User() revel.Result {
