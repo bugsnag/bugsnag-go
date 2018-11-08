@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.4.0 (2018-11-19)
+
+This release is a big non-breaking revamp of the notifier. Most importantly, this release introduces session tracking to Go applications.
+
+As of this release we require that you use Go 1.7 or higher.
+
+### Features
+
+* Session tracking to be able to show a stability score in the dashboard. Automatic recording of sessions for net/http, gin, revel, negroni and martini. Automatic capturing of sessions can be disabled using the `AutoCaptureSessions` configuration parameter.
+* Automatic recording of HTTP request information such as HTTP method, headers, URL and query parameters.
+
+### Enhancements
+
+* Migrate report payload version from 3 to 4.
+* Improve test coverage and introduce maze runner tests. Simplify integration tests for Negroni, Gin and Martini.
+* Deprecate the use of the old `Endpoint` configuration parameter, and allow users of on-premise to configure both the notify endpoint and the sessions endpoint.
+* `bugsnag.Notify()` now accepts a `context.Context` object, generally from `*http.Request`'s `r.Context()`, which Bugsnag can extract session and request information from.
+* Improve and augment examples (`bugsnag_example_test.go`) for documentation.
+* Improve example applications (`examples/` directory) to get up and running faster.
+* Clarify and improve GoDocs.
+* Improved serialization performance and safety of the report payload.
+* Filter HTTP headers based on the `FiltersParams`.
+* Revel enhancements:
+    * Ensure all non-code configuration options are configurable from config file.
+    * Stop using deprecated logger.
+    * Attempt to configure a what we can from the revel configuration options.
+* Make NotifyReleaseStages work consistently with other notifiers, both for sessions and for reports.
+* Also filter out 'authorization' and 'cookie' by default, to match other notifiers.
+
+### Bug fixes
+
+* Address compile errors test failures that failed the build.
+* Don't crash when calling `bugsnag.Notify(nil)`
+* Other minor bug fixes that came to light after improving test coverage.
+
 ## 1.3.2 (2018-10-05)
 
 ### Bug fixes
