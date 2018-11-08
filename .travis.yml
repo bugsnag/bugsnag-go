@@ -13,15 +13,17 @@ jobs:
   include:
     - stage: gotest
       script: make ci
-      go: 1.7
+      go: "1.7"
     - script: make ci
-      go: 1.8
+      go: "1.8"
     - script: make ci
-      go: 1.9
+      go: "1.9"
     - script: make ci
-      go: 1.10
+      go: "1.10"
     - script: make ci
-      go: 1.11
+      go: "1.11"
+    - script: make ci
+      go: "master"
 
     - stage: plain go app tests
       script: make testplain
