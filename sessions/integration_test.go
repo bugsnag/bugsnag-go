@@ -91,6 +91,8 @@ func TestStartSession(t *testing.T) {
 	}))
 	defer ts.Close()
 
+	time.Sleep(testPublishInterval * 2) //Allow server to start
+
 	// Minimal config. API is mandatory, URLs point to the test server
 	bugsnag.Configure(bugsnag.Configuration{
 		APIKey: testAPIKey,
@@ -103,12 +105,12 @@ func TestStartSession(t *testing.T) {
 		bugsnag.StartSession(context.Background())
 	}
 
-	time.Sleep(testPublishInterval * 2)
+	time.Sleep(testPublishInterval * 2) //Allow all messages to be processed
 
 	mutex.Lock()
 	defer mutex.Unlock()
 	if got, exp := sessionsStarted, sessionsCount; got != exp {
-		t.Errorf("Expected %d sessions started, but was %d", got, exp)
+		t.Errorf("Expected %d sessions started, but was %d", exp, got)
 	}
 }
 
