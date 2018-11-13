@@ -90,16 +90,6 @@ func init() {
 		c := revel.Config
 		config := bugsnag.Config
 
-		// Default to AutoCaptureSessions to true if not set, but false it was tried to be set and failed
-		acs := true
-		if config.AutoCaptureSessions != nil {
-			var ok bool
-			acs, ok = config.AutoCaptureSessions.(bool)
-			if !ok {
-				acs = false
-			}
-		}
-
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:   c.StringDefault("bugsnag.apikey", ""),
 			Endpoint: c.StringDefault("bugsnag.endpoint", ""),
@@ -110,7 +100,7 @@ func init() {
 			ReleaseStage:        c.StringDefault("bugsnag.releasestage", defaultReleaseStage()),
 			AppType:             c.StringDefault("bugsnag.apptype", defaultAppType()),
 			AppVersion:          c.StringDefault("bugsnag.appversion", config.AppVersion),
-			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", acs),
+			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", config.IsAutoCaptureSessions()),
 			Hostname:            c.StringDefault("bugsnag.hostname", config.Hostname),
 			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", config.NotifyReleaseStages),
 			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", defaultProjectPackages()),
