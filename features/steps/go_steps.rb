@@ -32,3 +32,7 @@ end
 Then(/^the number of sessions started equals (\d+) for request (\d+)$/) do |count, request_index|
   step "the payload field \"sessionCounts.0.sessionsStarted\" equals #{count} for request #{request_index}"
 end
+
+When("I run the go service {string} with the test case {string}") do  |service, testcase|
+  run_service_with_command(service, "go run main.go -test=\"#{testcase}\"")
+end

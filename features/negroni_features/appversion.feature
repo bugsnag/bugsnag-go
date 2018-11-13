@@ -6,7 +6,7 @@ Background:
   And I set environment variable "APP_VERSION" to "3.1.2"
   And I set environment variable "SERVER_PORT" to "4514"
 
-Scenario: A error report contains the configured app type when using
+Scenario: A error report contains the configured app type
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I start the service "negroni"
   And I wait for the app to open port "4514"
