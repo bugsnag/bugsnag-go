@@ -4,7 +4,6 @@ package bugsnag
 
 import (
 	"github.com/bitly/go-simplejson"
-	"github.com/kardianos/osext"
 	"os"
 	"os/exec"
 	"testing"
@@ -61,7 +60,7 @@ func TestPanicHandlerUnhandledPanic(t *testing.T) {
 }
 
 func startPanickingProcess(t *testing.T, variant string) {
-	exePath, err := osext.Executable()
+	exePath, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
