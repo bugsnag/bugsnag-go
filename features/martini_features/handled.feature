@@ -1,4 +1,4 @@
-Feature: Plain handled errors
+Feature: Handled errors
 
 Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
@@ -20,4 +20,3 @@ Scenario: A handled error sends a report
   And the "file" of stack frame 0 equals "main.go" for request 0
   And the event handled sessions count equals 1 for request 0
   And the number of sessions started equals 1 for request 1
-  

@@ -2,6 +2,7 @@ Feature: Configuring using the config file
 
 Background:
   Given I configure the bugsnag endpoint
+  And I set environment variable "USE_PROPERTIES_FILE_CONFIG" to "true"
 
 Scenario: A error report contains the variables set in the config file
   When I start the service "revel"

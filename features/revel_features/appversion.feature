@@ -5,9 +5,8 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "APP_VERSION" to "3.1.2"
   And I set environment variable "SERVER_PORT" to "4515"
-  And I set environment variable "USE_CODE_CONFIG" to "true"
 
-Scenario: A error report contains the configured app type when using a gin
+Scenario: A error report contains the configured app type
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I start the service "revel"
   And I wait for the app to open port "4515"
@@ -17,7 +16,7 @@ Scenario: A error report contains the configured app type when using a gin
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "app.version" equals "3.1.2"
 
-Scenario: A session report contains the configured app type when using gin
+Scenario: A session report contains the configured app type
   When I start the service "revel"
   And I wait for the app to open port "4515"
   And I wait for 4 seconds

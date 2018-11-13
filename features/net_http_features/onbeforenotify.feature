@@ -12,9 +12,7 @@ Scenario: Send three bugsnags and use on before notify to drop one and modify th
   And I wait for 2 seconds
   And I open the URL "http://localhost:4512/onbeforenotify"
   Then I wait to receive 2 requests
-  
   And the request 0 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "message" equals "Don't ignore this error" for request 0
-  
   And the request 1 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the exception "message" equals "Error message was changed" for request 1

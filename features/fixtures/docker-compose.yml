@@ -135,6 +135,6 @@ services:
       - AUTO_CAPTURE_SESSIONS
       - SYNCHRONOUS
       - SERVER_PORT
-      - USE_CODE_CONFIG
+      - USE_PROPERTIES_FILE_CONFIG
     restart: "no"
     command: ./test/run.sh

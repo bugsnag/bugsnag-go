@@ -195,28 +195,3 @@ func user() {
 
 	time.Sleep(200 * time.Millisecond)
 }
-
-// func caseSynchronous() {
-// 	config := newDefaultConfig()
-// 	sync, err := strconv.ParseBool(os.Getenv("SYNCHRONOUS"))
-// 	if err != nil {
-// 		panic("Unknown synchronous flag: " + err.Error())
-// 	}
-// 	config.Synchronous = sync
-// 	bugsnag.Configure(config)
-
-// 	notifier := bugsnag.New()
-// 	notifier.Notify(fmt.Errorf("Generic error"))
-// }
-
-// func caseUserData() {
-// 	config := newDefaultConfig()
-// 	bugsnag.Configure(config)
-
-// 	notifier := bugsnag.New()
-// 	notifier.NotifySync(fmt.Errorf("oops"), true, bugsnag.User{
-// 		Id:    os.Getenv("USER_ID"),
-// 		Name:  os.Getenv("USER_NAME"),
-// 		Email: os.Getenv("USER_EMAIL"),
-// 	})
-// }

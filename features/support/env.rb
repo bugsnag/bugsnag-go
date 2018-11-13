@@ -7,25 +7,12 @@ testBuildFolder = 'features/fixtures/testbuild'
 FileUtils.rm_rf(testBuildFolder)
 Dir.mkdir testBuildFolder
 
-# Copy the existing air
+# Copy the existing dir
 `find . -name '*.go' \
         -not -path "./examples/*" \
         -not -path "./testutil/*" \
         -not -path "./features/*" \
         -not -name '*_test.go' | cpio -pdm #{testBuildFolder}`
-
-# Scenario hooks
-Before do
-# Runs before every Scenario
-end
-
-After do
-# Runs after every Scenario
-end
-
-at_exit do
-
-end
 
 def port_open?(ip, port, seconds=1)
   Timeout::timeout(seconds) do

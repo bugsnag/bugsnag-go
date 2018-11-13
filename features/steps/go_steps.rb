@@ -5,7 +5,7 @@ When(/^I wait for the app to open port "(.*)"$/) do |port|
 end
 
 Then(/^the request(?: (\d+))? is a valid error report with api key "(.*)"$/) do |request_index, api_key|
-  request_index ||= 0 
+  request_index ||= 0
   steps %Q{
     And the request #{request_index} is valid for the error reporting API
     And the "bugsnag-api-key" header equals "#{api_key}" for request #{request_index}
@@ -14,7 +14,7 @@ Then(/^the request(?: (\d+))? is a valid error report with api key "(.*)"$/) do 
 end
 
 Then(/^the request(?: (\d+))? is a valid session report with api key "(.*)"$/) do |request_index, api_key|
-  request_index ||= 0 
+  request_index ||= 0
   steps %Q{
     And the request #{request_index} is valid for the session tracking API
     And the "bugsnag-api-key" header equals "#{api_key}" for request #{request_index}

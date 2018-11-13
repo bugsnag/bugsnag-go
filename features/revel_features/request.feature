@@ -4,7 +4,6 @@ Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4515"
-  And I set environment variable "USE_CODE_CONFIG" to "true"
 
 Scenario: An error report will automatically contain request information
   When I start the service "revel"

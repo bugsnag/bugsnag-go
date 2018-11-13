@@ -48,7 +48,7 @@ func init() {
 
 	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
 
-	if os.Getenv("USE_CODE_CONFIG") == "" {
+	if os.Getenv("USE_PROPERTIES_FILE_CONFIG") != "" {
 		return
 	}
 
