@@ -88,6 +88,8 @@ func init() {
 		bugsnag.OnBeforeNotify(middleware)
 
 		c := revel.Config
+		config := bugsnag.Config
+
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey:   c.StringDefault("bugsnag.apikey", ""),
 			Endpoint: c.StringDefault("bugsnag.endpoint", ""),
@@ -95,19 +97,43 @@ func init() {
 				Notify:   c.StringDefault("bugsnag.endpoints.notify", ""),
 				Sessions: c.StringDefault("bugsnag.endpoints.sessions", ""),
 			},
-			ReleaseStage:        c.StringDefault("bugsnag.releasestage", revel.RunMode),
-			AppType:             c.StringDefault("bugsnag.apptype", FrameworkName),
-			AppVersion:          c.StringDefault("bugsnag.appversion", ""),
-			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", true),
-			Hostname:            c.StringDefault("bugsnag.device.hostname", ""),
-			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", nil),
-			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", []string{revel.ImportPath + "/app/**"}),
-			SourceRoot:          c.StringDefault("bugsnag.sourceroot", ""),
-			ParamsFilters:       getCsvsOrDefault("bugsnag.paramsfilters", []string{"password", "secret", "authorization", "cookie"}),
+			ReleaseStage:        c.StringDefault("bugsnag.releasestage", defaultReleaseStage()),
+			AppType:             c.StringDefault("bugsnag.apptype", defaultAppType()),
+			AppVersion:          c.StringDefault("bugsnag.appversion", config.AppVersion),
+			AutoCaptureSessions: c.BoolDefault("bugsnag.autocapturesessions", config.IsAutoCaptureSessions()),
+			Hostname:            c.StringDefault("bugsnag.hostname", config.Hostname),
+			NotifyReleaseStages: getCsvsOrDefault("bugsnag.notifyreleasestages", config.NotifyReleaseStages),
+			ProjectPackages:     getCsvsOrDefault("bugsnag.projectpackages", defaultProjectPackages()),
+			SourceRoot:          c.StringDefault("bugsnag.sourceroot", config.SourceRoot),
+			ParamsFilters:       getCsvsOrDefault("bugsnag.paramsfilters", config.ParamsFilters),
 			Logger:              new(bugsnagRevelLogger),
-			Synchronous:         c.BoolDefault("bugsnag.synchronous", false),
+			Synchronous:         c.BoolDefault("bugsnag.synchronous", config.Synchronous),
 		})
 	}, order)
+}
+
+func defaultProjectPackages() []string {
+	pp := bugsnag.Config.ProjectPackages
+	// Use the bugsnag.Config previously set (probably in init.go) if it is not
+	// the default []string{"main*"} value
+	if len(pp) == 1 && pp[0] == "main*" {
+		return []string{revel.ImportPath + "/app/**"}
+	}
+	return pp
+}
+
+func defaultAppType() string {
+	if at := bugsnag.Config.AppType; at != "" {
+		return at
+	}
+	return FrameworkName
+}
+
+func defaultReleaseStage() string {
+	if rs := bugsnag.Config.ReleaseStage; rs != "" {
+		return rs
+	}
+	return revel.RunMode
 }
 
 func getCsvsOrDefault(propertyKey string, d []string) []string {
