@@ -109,7 +109,8 @@ func TestStartSession(t *testing.T) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
-	if got, exp := sessionsStarted, sessionsCount; got != exp {
+	// Expect an additional session from startup
+	if got, exp := sessionsStarted, sessionsCount+1; got != exp {
 		t.Errorf("Expected %d sessions started, but was %d", exp, got)
 	}
 }
