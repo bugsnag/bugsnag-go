@@ -36,3 +36,30 @@ end
 When("I run the go service {string} with the test case {string}") do  |service, testcase|
   run_service_with_command(service, "go run main.go -test=\"#{testcase}\"")
 end
+
+Then(/^I wait to receive a request after the start up session$/) do
+  step "I wait to receive 1 requests after the start up session"
+end
+
+Then(/^I wait to receive (\d+) requests after the start up session?$/) do |request_count|
+  max_attempts = 50
+  attempts = 0
+  start_up_message_received = false
+  start_up_message_removed = false
+  received = false
+  until (attempts >= max_attempts) || received
+    attempts += 1
+    start_up_message_received ||= (stored_requests.size == 1)
+    if start_up_message_received && !start_up_message_removed
+      stored_requests.shift
+      start_up_message_removed = true
+      next
+    end
+    received = (stored_requests.size == request_count)
+    sleep 0.2
+  end
+  raise "Requests not received in 10s (received #{stored_requests.size})" unless received
+  # Wait an extra second to ensure there are no further requests
+  sleep 1
+  assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
+end
