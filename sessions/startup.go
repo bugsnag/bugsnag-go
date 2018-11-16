@@ -13,8 +13,8 @@ const (
 
 // SendStartupSession is called by Bugsnag on startup, which will send a
 // session to Bugsnag and return a context to represent the session of the main
-// thread. This is the session associated with any fatal panics that are caught
-// by panicwrap.
+// goroutine. This is the session associated with any fatal panics that are
+// caught by panicwrap.
 func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	ctx := context.Background()
 	session := newSession()
@@ -26,9 +26,6 @@ func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 		client: &http.Client{Transport: config.Transport},
 	}
 	go publisher.publish([]*Session{session})
-	// This blocks the application from continuing (and possibly crashing)
-	// before we've sent the session, but don't block for too long, i.e.
-	// nothing is synchronous.
 	return context.WithValue(ctx, contextSessionKey, session)
 }
 
