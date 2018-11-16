@@ -16,6 +16,6 @@ Scenario: An error report is sent successfully using the notify endpoint only
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
 
 Scenario: Configuring Bugsnag will panic if the sessions endpoint is configured without the notify endpoint
-  When I run the go service "app" with the test case "endpoint session" 
+  When I run the go service "app" with the test case "endpoint session"
   And I wait for 3 second
   Then I should receive no requests

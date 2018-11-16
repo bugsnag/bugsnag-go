@@ -11,6 +11,7 @@ services:
       - BUGSNAG_ENDPOINT
       - APP_VERSION
       - APP_TYPE
+      - AUTO_CAPTURE_SESSIONS
       - HOSTNAME
       - NOTIFY_RELEASE_STAGES
       - RELEASE_STAGE

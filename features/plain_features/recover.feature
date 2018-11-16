@@ -2,6 +2,7 @@ Feature: Using recover
 
 Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   And I configure the bugsnag endpoint
   And I have built the service "app"
 

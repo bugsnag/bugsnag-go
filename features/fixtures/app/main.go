@@ -38,6 +38,11 @@ func configureBasicBugsnag(testcase string) {
 		config.Synchronous = sync
 	}
 
+	acs, err := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS"))
+	if err == nil {
+		config.AutoCaptureSessions = acs
+	}
+
 	switch testcase {
 	case "endpoint legacy":
 		config.Endpoint = os.Getenv("BUGSNAG_ENDPOINT")
@@ -53,6 +58,7 @@ func configureBasicBugsnag(testcase string) {
 	}
 	bugsnag.Configure(config)
 
+	time.Sleep(200 * time.Millisecond)
 	// Increase publish rate for testing
 	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 100
 }
@@ -63,6 +69,7 @@ func main() {
 	flag.Parse()
 
 	configureBasicBugsnag(*test)
+	time.Sleep(100 * time.Millisecond) // Ensure tests are less flaky by ensuring the start-up session gets sent
 
 	switch *test {
 	case "unhandled":
