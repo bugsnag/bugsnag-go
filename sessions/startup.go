@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	startupStageKey    = "BUGSNAG_STARTUP_STAGE"
-	initialSessionSent = "INITIAL_SESSION_SENT"
+	startupSessionIDKey        = "BUGSNAG_STARTUP_SESSION_ID"
+	startupSessionTimestampKey = "BUGSNAG_STARTUP_SESSION_TIMESTAMP"
 )
 
 // SendStartupSession is called by Bugsnag on startup, which will send a
@@ -17,10 +17,10 @@ const (
 // by panicwrap.
 func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	ctx := context.Background()
-	if alreadySentStartupSession() || !config.IsAutoCaptureSessions() {
+	session := newSession()
+	if !config.IsAutoCaptureSessions() || isApplicationProcess(session) {
 		return ctx
 	}
-	session := newSession()
 	publisher := &publisher{
 		config: config,
 		client: &http.Client{Transport: config.Transport},
@@ -32,10 +32,13 @@ func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	return context.WithValue(ctx, contextSessionKey, session)
 }
 
-func alreadySentStartupSession() bool {
-	stage := os.Getenv(startupStageKey)
-	if stage == "" {
-		os.Setenv(startupStageKey, initialSessionSent)
-	}
-	return stage == initialSessionSent
+// Checks to see if this is the application process, as opposed to the process
+// that monitors for panics
+func isApplicationProcess(session *Session) bool {
+	// Application process is run first, and this will only have been set when
+	// the monitoring process runs
+	envID := os.Getenv(startupSessionIDKey)
+	os.Setenv(startupSessionIDKey, session.ID.String())
+	os.Setenv(startupSessionTimestampKey, session.StartedAt.String())
+	return envID == ""
 }

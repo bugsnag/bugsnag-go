@@ -186,6 +186,8 @@ func TestHandlerFunc(t *testing.T) {
 	Configure(generateSampleConfig(eventserver.URL))
 
 	t.Run("unhandled", func(st *testing.T) {
+		sessionTracker = nil
+		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(crashyHandler))
 		defer ts.Close()
 
@@ -279,6 +281,9 @@ func TestHandler(t *testing.T) {
 		Handler:  Handler(mux, generateSampleConfig(ts.URL), SeverityInfo),
 		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
 	}).Serve(l)
+
+	sessionTracker = nil
+	startSessionTracking()
 
 	http.Get("http://" + l.Addr().String() + "/ok?foo=bar")
 

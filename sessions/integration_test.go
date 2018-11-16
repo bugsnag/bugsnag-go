@@ -109,8 +109,9 @@ func TestStartSession(t *testing.T) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
-	// Expect an additional session from startup
-	if got, exp := sessionsStarted, sessionsCount+1; got != exp {
+	// Don't expect an additional session from startup as the test server URL
+	// would be different between processes
+	if got, exp := sessionsStarted, sessionsCount; got != exp {
 		t.Errorf("Expected %d sessions started, but was %d", exp, got)
 	}
 }
