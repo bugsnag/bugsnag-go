@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"time"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 // by panicwrap.
 func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	ctx := context.Background()
-	if alreadySentStartupSession() {
+	if alreadySentStartupSession() || !config.IsAutoCaptureSessions() {
 		return ctx
 	}
 	session := newSession()
@@ -26,12 +25,10 @@ func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 		config: config,
 		client: &http.Client{Transport: config.Transport},
 	}
-	publisher.publish([]*Session{session})
+	go publisher.publish([]*Session{session})
 	// This blocks the application from continuing (and possibly crashing)
 	// before we've sent the session, but don't block for too long, i.e.
 	// nothing is synchronous.
-	// TODO: make this number configurable for test sanity, if nothing else.
-	time.Sleep(100 * time.Millisecond)
 	return context.WithValue(ctx, contextSessionKey, session)
 }
 

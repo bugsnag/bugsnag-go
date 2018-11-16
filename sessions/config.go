@@ -15,6 +15,16 @@ type SessionTrackingConfiguration struct {
 	// PublishInterval defines how often the sessions are sent off to the session server.
 	PublishInterval time.Duration
 
+	// AutoCaptureSessions can be set to false to disable automatic session
+	// tracking. If you want control over what is deemed a session, you can
+	// switch off automatic session tracking with this configuration, and call
+	// bugsnag.StartSession() when appropriate for your application. See the
+	// official docs for instructions and examples of associating handled
+	// errors with sessions and ensuring error rate accuracy on the Bugsnag
+	// dashboard. This will default to true, but is stored as an interface to enable
+	// us to detect when this option has not been set.
+	AutoCaptureSessions interface{}
+
 	// APIKey defines the API key for the Bugsnag project. Same value as for reporting errors.
 	APIKey string
 	// Endpoint is the URI of the session server to receive session payloads.
@@ -88,6 +98,9 @@ func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfigurati
 	if config.NotifyReleaseStages != nil {
 		c.NotifyReleaseStages = config.NotifyReleaseStages
 	}
+	if config.AutoCaptureSessions != nil {
+		c.AutoCaptureSessions = config.AutoCaptureSessions
+	}
 }
 
 func (c *SessionTrackingConfiguration) logf(fmt string, args ...interface{}) {
@@ -96,4 +109,19 @@ func (c *SessionTrackingConfiguration) logf(fmt string, args ...interface{}) {
 	} else {
 		log.Printf(fmt, args...)
 	}
+}
+
+// IsAutoCaptureSessions identifies whether or not the notifier should
+// automatically capture sessions as requests come in. It's a convenience
+// wrapper that allows automatic session capturing to be enabled by default.
+func (c *SessionTrackingConfiguration) IsAutoCaptureSessions() bool {
+	if c.AutoCaptureSessions == nil {
+		return true // enabled by default
+	}
+	if val, ok := c.AutoCaptureSessions.(bool); ok {
+		return val
+	}
+	// It has been configured to *something* (although not a valid value)
+	// assume the user wanted to disable this option.
+	return false
 }
