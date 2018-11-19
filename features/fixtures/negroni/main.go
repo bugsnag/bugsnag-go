@@ -54,7 +54,7 @@ func main() {
 	mux.HandleFunc("/session", session)
 	mux.HandleFunc("/autonotify", autonotify)
 	mux.HandleFunc("/onbeforenotify", onBeforeNotify)
-	mux.HandleFunc("/recover", recover)
+	mux.HandleFunc("/recover", dontDie)
 	mux.HandleFunc("/user", user)
 
 	n := negroni.New()
@@ -82,7 +82,7 @@ func session(w http.ResponseWriter, r *http.Request) {
 	log.Println("single session")
 }
 
-func recover(w http.ResponseWriter, r *http.Request) {
+func dontDie(w http.ResponseWriter, r *http.Request) {
 	defer bugsnag.Recover(r.Context())
 	panic("Request killed but recovered")
 }
@@ -117,6 +117,7 @@ func onBeforeNotify(w http.ResponseWriter, r *http.Request) {
 
 func autonotify(w http.ResponseWriter, r *http.Request) {
 	go func(ctx context.Context) {
+		defer func() { recover() }()
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(r.Context())
