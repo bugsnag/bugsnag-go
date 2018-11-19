@@ -6,11 +6,11 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4513"
 
-Scenario: An error report is sent when an unhandled crash occurs
+Scenario: An error report is sent when an AutoNotified crash occurs which later gets recovered
   When I start the service "martini"
   And I wait for the app to open port "4513"
   And I wait for 2 seconds
-  And I open the URL "http://localhost:4513/unhandled"
+  And I open the URL "http://localhost:4513/autonotify-then-recover"
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is true

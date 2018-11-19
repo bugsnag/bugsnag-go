@@ -49,7 +49,7 @@ func main() {
 	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/unhandled", unhandledCrash)
+	mux.HandleFunc("/autonotify-then-recover", unhandledCrash)
 	mux.HandleFunc("/handled", handledError)
 	mux.HandleFunc("/session", session)
 	mux.HandleFunc("/autonotify", autonotify)

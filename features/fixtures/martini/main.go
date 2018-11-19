@@ -51,7 +51,7 @@ func main() {
 
 	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify())
-	m.Get("/unhandled", unhandledCrash)
+	m.Get("/autonotify-then-recover", unhandledCrash)
 	m.Get("/handled", handledError)
 	m.Get("/session", session)
 	m.Get("/autonotify", autonotify)

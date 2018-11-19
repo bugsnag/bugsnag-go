@@ -51,7 +51,7 @@ func main() {
 
 	g.Use(gin.Recovery(), bugsnaggin.AutoNotify(config))
 
-	g.GET("/unhandled", unhandledCrash)
+	g.GET("/autonotify-then-recover", unhandledCrash)
 	g.GET("/handled", handledError)
 	g.GET("/session", session)
 	g.GET("/autonotify", autonotify)

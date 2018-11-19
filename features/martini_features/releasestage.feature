@@ -6,7 +6,7 @@ Background:
   And I set environment variable "SERVER_PORT" to "4513"
   And I set environment variable "RELEASE_STAGE" to "my-stage"
 
-Scenario: An error report and session is sent with configured release stage
+Scenario: An error report is sent with configured release stage
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
   When I start the service "martini"
   And I wait for the app to open port "4513"

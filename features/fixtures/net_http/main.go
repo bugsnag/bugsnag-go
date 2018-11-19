@@ -17,7 +17,7 @@ func main() {
 	configureBasicBugsnag()
 
 	http.HandleFunc("/handled", handledError)
-	http.HandleFunc("/unhandled", unhandledCrash)
+	http.HandleFunc("/autonotify-then-recover", unhandledCrash)
 	http.HandleFunc("/session", session)
 	http.HandleFunc("/autonotify", autonotify)
 	http.HandleFunc("/onbeforenotify", onBeforeNotify)
