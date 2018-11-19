@@ -6,10 +6,7 @@ import (
 	"os"
 )
 
-const (
-	startupSessionIDKey        = "BUGSNAG_STARTUP_SESSION_ID"
-	startupSessionTimestampKey = "BUGSNAG_STARTUP_SESSION_TIMESTAMP"
-)
+const startupSessionIDKey = "BUGSNAG_STARTUP_SESSION_ID"
 
 // SendStartupSession is called by Bugsnag on startup, which will send a
 // session to Bugsnag and return a context to represent the session of the main
@@ -36,6 +33,5 @@ func isApplicationProcess(session *Session) bool {
 	// the monitoring process runs
 	envID := os.Getenv(startupSessionIDKey)
 	os.Setenv(startupSessionIDKey, session.ID.String())
-	os.Setenv(startupSessionTimestampKey, session.StartedAt.String())
 	return envID == ""
 }
