@@ -100,7 +100,8 @@ func (p *payload) makeSession() *sessionJSON {
 		return nil
 	}
 
-	if session := sessions.GetSession(p.Ctx, p.handledState.Unhandled); session != nil {
+	session := sessions.IncrementEventCountAndGetSession(p.Ctx, p.handledState.Unhandled)
+	if session != nil {
 		return &sessionJSON{
 			ID:        session.ID,
 			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),

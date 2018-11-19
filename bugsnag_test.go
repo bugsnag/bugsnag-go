@@ -56,7 +56,7 @@ func (t *testSessionTracker) StartSession(context.Context) context.Context {
 	return context.Background()
 }
 
-func (t *testSessionTracker) GetSession(context.Context, bool) *sessions.Session {
+func (t *testSessionTracker) IncrementEventCountAndGetSession(context.Context, bool) *sessions.Session {
 	return &sessions.Session{}
 }
 

@@ -52,8 +52,10 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 	return &st
 }
 
-// GetSession extracts a session from a context
-func GetSession(ctx context.Context, unhandled bool) *Session {
+// IncrementEventCountAndGetSession extracts a Bugsnag session from the given
+// context and increments the event count of unhandled or handled events and
+// returns the session
+func IncrementEventCountAndGetSession(ctx context.Context, unhandled bool) *Session {
 	if s := ctx.Value(contextSessionKey); s != nil {
 		if session, ok := s.(*Session); ok && !session.StartedAt.IsZero() {
 			// It is not just getting back a default value
