@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 	"os"
-)
 
-const startupSessionIDKey = "BUGSNAG_STARTUP_SESSION_ID"
+	"github.com/bugsnag/panicwrap"
+)
 
 // SendStartupSession is called by Bugsnag on startup, which will send a
 // session to Bugsnag and return a context to represent the session of the main
@@ -15,7 +15,7 @@ const startupSessionIDKey = "BUGSNAG_STARTUP_SESSION_ID"
 func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	ctx := context.Background()
 	session := newSession()
-	if !config.IsAutoCaptureSessions() || isApplicationProcess(session) {
+	if !config.IsAutoCaptureSessions() || isApplicationProcess() {
 		return ctx
 	}
 	publisher := &publisher{
@@ -28,10 +28,8 @@ func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 
 // Checks to see if this is the application process, as opposed to the process
 // that monitors for panics
-func isApplicationProcess(session *Session) bool {
+func isApplicationProcess() bool {
 	// Application process is run first, and this will only have been set when
 	// the monitoring process runs
-	envID := os.Getenv(startupSessionIDKey)
-	os.Setenv(startupSessionIDKey, session.ID.String())
-	return envID == ""
+	return "" == os.Getenv(panicwrap.DEFAULT_COOKIE_KEY)
 }

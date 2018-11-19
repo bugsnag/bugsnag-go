@@ -51,6 +51,7 @@ Then(/^I wait to receive (\d+) requests after the start up session?$/) do |reque
     attempts += 1
     start_up_message_received ||= (stored_requests.size == 1)
     if start_up_message_received && !start_up_message_removed
+      step 'the request is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"'
       stored_requests.shift
       start_up_message_removed = true
       next
