@@ -39,7 +39,7 @@ func TestStartSessionModifiesContext(t *testing.T) {
 		t.Fatalf("No session information applied to context %v", ctx)
 	}
 
-	verifyValidSession(t, GetSession(ctx))
+	verifyValidSession(t, GetSession(ctx, true))
 }
 
 func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {

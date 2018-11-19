@@ -94,22 +94,17 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 }
 
 func (p *payload) makeSession() *sessionJSON {
-	handled, unhandled := 1, 0
-	if p.handledState.Unhandled {
-		handled, unhandled = unhandled, handled
-	}
-
 	// If a context has not been applied to the payload then assume that no
 	// session has started either
 	if p.Ctx == nil {
 		return nil
 	}
 
-	if session := sessions.GetSession(p.Ctx); session != nil {
+	if session := sessions.GetSession(p.Ctx, p.handledState.Unhandled); session != nil {
 		return &sessionJSON{
 			ID:        session.ID,
 			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),
-			Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
+			Events:    *session.EventCounts,
 		}
 	}
 	return nil

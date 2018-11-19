@@ -16,6 +16,8 @@ const (
 	contextSessionKey ctxKey = 1
 )
 
+var sessionMutex sync.Mutex
+
 // ctxKey is a type alias that ensures uniqueness as a context.Context key
 type ctxKey int
 
@@ -51,10 +53,19 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 }
 
 // GetSession extracts a session from a context
-func GetSession(ctx context.Context) *Session {
+func GetSession(ctx context.Context, unhandled bool) *Session {
 	if s := ctx.Value(contextSessionKey); s != nil {
 		if session, ok := s.(*Session); ok && !session.StartedAt.IsZero() {
-			//It is not just getting back a default value
+			// It is not just getting back a default value
+			sessionMutex.Lock()
+			defer sessionMutex.Unlock()
+			eventCounts := session.EventCounts
+			if unhandled {
+				eventCounts.Unhandled++
+			} else {
+				eventCounts.Handled++
+			}
+			*session.EventCounts = *eventCounts
 			return session
 		}
 	}

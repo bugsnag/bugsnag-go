@@ -56,7 +56,7 @@ func (t *testSessionTracker) StartSession(context.Context) context.Context {
 	return context.Background()
 }
 
-func (t *testSessionTracker) GetSession(context.Context) *sessions.Session {
+func (t *testSessionTracker) GetSession(context.Context, bool) *sessions.Session {
 	return &sessions.Session{}
 }
 
@@ -119,7 +119,7 @@ func TestNotify(t *testing.T) {
 		Context:        "testing",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "lol",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "warning",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
 		Unhandled:      false,
@@ -199,7 +199,7 @@ func TestHandlerFunc(t *testing.T) {
 			Context:        "/unhandled",
 			Device:         &deviceJSON{Hostname: "web1"},
 			GroupingHash:   "",
-			Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+			Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 			Severity:       "error",
 			SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 			Unhandled:      true,
@@ -238,7 +238,7 @@ func TestHandlerFunc(t *testing.T) {
 			Context:        "/handled",
 			Device:         &deviceJSON{Hostname: "web1"},
 			GroupingHash:   "",
-			Session:        &sessionJSON{Events: eventCountsJSON{Handled: 1, Unhandled: 0}},
+			Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 1, Unhandled: 0}},
 			Severity:       "warning",
 			SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
 			Unhandled:      false,
@@ -297,7 +297,7 @@ func TestHandler(t *testing.T) {
 		Context:        "/ok",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "info",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
@@ -364,7 +364,7 @@ func TestAutoNotify(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
@@ -403,7 +403,7 @@ func TestRecover(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "warning",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      false,
@@ -446,7 +446,7 @@ func TestRecoverCustomHandledState(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
@@ -473,7 +473,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "info",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonCallbackSpecified},
 		Unhandled:      false,
