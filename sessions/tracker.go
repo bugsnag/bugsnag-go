@@ -23,7 +23,6 @@ type ctxKey int
 // gauging your application's health
 type SessionTracker interface {
 	StartSession(context.Context) context.Context
-	GetSession(context.Context) *Session
 	FlushSessions()
 }
 
@@ -51,7 +50,8 @@ func NewSessionTracker(config *SessionTrackingConfiguration) SessionTracker {
 	return &st
 }
 
-func (s *sessionTracker) GetSession(ctx context.Context) *Session {
+// GetSession extracts a session from a context
+func GetSession(ctx context.Context) *Session {
 	if s := ctx.Value(contextSessionKey); s != nil {
 		if session, ok := s.(*Session); ok && !session.StartedAt.IsZero() {
 			//It is not just getting back a default value

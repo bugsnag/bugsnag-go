@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bugsnag/bugsnag-go/headers"
+	"github.com/bugsnag/bugsnag-go/sessions"
 )
 
 const notifyPayloadVersion = "4"
@@ -98,16 +99,13 @@ func (p *payload) makeSession() *sessionJSON {
 		handled, unhandled = unhandled, handled
 	}
 
-	// In the case of an immediate crash on startup, the sessionTracker may
-	// not have been set up just yet. We therefore have to fall back to a
-	// payload without a 'session' property
 	// If a context has not been applied to the payload then assume that no
 	// session has started either
-	if sessionTracker == nil || p.Ctx == nil {
+	if p.Ctx == nil {
 		return nil
 	}
 
-	if session := sessionTracker.GetSession(p.Ctx); session != nil {
+	if session := sessions.GetSession(p.Ctx); session != nil {
 		return &sessionJSON{
 			ID:        session.ID,
 			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),

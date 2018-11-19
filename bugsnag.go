@@ -44,6 +44,9 @@ var sessionTracker sessions.SessionTracker
 // called as early as possible in your initialization process.
 func Configure(config Configuration) {
 	Config.update(&config)
+	updateSessionConfig()
+	// Only do once in case the user overrides the default panichandler, and
+	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
 }
 
@@ -245,23 +248,29 @@ func init() {
 
 		flushSessionsOnRepanic: true,
 	})
+	updateSessionConfig()
 }
 
 func startSessionTracking() {
 	if sessionTracker == nil {
-		sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
-			APIKey:              Config.APIKey,
-			Endpoint:            Config.Endpoints.Sessions,
-			Version:             VERSION,
-			PublishInterval:     DefaultSessionPublishInterval,
-			Transport:           Config.Transport,
-			ReleaseStage:        Config.ReleaseStage,
-			Hostname:            Config.Hostname,
-			AppType:             Config.AppType,
-			AppVersion:          Config.AppVersion,
-			NotifyReleaseStages: Config.NotifyReleaseStages,
-			Logger:              Config.Logger,
-		})
+		updateSessionConfig()
 		sessionTracker = sessions.NewSessionTracker(&sessionTrackingConfig)
 	}
+}
+
+func updateSessionConfig() {
+	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
+		APIKey:              Config.APIKey,
+		AutoCaptureSessions: Config.AutoCaptureSessions,
+		Endpoint:            Config.Endpoints.Sessions,
+		Version:             VERSION,
+		PublishInterval:     DefaultSessionPublishInterval,
+		Transport:           Config.Transport,
+		ReleaseStage:        Config.ReleaseStage,
+		Hostname:            Config.Hostname,
+		AppType:             Config.AppType,
+		AppVersion:          Config.AppVersion,
+		NotifyReleaseStages: Config.NotifyReleaseStages,
+		Logger:              Config.Logger,
+	})
 }

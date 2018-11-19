@@ -37,6 +37,7 @@ func (c App) Session() revel.Result {
 
 func (c App) AutoNotify() revel.Result {
 	go func(ctx interface{}) {
+		defer func() { recover() }()
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(c.Args["context"])

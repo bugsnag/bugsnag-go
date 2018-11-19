@@ -17,7 +17,7 @@ func main() {
 	configureBasicBugsnag()
 
 	http.HandleFunc("/handled", handledError)
-	http.HandleFunc("/unhandled", unhandledCrash)
+	http.HandleFunc("/autonotify-then-recover", unhandledCrash)
 	http.HandleFunc("/session", session)
 	http.HandleFunc("/autonotify", autonotify)
 	http.HandleFunc("/onbeforenotify", onBeforeNotify)
@@ -93,6 +93,7 @@ func session(w http.ResponseWriter, r *http.Request) {
 
 func autonotify(w http.ResponseWriter, r *http.Request) {
 	go func(ctx context.Context) {
+		defer func() { recover() }()
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(r.Context())

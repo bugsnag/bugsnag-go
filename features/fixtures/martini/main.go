@@ -51,12 +51,12 @@ func main() {
 
 	m.Use(martini.Recovery())
 	m.Use(bugsnagmartini.AutoNotify())
-	m.Get("/unhandled", unhandledCrash)
+	m.Get("/autonotify-then-recover", unhandledCrash)
 	m.Get("/handled", handledError)
 	m.Get("/session", session)
 	m.Get("/autonotify", autonotify)
 	m.Get("/onbeforenotify", onBeforeNotify)
-	m.Get("/recover", recover)
+	m.Get("/recover", dontDie)
 	m.Get("/user", user)
 	m.RunOnAddr(":" + os.Getenv("SERVER_PORT"))
 }
@@ -78,7 +78,7 @@ func session() {
 	log.Println("single session")
 }
 
-func recover(r *http.Request) {
+func dontDie(r *http.Request) {
 	defer bugsnag.Recover(r.Context())
 	panic("Request killed but recovered")
 }
@@ -113,6 +113,7 @@ func onBeforeNotify(r *http.Request) {
 
 func autonotify(r *http.Request) {
 	go func(ctx context.Context) {
+		defer func() { recover() }()
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(r.Context())

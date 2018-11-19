@@ -17,10 +17,11 @@ Scenario: A error report contains the configured app type
   And the event "app.version" equals "3.1.2"
 
 Scenario: A session report contains the configured app type
+  Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "true"
   When I start the service "negroni"
   And I wait for the app to open port "4514"
   And I wait for 2 seconds
   And I open the URL "http://localhost:4514/session"
-  Then I wait to receive a request
+  Then I wait to receive a request after the start up session
   And the request is a valid session report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the payload field "app.version" equals "3.1.2"

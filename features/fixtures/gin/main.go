@@ -51,12 +51,12 @@ func main() {
 
 	g.Use(gin.Recovery(), bugsnaggin.AutoNotify(config))
 
-	g.GET("/unhandled", unhandledCrash)
+	g.GET("/autonotify-then-recover", unhandledCrash)
 	g.GET("/handled", handledError)
 	g.GET("/session", session)
 	g.GET("/autonotify", autonotify)
 	g.GET("/onbeforenotify", onBeforeNotify)
-	g.GET("/recover", recover)
+	g.GET("/recover", dontDie)
 	g.GET("/user", user)
 	g.Run(":" + os.Getenv("SERVER_PORT"))
 
@@ -79,7 +79,7 @@ func session(c *gin.Context) {
 	log.Println("single session")
 }
 
-func recover(c *gin.Context) {
+func dontDie(c *gin.Context) {
 	defer bugsnag.Recover(c.Request.Context())
 	panic("Request killed but recovered")
 }
@@ -114,6 +114,7 @@ func onBeforeNotify(c *gin.Context) {
 
 func autonotify(c *gin.Context) {
 	go func(ctx context.Context) {
+		defer func() { recover() }()
 		defer bugsnag.AutoNotify(ctx)
 		panic("Go routine killed with auto notify")
 	}(c.Request.Context())
