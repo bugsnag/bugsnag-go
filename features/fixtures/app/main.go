@@ -87,18 +87,43 @@ func main() {
 	case "filtered":
 		filtered()
 	case "recover":
-		recover()
+		dontDie()
 	case "session and error":
 		sessionAndError()
 	case "send and exit":
 		sendAndExit()
 	case "user":
 		user()
+	case "multiple handled":
+		multipleHandled()
+	case "multiple unhandled":
+		multipleUnhandled()
 	default:
 		log.Println("Not a valid test flag: " + *test)
 		os.Exit(1)
 	}
 
+}
+
+func multipleHandled() {
+	//Make the order of the below predictable
+	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
+
+	ctx := bugsnag.StartSession(context.Background())
+	bugsnag.Notify(fmt.Errorf("oops"), ctx)
+	bugsnag.Notify(fmt.Errorf("oops"), ctx)
+}
+
+func multipleUnhandled() {
+	//Make the order of the below predictable
+	notifier := bugsnag.New(bugsnag.Configuration{Synchronous: true})
+	notifier.FlushSessionsOnRepanic(false)
+
+	ctx := bugsnag.StartSession(context.Background())
+	defer func() { recover() }()
+	defer notifier.AutoNotify(ctx)
+	defer notifier.AutoNotify(ctx)
+	panic("oops")
 }
 
 func unhandledCrash() {
@@ -174,7 +199,7 @@ func onBeforeNotify() {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func recover() {
+func dontDie() {
 	go func() {
 		defer bugsnag.Recover()
 		panic("Go routine killed but recovered")
