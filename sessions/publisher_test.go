@@ -154,6 +154,20 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 }
 
+func TestNoSessionsSentWhenAPIKeyIsMissing(t *testing.T) {
+	sessions, _ := makeSessions()
+	config := makeHeavyConfig()
+	config.APIKey = "labracadabrador"
+	publisher := publisher{config: config, client: &testHTTPClient{}}
+	if err := publisher.publish(sessions); err != nil {
+		if got, exp := err.Error(), "bugsnag/sessions/publisher.publish invalid API key: 'labracadabrador'"; got != exp {
+			t.Errorf(`Expected error message "%s" but got "%s"`, exp, got)
+		}
+	} else {
+		t.Errorf("Expected error message but no errors were returned")
+	}
+}
+
 func TestNoSessionsOutsideNotifyReleaseStages(t *testing.T) {
 	sessions, _ := makeSessions()
 
