@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/bugsnag/bugsnag-go/headers"
@@ -12,6 +13,8 @@ import (
 )
 
 const notifyPayloadVersion = "4"
+
+var sessionMutex sync.Mutex
 
 type payload struct {
 	*Event
@@ -94,22 +97,24 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 }
 
 func (p *payload) makeSession() *sessionJSON {
-	handled, unhandled := 1, 0
-	if p.handledState.Unhandled {
-		handled, unhandled = unhandled, handled
-	}
-
 	// If a context has not been applied to the payload then assume that no
 	// session has started either
 	if p.Ctx == nil {
 		return nil
 	}
 
-	if session := sessions.GetSession(p.Ctx); session != nil {
+	sessionMutex.Lock()
+	defer sessionMutex.Unlock()
+	session := sessions.IncrementEventCountAndGetSession(p.Ctx, p.handledState.Unhandled)
+	if session != nil {
+		s := *session
 		return &sessionJSON{
-			ID:        session.ID,
-			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),
-			Events:    eventCountsJSON{Handled: handled, Unhandled: unhandled},
+			ID:        s.ID,
+			StartedAt: s.StartedAt.UTC().Format(time.RFC3339),
+			Events: sessions.EventCounts{
+				Handled:   s.EventCounts.Handled,
+				Unhandled: s.EventCounts.Unhandled,
+			},
 		}
 	}
 	return nil

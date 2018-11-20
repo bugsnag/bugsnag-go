@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"github.com/bugsnag/bugsnag-go/sessions"
 	uuid "github.com/gofrs/uuid"
 )
 
@@ -33,14 +34,9 @@ type eventJSON struct {
 }
 
 type sessionJSON struct {
-	StartedAt string          `json:"startedAt"`
-	ID        uuid.UUID       `json:"id"`
-	Events    eventCountsJSON `json:"events"`
-}
-
-type eventCountsJSON struct {
-	Handled   int `json:"handled"`
-	Unhandled int `json:"unhandled"`
+	StartedAt string               `json:"startedAt"`
+	ID        uuid.UUID            `json:"id"`
+	Events    sessions.EventCounts `json:"events"`
 }
 
 type appJSON struct {

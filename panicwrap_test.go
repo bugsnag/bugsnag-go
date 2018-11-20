@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/bugsnag/bugsnag-go/sessions"
 	"github.com/kardianos/osext"
 )
 
@@ -31,7 +32,7 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledPanic},
 		Unhandled:      true,
@@ -68,7 +69,7 @@ func TestPanicHandlerUnhandledPanic(t *testing.T) {
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
 		GroupingHash:   "",
-		Session:        &sessionJSON{Events: eventCountsJSON{Handled: 0, Unhandled: 1}},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "error",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonUnhandledPanic},
 		Unhandled:      true,
