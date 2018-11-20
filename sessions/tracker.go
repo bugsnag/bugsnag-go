@@ -16,8 +16,6 @@ const (
 	contextSessionKey ctxKey = 1
 )
 
-var sessionMutex sync.Mutex
-
 // ctxKey is a type alias that ensures uniqueness as a context.Context key
 type ctxKey int
 
@@ -59,15 +57,12 @@ func IncrementEventCountAndGetSession(ctx context.Context, unhandled bool) *Sess
 	if s := ctx.Value(contextSessionKey); s != nil {
 		if session, ok := s.(*Session); ok && !session.StartedAt.IsZero() {
 			// It is not just getting back a default value
-			sessionMutex.Lock()
-			defer sessionMutex.Unlock()
-			eventCounts := session.EventCounts
+			ec := session.EventCounts
 			if unhandled {
-				eventCounts.Unhandled++
+				ec.Unhandled++
 			} else {
-				eventCounts.Handled++
+				ec.Handled++
 			}
-			*session.EventCounts = *eventCounts
 			return session
 		}
 	}

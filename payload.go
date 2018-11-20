@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/bugsnag/bugsnag-go/headers"
@@ -12,6 +13,8 @@ import (
 )
 
 const notifyPayloadVersion = "4"
+
+var sessionMutex sync.Mutex
 
 type payload struct {
 	*Event
@@ -100,12 +103,18 @@ func (p *payload) makeSession() *sessionJSON {
 		return nil
 	}
 
+	sessionMutex.Lock()
+	defer sessionMutex.Unlock()
 	session := sessions.IncrementEventCountAndGetSession(p.Ctx, p.handledState.Unhandled)
 	if session != nil {
+		s := *session
 		return &sessionJSON{
-			ID:        session.ID,
-			StartedAt: session.StartedAt.UTC().Format(time.RFC3339),
-			Events:    *session.EventCounts,
+			ID:        s.ID,
+			StartedAt: s.StartedAt.UTC().Format(time.RFC3339),
+			Events: sessions.EventCounts{
+				Handled:   s.EventCounts.Handled,
+				Unhandled: s.EventCounts.Unhandled,
+			},
 		}
 	}
 	return nil
