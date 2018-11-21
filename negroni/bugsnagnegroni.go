@@ -16,6 +16,7 @@ type handler struct {
 
 // AutoNotify sends any panics to bugsnag, and then re-raises them.
 func AutoNotify(rawData ...interface{}) negroni.Handler {
+	updateGlobalConfig(rawData...)
 	state := bugsnag.HandledState{
 		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
 		OriginalSeverity: bugsnag.SeverityError,
@@ -38,4 +39,13 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.H
 	defer notifier.AutoNotify(ctx)
 	next(rw, request)
 
+}
+
+func updateGlobalConfig(rawData ...interface{}) {
+	for i, datum := range rawData {
+		if c, ok := datum.(bugsnag.Configuration); ok {
+			bugsnag.Configure(c)
+			rawData[i] = nil
+		}
+	}
 }
