@@ -78,6 +78,50 @@ func TestNegroni(t *testing.T) {
 		}
 		`, hostname, userID, bugsnag.VERSION))
 	})
+
+	t.Run("Notify", func(st *testing.T) {
+		time.Sleep(500 * time.Millisecond)
+		http.Get("http://localhost:9078/handled")
+		report := <-reports
+		r, _ := simplejson.NewJson(report)
+		AssertPayload(st, r, fmt.Sprintf(`
+		{
+			"apiKey":"166f5ad3590596f9aa8d601ea89af845",
+			"events":[
+				{
+					"app":{ "releaseStage":"" },
+					"context":"/handled",
+					"device":{ "hostname": "%s" },
+					"exceptions":[
+						{
+							"errorClass":"*errors.errorString",
+							"message":"Ooopsie",
+							"stacktrace":[]
+						}
+					],
+					"payloadVersion":"4",
+					"severity":"warning",
+					"severityReason":{ "type":"handledError" },
+					"unhandled": false,
+					"request": {
+						"url": "http://localhost:9078/handled",
+						"httpMethod": "GET",
+						"referer": "",
+						"headers": {
+							"Accept-Encoding": "gzip"
+						}
+					},
+					"user":{ "id": "%s" }
+				}
+			],
+			"notifier":{
+				"name":"Bugsnag Go",
+				"url":"https://github.com/bugsnag/bugsnag-go",
+				"version": "%s"
+			}
+		}
+		`, hostname, userID, bugsnag.VERSION))
+	})
 }
 
 func unhandledCrashHandler(w http.ResponseWriter, req *http.Request) {
@@ -85,7 +129,7 @@ func unhandledCrashHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func handledCrashHandler(w http.ResponseWriter, req *http.Request) {
-	bugsnag.Notify(fmt.Errorf("Ooopsie"), req.Context())
+	bugsnag.Notify(fmt.Errorf("Ooopsie"), bugsnag.User{Id: userID}, req.Context())
 }
 
 func crash(a interface{}) string {
