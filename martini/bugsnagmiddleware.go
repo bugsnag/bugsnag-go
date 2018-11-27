@@ -36,6 +36,7 @@ import (
 	"github.com/go-martini/martini"
 )
 
+// FrameworkName is the name of the framework this middleware applies to
 const FrameworkName string = "Martini"
 
 // AutoNotify sends any panics to bugsnag, and then re-raises them.
@@ -44,24 +45,43 @@ const FrameworkName string = "Martini"
 // The arguments can be any RawData to pass to Bugsnag, most usually
 // you'll pass a bugsnag.Configuration object.
 func AutoNotify(rawData ...interface{}) martini.Handler {
+	updateGlobalConfig(rawData...)
 
 	state := bugsnag.HandledState{
-		bugsnag.SeverityReasonUnhandledMiddlewareError,
-		bugsnag.SeverityError,
-		true,
-		FrameworkName,
+		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
+		OriginalSeverity: bugsnag.SeverityError,
+		Unhandled:        true,
+		Framework:        FrameworkName,
 	}
-	rawData = append(rawData, state)
-	// set the release stage based on the martini environment.
-	rawData = append([]interface{}{bugsnag.Configuration{ReleaseStage: martini.Env}},
-		rawData...)
 
 	return func(r *http.Request, c martini.Context) {
+		// Martini's request-based context for dependency injection means that we can
+		// attach request data to the notifier (one notifier <=> one request) itself.
+		// This means that request data will show up when doing just notifier.Notify(err)
+		notifier := bugsnag.New(append(rawData, r, state)...)
 
-		// create a notifier that has the current request bound to it
-		notifier := bugsnag.New(append(rawData, r)...)
-		defer notifier.AutoNotify(r)
+		// In case users use bugsnag.Notify instead of the mapped notifier.
+		ctx := bugsnag.AttachRequestData(r.Context(), r)
+
+		if notifier.Config.IsAutoCaptureSessions() {
+			ctx = bugsnag.StartSession(ctx)
+		}
+		notifier.FlushSessionsOnRepanic(false)
+		c.Map(r.WithContext(ctx))
+		defer notifier.AutoNotify(ctx)
 		c.Map(notifier)
 		c.Next()
+	}
+}
+
+func updateGlobalConfig(rawData ...interface{}) {
+	for i, datum := range rawData {
+		if c, ok := datum.(bugsnag.Configuration); ok {
+			if c.ReleaseStage == "" {
+				c.ReleaseStage = martini.Env
+			}
+			bugsnag.Configure(c)
+			rawData[i] = nil
+		}
 	}
 }

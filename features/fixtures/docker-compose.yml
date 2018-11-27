@@ -1,0 +1,141 @@
+version: '3.4'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+       - GO_VERSION
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - AUTO_CAPTURE_SESSIONS
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+
+  nethttp:
+    build:
+      context: .
+      dockerfile: net_http/Dockerfile
+      args:
+       - GO_VERSION
+    ports:
+      - "4512:4512"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+    command: go run main.go
+
+  gin:
+    build:
+      context: .
+      dockerfile: gin/Dockerfile
+      args:
+       - GO_VERSION
+       - GIN_VERSION
+    ports:
+      - "4511:4511"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+    command: go run main.go
+
+  martini:
+    build:
+      context: .
+      dockerfile: martini/Dockerfile
+      args:
+       - GO_VERSION
+    ports:
+      - "4513:4513"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+    command: go run main.go
+
+  negroni:
+    build:
+      context: .
+      dockerfile: negroni/Dockerfile
+      args:
+       - GO_VERSION
+       - NEGRONI_VERSION
+    ports:
+      - "4514:4514"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+    restart: "no"
+    command: go run main.go
+
+  revel:
+    build:
+      context: .
+      dockerfile: revel/Dockerfile
+      args:
+       - GO_VERSION
+       - REVEL_VERSION
+       - REVEL_CMD_VERSION
+    ports:
+      - "4515:4515"
+    environment:
+      - API_KEY
+      - BUGSNAG_ENDPOINT
+      - APP_VERSION
+      - APP_TYPE
+      - HOSTNAME
+      - NOTIFY_RELEASE_STAGES
+      - RELEASE_STAGE
+      - PARAMS_FILTERS
+      - AUTO_CAPTURE_SESSIONS
+      - SYNCHRONOUS
+      - SERVER_PORT
+      - USE_PROPERTIES_FILE_CONFIG
+    restart: "no"
+    command: ./test/run.sh

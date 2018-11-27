@@ -1,19 +1,30 @@
 package controllers
 
-import "github.com/revel/revel"
-import "time"
+import (
+	"fmt"
+
+	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/revel/revel"
+)
 
 type App struct {
 	*revel.Controller
 }
 
 func (c App) Index() revel.Result {
-	go func() {
-		time.Sleep(5 * time.Second)
-		panic("hello!")
-	}()
-
-	s := make([]string, 0)
-	revel.INFO.Print(s[0])
 	return c.Render()
+}
+
+func (c App) Handled() revel.Result {
+	bugsnag.Notify(fmt.Errorf("oopsie"), c.Args["context"])
+	return c.Render()
+}
+
+func (c App) Unhandled() revel.Result {
+	crash(struct{}{})
+	return c.Render()
+}
+
+func crash(a interface{}) string {
+	return a.(string)
 }

@@ -21,18 +21,23 @@ func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
 	}
 
 	state := bugsnag.HandledState{
-		bugsnag.SeverityReasonUnhandledMiddlewareError,
-		bugsnag.SeverityError,
-		true,
-		FrameworkName,
+		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
+		OriginalSeverity: bugsnag.SeverityError,
+		Unhandled:        true,
+		Framework:        FrameworkName,
 	}
 	rawData = append(rawData, state)
 	return func(c *gin.Context) {
 		r := c.Copy().Request
-
-		// create a notifier that has the current request bound to it
 		notifier := bugsnag.New(append(rawData, r)...)
-		defer notifier.AutoNotify(r)
+		ctx := bugsnag.AttachRequestData(r.Context(), r)
+		if notifier.Config.IsAutoCaptureSessions() {
+			ctx = bugsnag.StartSession(ctx)
+		}
+		c.Request = r.WithContext(ctx)
+
+		notifier.FlushSessionsOnRepanic(false)
+		defer notifier.AutoNotify(ctx)
 		c.Next()
 	}
 }

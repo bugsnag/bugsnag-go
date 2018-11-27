@@ -3,41 +3,47 @@ package bugsnag
 import (
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
 func TestNotifyReleaseStages(t *testing.T) {
 
-	var testCases = []struct {
-		stage      string
-		configured []string
-		notify     bool
-		msg        string
+	notify := " "
+
+	var tt = []struct {
+		releaseStage        string
+		notifyReleaseStages []string
+		expected            bool
 	}{
 		{
-			stage:  "production",
-			notify: true,
-			msg:    "Should notify in all release stages by default",
+			releaseStage: "production",
+			expected:     true,
 		},
 		{
-			stage:      "production",
-			configured: []string{"development", "production"},
-			notify:     true,
-			msg:        "Failed to notify in configured release stage",
+			releaseStage:        "production",
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            true,
 		},
 		{
-			stage:      "staging",
-			configured: []string{"development", "production"},
-			notify:     false,
-			msg:        "Failed to prevent notification in excluded release stage",
+			releaseStage:        "staging",
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            false,
+		},
+		{
+			notifyReleaseStages: []string{"development", "production"},
+			expected:            true,
 		},
 	}
 
-	for _, testCase := range testCases {
-		Configure(Configuration{ReleaseStage: testCase.stage, NotifyReleaseStages: testCase.configured})
-
-		if Config.notifyInReleaseStage() != testCase.notify {
-			t.Error(testCase.msg)
+	for _, tc := range tt {
+		rs, nrs, exp := tc.releaseStage, tc.notifyReleaseStages, tc.expected
+		config := &Configuration{ReleaseStage: rs, NotifyReleaseStages: nrs}
+		if config.notifyInReleaseStage() != exp {
+			if !exp {
+				notify = " not "
+			}
+			t.Errorf("expected%sto notify when release stage is '%s' and notify release stages are '%+v'", notify, rs, nrs)
 		}
 	}
 }
@@ -173,9 +179,11 @@ func TestStripCustomSourceRoot(t *testing.T) {
 }
 
 type CustomTestLogger struct {
+	loggedMessages []string
 }
 
 func (logger *CustomTestLogger) Printf(format string, v ...interface{}) {
+	logger.loggedMessages = append(logger.loggedMessages, format)
 }
 
 func TestConfiguringCustomLogger(t *testing.T) {
@@ -203,5 +211,140 @@ func TestConfiguringCustomLogger(t *testing.T) {
 		// call printf just to illustrate it is present as the compiler does most of the hard work
 		testCase.config.Logger.Printf("hello %s", "bugsnag")
 
+	}
+}
+
+func TestEndpointDeprecationWarning(t *testing.T) {
+	defaultNotify := "https://notify.bugsnag.com/"
+	defaultSessions := "https://sessions.bugsnag.com/"
+	setUp := func() (*Configuration, *CustomTestLogger) {
+		logger := &CustomTestLogger{}
+		return &Configuration{
+			Endpoints: Endpoints{
+				Notify:   defaultNotify,
+				Sessions: defaultSessions,
+			},
+			Logger: logger,
+		}, logger
+	}
+
+	t.Run("Setting Endpoint gives deprecation warning", func(st *testing.T) {
+		c, logger := setUp()
+		config := Configuration{Endpoint: "https://endpoint.whatever.com/"}
+		c.update(&config)
+		if got := logger.loggedMessages; len(got) != 1 {
+			st.Errorf("Expected exactly one logged message but got %d: %v", len(got), got)
+		}
+		got := logger.loggedMessages[0]
+		for _, exp := range []string{"WARNING", "Bugsnag", "Endpoint", "Endpoints", "deprecated"} {
+			if !strings.Contains(got, exp) {
+				st.Errorf("Expected logger message containing '%s' when configuring but got %s.", exp, got)
+			}
+		}
+		if got, exp := c.Endpoints.Notify, config.Endpoint; got != exp {
+			st.Errorf("Expected notify endpoint '%s' but got '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, ""; got != exp {
+			st.Errorf("Expected sessions endpoint '%s' but got '%s'", exp, got)
+		}
+	})
+
+	t.Run("Setting Endpoints.Notify without setting Endpoints.Sessions gives session disabled warning", func(st *testing.T) {
+		c, logger := setUp()
+		config := Configuration{
+			Endpoints: Endpoints{
+				Notify: "https://notify.whatever.com/",
+			},
+		}
+		keywords := []string{"WARNING", "Bugsnag", "notify", "No sessions"}
+		c.update(&config)
+		if got := len(logger.loggedMessages); got != 1 {
+			st.Errorf("Expected exactly one logged message but got %d", got)
+		}
+		got := logger.loggedMessages[0]
+		for _, exp := range keywords {
+			if !strings.Contains(got, exp) {
+				st.Errorf("Expected logger message containing '%s' when configuring but got %s.", exp, got)
+			}
+		}
+		if got, exp := c.Endpoints.Notify, config.Endpoints.Notify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, ""; got != exp {
+			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
+		}
+	})
+
+	t.Run("Setting Endpoints.Sessions without setting Endpoints.Notify should panic", func(st *testing.T) {
+		c, _ := setUp()
+		defer func() {
+			if err := recover(); err != nil {
+				got := err.(string)
+				for _, exp := range []string{"FATAL", "Bugsnag", "notify", "sessions"} {
+					if !strings.Contains(got, exp) {
+						st.Errorf("Expected panic error containing '%s' when configuring but got %s.", exp, got)
+					}
+				}
+			} else {
+				st.Errorf("Expected a panic to happen but didn't")
+			}
+		}()
+		c.update(&Configuration{
+			Endpoints: Endpoints{
+				Sessions: "https://sessions.whatever.com/",
+			},
+		})
+	})
+
+	t.Run("Should not complain if both Endpoints.Notify and Endpoints.Sessions are configured", func(st *testing.T) {
+		notifyEndpoint, sessionsEndpoint := "https://notify.whatever.com", "https://sessions.whatever.com"
+		config := Configuration{
+			Endpoints: Endpoints{
+				Notify:   notifyEndpoint,
+				Sessions: sessionsEndpoint,
+			},
+		}
+		c, logger := setUp()
+		c.update(&config)
+		if len(logger.loggedMessages) != 0 {
+			st.Errorf("Did not expect any messages to be logged but logged: %v", logger.loggedMessages)
+		}
+		if got, exp := c.Endpoints.Notify, notifyEndpoint; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, sessionsEndpoint; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+	})
+
+	t.Run("Should not complain if Endpoints are not configured", func(st *testing.T) {
+		c, logger := setUp()
+		c.update(&Configuration{})
+		if len(logger.loggedMessages) != 0 {
+			st.Errorf("Did not expect any messages to be logged but logged: %v", logger.loggedMessages)
+		}
+		if got, exp := c.Endpoints.Notify, defaultNotify; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, defaultSessions; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+	})
+}
+
+func TestIsAutoCaptureSessions(t *testing.T) {
+	defaultConfig := Configuration{}
+	if !defaultConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be enabled by default, but was disabled")
+	}
+
+	enabledConfig := Configuration{AutoCaptureSessions: true}
+	if !enabledConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be enabled when so configured, but was disabled")
+	}
+
+	disabledConfig := Configuration{AutoCaptureSessions: false}
+	if disabledConfig.IsAutoCaptureSessions() {
+		t.Errorf("Expected automatic session tracking to be disabled when so configured, but enabled")
 	}
 }
