@@ -22,8 +22,6 @@ jobs:
       go: "1.10"
     - script: make ci
       go: "1.11"
-    - script: make ci
-      go: "master"
 
     - stage: plain go app tests
       script: make testplain
