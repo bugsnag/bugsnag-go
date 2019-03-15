@@ -59,6 +59,7 @@ func TestParseHeadersWillSanitiseIllegalParams(t *testing.T) {
 	headers["password"] = []string{"correct horse battery staple"}
 	headers["secret"] = []string{"I am Banksy"}
 	headers["authorization"] = []string{"licence to kill -9"}
+	headers["custom-made-secret"] = []string{"I'm the insider at Sotheby's"}
 	for k, v := range parseRequestHeaders(headers) {
 		if v != "[FILTERED]" {
 			t.Errorf("expected '%s' to be [FILTERED], but was '%s'", k, v)
