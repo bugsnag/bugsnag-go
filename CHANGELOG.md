@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.1 (2019-03-18)
+
+This release fixes a compilation error on Windows.
+Due to a missing implementation in the Go library, Windows users may have to send two interrupt signals to interrupt the application. Other signals are unaffected.
+
+Additionally, ensure data sanitisation behaves the same for both request data and metadata.
+
+### Bug fixes
+
+* Use the `os` package instead of `syscall` to re-send signals, as `syscall` varies per platform, which caused a compilation error.
+
+* Make sure that all data sanitization using `Config.ParamsFilters` behaves the same.
+  [#104](https://github.com/bugsnag/bugsnag-go/pull/104)
+  [Adam Renberg Tamm](https://github.com/tgwizard)
+
 ## 1.4.0 (2018-11-19)
 
 This release is a big non-breaking revamp of the notifier. Most importantly, this release introduces session tracking to Go applications.

@@ -60,7 +60,7 @@ func parseRequestHeaders(header map[string][]string) map[string]string {
 
 func contains(slice []string, e string) bool {
 	for _, s := range slice {
-		if strings.ToLower(s) == strings.ToLower(e) {
+		if strings.Contains(strings.ToLower(e), strings.ToLower(s)) {
 			return true
 		}
 	}
