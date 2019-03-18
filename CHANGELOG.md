@@ -3,15 +3,15 @@
 ## 1.4.1 (2019-03-18)
 
 This release fixes a compilation error on Windows.
-Due to a missing implementation in the Go library, Windows users may have to send two interrupt signals to interrupt the application. Other signals are expected to work as expected.
+Due to a missing implementation in the Go library, Windows users may have to send two interrupt signals to interrupt the application. Other signals are unaffected.
 
-Additionally, add a fix to make sure data sanitisation behaves the same for both request data and metadata.
+Additionally, ensure data sanitisation behaves the same for both request data and metadata.
 
 ### Bug fixes
 
 * Use the `os` package instead of `syscall` to re-send signals, as `syscall` varies per platform, which caused a compilation error.
 
-* Make sure that all data sanitization using Config.ParamsFilters behaves the same.
+* Make sure that all data sanitization using `Config.ParamsFilters` behaves the same.
   [#104](https://github.com/bugsnag/bugsnag-go/pull/104)
   [Adam Renberg Tamm](https://github.com/tgwizard)
 
