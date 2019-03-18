@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.1 (2019-03-18)
+
+This release fixes a compilation error on Windows.
+Due to a missing implementation in the Go library, Windows users may have to send two interrupt signals to interrupt the application. Other signals are expected to work as expected.
+
+### Bug fixes
+
+* Use the `os` package instead of `syscall` to re-send signals, as `syscall` varies per platform, which caused a compilation error.
+
 ## 1.4.0 (2018-11-19)
 
 This release is a big non-breaking revamp of the notifier. Most importantly, this release introduces session tracking to Go applications.
