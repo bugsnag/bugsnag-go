@@ -30,11 +30,6 @@ Installing the go development environment
     export PATH=$PATH:$GOPATH/bin
     ```
 
-Installing the appengine development environment
-------------------------------------------------
-
-1. Follow the [Google instructions](https://cloud.google.com/appengine/downloads).
-
 Downloading the code
 --------------------
 
@@ -56,12 +51,6 @@ You can run the tests with
 
 ```shell
 go test
-```
-
-If you've made significant changes, please also test the appengine integration with
-
-```shell
-goapp test
 ```
 
 Releasing a New Version

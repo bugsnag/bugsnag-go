@@ -97,7 +97,7 @@ type Configuration struct {
 		Printf(format string, v ...interface{}) // limited to the functions used
 	}
 	// The http Transport to use, defaults to the default http Transport. This
-	// can be configured if you are in an environment like Google App Engine
+	// can be configured if you are in an environment
 	// that has stringent conditions on making http requests.
 	Transport http.RoundTripper
 	// Whether bugsnag should notify synchronously. This defaults to false which
