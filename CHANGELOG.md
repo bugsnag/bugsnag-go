@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 (2019-03-26)
+
+### Enhancements
+
+* Testing improvements [#105](https://github.com/bugsnag/bugsnag-go/pull/105)
+  * Only run full test suite on PRs targeting master
+  * Test against the latest release of go (currently 1.12) rather than go's unstable master branch
+* App engine has not been supported for a while. This release removes the app engine-specific code and tests from the codebase [#109](https://github.com/bugsnag/bugsnag-go/pull/109).
+
 ## 1.4.1 (2019-03-18)
 
 This release fixes a compilation error on Windows.
