@@ -239,7 +239,6 @@ func init() {
 		ReleaseStage:        "",
 		ParamsFilters:       []string{"password", "secret", "authorization", "cookie"},
 		SourceRoot:          sourceRoot,
-		// * for app-engine
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),

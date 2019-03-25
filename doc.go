@@ -17,7 +17,7 @@ when you call ListenAndServer:
 
 	http.ListenAndServe(":8080", bugsnag.Handler(nil))
 
-If that's not possible, for example because you're using Google App Engine, you can also wrap each
+If that's not possible, you can also wrap each
 HTTP handler manually:
 
 	http.HandleFunc("/" bugsnag.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
