@@ -53,18 +53,38 @@ You can run the tests with
 go test
 ```
 
+Making PRs
+----------
+
+All PRs should target the `next` branch as their base. This means that we can land them and stage them for a release without making multiple changes to `master` (which would cause multiple releases due to `go get`'s behaviour).
+
+The exception to this rule is for an urgent bug fix when `next` is already ahead of `master`. See [hotfixes](#hotfixes) for what to do then.
+
 Releasing a New Version
 -----------------------
 
 If you are a project maintainer, you can build and release a new version of
 `bugsnag-go` as follows:
 
-1. Commit all your changes.
-1. Update the version number in `bugsnag.go`.
-1. Add an entry to `CHANGELOG.md` and update the README if necessary.
-1. Commit tag and push
+#### Planned releases
 
-    git commit -mv1.0.x && git tag v1.0.x && git push origin v1.0.x
+**Prerequisite**: All code changes should already have been reviewed and PR'd into the `next` branch before making a release.
 
-1. Update the setup guides for Go (and its frameworks) on docs.bugsnag.com with
-   any new content.
+1. Decide on a version number and date for this release
+1. Add an entry (or update the `TBD` entry if it exists) for this release in `CHANGELOG.md` so that it includes the version number, release date and granular description of what changed
+1. Update the README if necessary
+1. Update the version number in `bugsnag.go`
+1. Commit these changes `git commit -am "Preparing release"`
+1. Create a PR from `next` -> `master` titled `Release vX.X.X`, adding a description to help the reviewer understand the scope of the release
+1. Await PR approval and CI pass
+1. Merge to master on GitHub, using the UI to set the merge commit message to be `vX.X.X`
+1. Create a release from current `master` on GitHub called `vX.X.X`. Copy and paste the markdown from this release's notes in `CONTRIBUTING.md` (this will create a git tag for you).
+1. Ensure setup guides for Go (and its frameworks) on docs.bugsnag.com are correct and up to date.
+1. Merge `master` into `next` (since we just did a merge commit the other way, this will be a fastforward update) and push it so that it is ready for future PRs.
+
+
+#### Hotfixes
+
+If a `next` branch already exists and is ahead of `master` but there is a bug fix which needs to go out urgently, check out the latest `master` and create a new hotfix branch `git checkout -b hot-fix`. You can then proceed to follow the above steps, substituting `next` for `hotfix`.
+
+Once released, ensure `master` is merged into `next` so that the changes made on `hot-fix` are included.
