@@ -87,4 +87,4 @@ If you are a project maintainer, you can build and release a new version of
 
 If a `next` branch already exists and is ahead of `master` but there is a bug fix which needs to go out urgently, check out the latest `master` and create a new hotfix branch `git checkout -b hot-fix`. You can then proceed to follow the above steps, substituting `next` for `hotfix`.
 
-Once released, ensure `master` is merged into `next` so that the changes made on `hot-fix` are included.
+Once released, ensure `master` is merged into `next` so that the changes made on `hotfix` are included.
