@@ -95,3 +95,31 @@ func packageAndName(fn *runtime.Func) (string, string) {
 	name = strings.Replace(name, "·", ".", -1)
 	return pkg, name
 }
+
+func pcsToFrames(pcs []uintptr) []runtime.Frame {
+	frames := runtime.CallersFrames(pcs)
+	s := make([]runtime.Frame, 0, len(pcs))
+	for {
+		frame, more := frames.Next()
+		s = append(s, frame)
+		if !more {
+			break
+		}
+	}
+	return s
+}
+
+func runtimeToErrorFrames(rtFrames []runtime.Frame) []StackFrame {
+	frames := make([]StackFrame, len(rtFrames))
+	for i, f := range rtFrames {
+		pkg, name := packageAndName(f.Func)
+		frames[i] = StackFrame{
+			File:           f.File,
+			LineNumber:     f.Line,
+			Name:           name,
+			Package:        pkg,
+			ProgramCounter: f.PC,
+		}
+	}
+	return frames
+}

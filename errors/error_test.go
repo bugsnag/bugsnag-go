@@ -4,28 +4,39 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"runtime/debug"
+	"reflect"
+	"runtime"
 	"testing"
 )
 
-func TestStackFormatMatches(t *testing.T) {
+type prettyStack []StackFrame
 
+func (s prettyStack) String() string {
+	buf := &bytes.Buffer{}
+	for _, f := range s {
+		_, _ = fmt.Fprintf(buf, "%#v\n", f)
+	}
+	return buf.String()
+}
+
+func callerFrames(skip int) []runtime.Frame {
+	callers := make([]uintptr, MaxStackDepth)
+	n := runtime.Callers(2+skip, callers)
+	return pcsToFrames(callers[:n])
+}
+
+func TestStackFrameMatches(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != 'a' {
 			t.Fatal(err)
 		}
 
-		bs := [][]byte{Errorf("hi").Stack(), debug.Stack()}
+		expected := runtimeToErrorFrames(callerFrames(0))[1:]
+		got := Errorf("hi").StackFrames()[1:]
 
-		// Ignore the first line (as it contains the PC of the .Stack() call)
-		bs[0] = bytes.SplitN(bs[0], []byte("\n"), 2)[1]
-		bs[1] = bytes.SplitN(bs[1], []byte("\n"), 2)[1]
-
-		if bytes.Compare(bs[0], bs[1]) != 0 {
-			t.Errorf("Stack didn't match")
-			t.Errorf("%s", bs[0])
-			t.Errorf("%s", bs[1])
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("Stacks didn't match\nGot:\n%v\nExpected:\n%v", prettyStack(got), prettyStack(expected))
 		}
 	}()
 
@@ -33,19 +44,17 @@ func TestStackFormatMatches(t *testing.T) {
 }
 
 func TestSkipWorks(t *testing.T) {
-
 	defer func() {
 		err := recover()
 		if err != 'a' {
 			t.Fatal(err)
 		}
 
-		bs := [][]byte{New("hi", 2).Stack(), debug.Stack()}
+		expected := runtimeToErrorFrames(callerFrames(2))
+		got := New("hi", 2).StackFrames()
 
-		if !bytes.HasSuffix(bs[1], bs[0]) {
-			t.Errorf("Stack didn't match")
-			t.Errorf("%s", bs[0])
-			t.Errorf("%s", bs[1])
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("Stacks didn't match\nGot:\n%v\nExpected:\n%v", prettyStack(got), prettyStack(expected))
 		}
 	}()
 
@@ -130,7 +139,7 @@ func ExampleError_Stack() {
 	fmt.Printf("Stack is %d bytes", len(e.Stack()))
 	// Output:
 	// Error: Oh noes!
-	// Stack is 589 bytes
+	// Stack is 505 bytes
 }
 
 func a() error {
