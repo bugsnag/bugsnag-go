@@ -20,7 +20,6 @@ type StackFrame struct {
 
 // NewStackFrame popoulates a stack frame object from the program counter.
 func NewStackFrame(pc uintptr) (frame StackFrame) {
-
 	frame = StackFrame{ProgramCounter: pc}
 	if frame.Func() == nil {
 		return
@@ -31,7 +30,18 @@ func NewStackFrame(pc uintptr) (frame StackFrame) {
 	// and we want to show the line that corresponds to the function call
 	frame.File, frame.LineNumber = frame.Func().FileLine(pc - 1)
 	return
+}
 
+// NewStackFrameFromRuntime populates a stack frame object from a runtime.Frame object.
+func NewStackFrameFromRuntime(frame runtime.Frame) StackFrame {
+	pkg, name := packageAndName(frame.Func)
+	return StackFrame{
+		File:           frame.File,
+		LineNumber:     frame.Line,
+		Name:           name,
+		Package:        pkg,
+		ProgramCounter: frame.PC,
+	}
 }
 
 // Func returns the function that this stackframe corresponds to
@@ -112,14 +122,7 @@ func pcsToFrames(pcs []uintptr) []runtime.Frame {
 func runtimeToErrorFrames(rtFrames []runtime.Frame) []StackFrame {
 	frames := make([]StackFrame, len(rtFrames))
 	for i, f := range rtFrames {
-		pkg, name := packageAndName(f.Func)
-		frames[i] = StackFrame{
-			File:           f.File,
-			LineNumber:     f.Line,
-			Name:           name,
-			Package:        pkg,
-			ProgramCounter: f.PC,
-		}
+		frames[i] = NewStackFrameFromRuntime(f)
 	}
 	return frames
 }

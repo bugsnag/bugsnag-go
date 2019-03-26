@@ -105,13 +105,8 @@ func (err *Error) Stack() []byte {
 // stack.
 func (err *Error) StackFrames() []StackFrame {
 	if err.frames == nil {
-		err.frames = make([]StackFrame, len(err.stack))
-
-		for i, pc := range err.stack {
-			err.frames[i] = NewStackFrame(pc)
-		}
+		err.frames = runtimeToErrorFrames(pcsToFrames(err.stack))
 	}
-
 	return err.frames
 }
 
