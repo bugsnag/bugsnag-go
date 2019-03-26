@@ -78,7 +78,7 @@ If you are a project maintainer, you can build and release a new version of
 1. Create a PR from `next` -> `master` titled `Release vX.X.X`, adding a description to help the reviewer understand the scope of the release
 1. Await PR approval and CI pass
 1. Merge to master on GitHub, using the UI to set the merge commit message to be `vX.X.X`
-1. Create a release from current `master` on GitHub called `vX.X.X`. Copy and paste the markdown from this release's notes in `CONTRIBUTING.md` (this will create a git tag for you).
+1. Create a release from current `master` on GitHub called `vX.X.X`. Copy and paste the markdown from this release's notes in `CHANGELOG.md` (this will create a git tag for you).
 1. Ensure setup guides for Go (and its frameworks) on docs.bugsnag.com are correct and up to date.
 1. Merge `master` into `next` (since we just did a merge commit the other way, this will be a fastforward update) and push it so that it is ready for future PRs.
 
