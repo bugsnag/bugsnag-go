@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION defines the version of this Bugsnag notifier
-const VERSION = "1.4.0"
+const VERSION = "1.5.0"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
@@ -239,7 +239,6 @@ func init() {
 		ReleaseStage:        "",
 		ParamsFilters:       []string{"password", "secret", "authorization", "cookie"},
 		SourceRoot:          sourceRoot,
-		// * for app-engine
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),

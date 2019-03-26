@@ -18,7 +18,6 @@ Learn more about Bugsnag's [Go error monitoring and error reporting](https://www
 
 1. [Create a Bugsnag account](https://bugsnag.com)
 2. Complete the instructions in the integration guide for your framework:
-    * [Google App Engine](https://docs.bugsnag.com/platforms/go/app-engine/)
     * [Martini](https://docs.bugsnag.com/platforms/go/martini)
     * [Negroni](https://docs.bugsnag.com/platforms/go/negroni)
     * [net/http](https://docs.bugsnag.com/platforms/go/net-http)
@@ -29,7 +28,6 @@ Learn more about Bugsnag's [Go error monitoring and error reporting](https://www
 ## Support
 
 * Read the configuration reference:
-    * [Google App Engine](https://docs.bugsnag.com/platforms/go/app-engine/configuration-options/)
     * [Martini](https://docs.bugsnag.com/platforms/go/martini/configuration-options/)
     * [Negroni](https://docs.bugsnag.com/platforms/go/negroni/configuration-options/)
     * [net/http](https://docs.bugsnag.com/platforms/go/net-http/configuration-options/)

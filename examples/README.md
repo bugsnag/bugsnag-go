@@ -13,4 +13,3 @@ The examples that expose a HTTP port will all listen on 9001.
 * [Using Negroni](negroni) (web framework)
 * [Using Martini](martini) (web framework)
 * [Using Revel](revelapp) (web framework)
-* [Deploying to Google App Engine](appengine)

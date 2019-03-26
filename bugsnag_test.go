@@ -92,19 +92,10 @@ func TestNotify(t *testing.T) {
 		return nil
 	})
 
-	Notify(
-		fmt.Errorf("hello world"),
-		StartSession(context.Background()),
-		generateSampleConfig(ts.URL),
-		User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
-		Context{"testing"},
-		MetaData{"test": {
-			"password": "sneaky",
-			"value":    "able",
-			"broken":   complex(1, 2),
-			"recurse":  recurse,
-		}},
-	)
+	md := MetaData{"test": {"password": "sneaky", "value": "able", "broken": complex(1, 2), "recurse": recurse}}
+	user := User{Id: "123", Name: "Conrad", Email: "me@cirw.in"}
+	config := generateSampleConfig(ts.URL)
+	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, Context{"testing"}, md)
 
 	json, err := simplejson.NewJson(<-reports)
 
@@ -141,8 +132,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "bugsnag_test.go", Method: "TestNotify", InProject: true})
-	checkFrame(t, getIndex(exception, "stacktrace", 1), stackFrame{File: "testing/testing.go", Method: "tRunner", InProject: false})
+	verifyExistsInStackTrace(t, exception, &stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 98, InProject: true})
 }
 
 type testPublisher struct {
@@ -325,8 +315,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	checkFrame(t, getIndex(exception, "stacktrace", 0), stackFrame{File: "runtime/panic.go", Method: "gopanic", InProject: false})
-	checkFrame(t, getIndex(exception, "stacktrace", 3), stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true})
+	verifyExistsInStackTrace(t, exception, &stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 24})
 }
 
 func TestAutoNotify(t *testing.T) {
@@ -622,19 +611,18 @@ func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
 	}
 }
 
-func checkFrame(t *testing.T, frame *simplejson.Json, exp stackFrame) {
-	if got := getString(frame, "file"); got != exp.File {
-		t.Errorf("Expected frame file to be '%s' but was '%s'", exp.File, got)
+func verifyExistsInStackTrace(t *testing.T, exception *simplejson.Json, exp *stackFrame) {
+	isFile := func(frame *simplejson.Json) bool { return getString(frame, "file") == exp.File }
+	isMethod := func(frame *simplejson.Json) bool { return getString(frame, "method") == exp.Method }
+	isLineNumber := func(frame *simplejson.Json) bool { return getInt(frame, "lineNumber") == exp.LineNumber }
+	isInProject := func(frame *simplejson.Json) bool { return getBool(frame, "inProject") == exp.InProject }
+
+	arr, _ := exception.Get("stacktrace").Array()
+	for i := 0; i < len(arr); i++ {
+		frame := getIndex(exception, "stacktrace", i)
+		if isFile(frame) && isMethod(frame) && isLineNumber(frame) && isInProject(frame) {
+			return
+		}
 	}
-	if got := getString(frame, "method"); got != exp.Method {
-		t.Errorf("Expected frame method to be '%s' but was '%s'", exp.Method, got)
-	}
-	// We can unfortunately not be more specific with this check as different
-	// versions of Go might add/remove stack frames
-	if got := getInt(frame, "lineNumber"); got == 0 {
-		t.Errorf("Expected frame line number to be %d but was %d", exp.LineNumber, got)
-	}
-	if got := getBool(frame, "inProject"); got != exp.InProject {
-		t.Errorf("Expected frame inProject to be '%v' but was '%v'", exp.InProject, got)
-	}
+	t.Errorf("Could not find expected stackframe %v in exception '%v'", exp, exception)
 }
