@@ -20,6 +20,7 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 
 	startPanickingProcess(t, "handled", ts.URL)
 
+	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
 	json, err := simplejson.NewJson(<-reports)
 	if err != nil {
 		t.Fatal(err)
@@ -42,12 +43,24 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 	event := getIndex(json, "events", 0)
 	assertValidSession(t, event, true)
 
-	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
-	frame := getIndex(getIndex(event, "exceptions", 0), "stacktrace", 1)
-	if getBool(frame, "inProject") != true ||
-		getString(frame, "file") != "panicwrap_test.go" ||
-		getInt(frame, "lineNumber") == 0 {
-		t.Errorf("stack frame seems wrong at index 1: %v", frame)
+	frames := event.Get("exceptions").
+		GetIndex(0).
+		Get("stacktrace")
+
+	found := false
+	for i := range frames.MustArray() {
+		frame := frames.GetIndex(i)
+		if getString(frame, "file") == "panicwrap_test.go" &&
+			getBool(frame, "inProject") &&
+			getInt(frame, "lineNumber") != 0 {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("stack frames seem wrong: can't find panicwrap_test.go frame")
+		s, _ := frames.EncodePretty()
+		t.Log(string(s))
 	}
 }
 
