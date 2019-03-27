@@ -133,15 +133,6 @@ func ExampleNew_skip() {
 	}()
 }
 
-func ExampleError_Stack() {
-	e := New("Oh noes!", 1)
-	fmt.Printf("Error: %s\n", e.Error())
-	fmt.Printf("Stack is %d bytes", len(e.Stack()))
-	// Output:
-	// Error: Oh noes!
-	// Stack is 505 bytes
-}
-
 func a() error {
 	b(5)
 	return nil
