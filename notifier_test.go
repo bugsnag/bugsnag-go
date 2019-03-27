@@ -117,7 +117,6 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 }
 
 func assertStackframeCount(t *testing.T, expCount int) {
-	t.Helper()
 	report, _ := simplejson.NewJson(<-bugsnaggedReports)
 	stacktrace := GetIndex(GetIndex(report, "events", 0), "exceptions", 0).Get("stacktrace")
 	if s := stacktrace.MustArray(); len(s) != expCount {
