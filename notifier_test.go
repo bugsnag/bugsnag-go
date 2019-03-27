@@ -2,9 +2,11 @@ package bugsnag_test
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/bitly/go-simplejson"
+
 	"github.com/bugsnag/bugsnag-go"
 	. "github.com/bugsnag/bugsnag-go/testutil"
 )
@@ -20,6 +22,26 @@ func notifierSetup(url string) *bugsnag.Notifier {
 
 func crash(s interface{}) int {
 	return s.(int)
+}
+
+// numCrashFrames returns the number of frames to expect from calling crash(...)
+func numCrashFrames(s interface{}) (n int) {
+	defer func() {
+		_ = recover()
+		pcs := make([]uintptr, 50)
+		// exclude Callers, deferred anon function, & numCrashFrames itself
+		m := runtime.Callers(3, pcs)
+		frames := runtime.CallersFrames(pcs[:m])
+		for {
+			n++
+			_, more := frames.Next()
+			if !more {
+				break
+			}
+		}
+	}()
+	crash(s)
+	return
 }
 
 func TestStackframesAreSkippedCorrectly(t *testing.T) {
@@ -61,22 +83,13 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 		assertStackframeCount(st, 3)
 	})
 
-	// Expect the following frames to be present for *.AutoNotify
-	/*
-		{ "file": "runtime/panic.go", "method": "gopanic" },
-		{ "file": "runtime/iface.go", "method": "panicdottypeE" },
-		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func2.1" },
-		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func3" },
-		{ "file": "testing/testing.go", "method": "tRunner" },
-		{ "file": "runtime/asm_amd64.s", "method": "goexit" }
-	*/
 	t.Run("notifier.AutoNotify", func(st *testing.T) {
 		func() {
 			defer func() { recover() }()
 			defer notifier.AutoNotify()
 			crash("NaN")
 		}()
-		assertStackframeCount(st, 6)
+		assertStackframeCount(st, numCrashFrames("NaN"))
 	})
 	t.Run("bugsnag.AutoNotify", func(st *testing.T) {
 		func() {
@@ -84,35 +97,27 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 			defer bugsnag.AutoNotify()
 			crash("NaN")
 		}()
-		assertStackframeCount(st, 6)
+		assertStackframeCount(st, numCrashFrames("NaN"))
 	})
 
-	// Expect the following frames to be present for *.Recover
-	/*
-		{ "file": "runtime/panic.go", "method": "gopanic" },
-		{ "file": "runtime/iface.go", "method": "panicdottypeE" },
-		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func4.1" },
-		{ "file": "$GOPATH/src/github.com/bugsnag/bugsnag-go/notifier_test.go", "method": "TestStackframesAreSkippedCorrectly.func4" },
-		{ "file": "testing/testing.go", "method": "tRunner" },
-		{ "file": "runtime/asm_amd64.s", "method": "goexit" }
-	*/
 	t.Run("notifier.Recover", func(st *testing.T) {
 		func() {
 			defer notifier.Recover()
 			crash("NaN")
 		}()
-		assertStackframeCount(st, 6)
+		assertStackframeCount(st, numCrashFrames("NaN"))
 	})
 	t.Run("bugsnag.Recover", func(st *testing.T) {
 		func() {
 			defer bugsnag.Recover()
 			crash("NaN")
 		}()
-		assertStackframeCount(st, 6)
+		assertStackframeCount(st, numCrashFrames("NaN"))
 	})
 }
 
 func assertStackframeCount(t *testing.T, expCount int) {
+	t.Helper()
 	report, _ := simplejson.NewJson(<-bugsnaggedReports)
 	stacktrace := GetIndex(GetIndex(report, "events", 0), "exceptions", 0).Get("stacktrace")
 	if s := stacktrace.MustArray(); len(s) != expCount {
