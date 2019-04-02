@@ -24,7 +24,7 @@ func NewStackFrame(pc uintptr) (frame StackFrame) {
 	if frame.Func() == nil {
 		return
 	}
-	frame.Package, frame.Name = packageAndName(frame.Func())
+	frame.Package, frame.Name = packageAndName(frame.Func().Name())
 
 	// pc -1 because the program counters we use are usually return addresses,
 	// and we want to show the line that corresponds to the function call
@@ -34,7 +34,14 @@ func NewStackFrame(pc uintptr) (frame StackFrame) {
 
 // NewStackFrameFromRuntime populates a stack frame object from a runtime.Frame object.
 func NewStackFrameFromRuntime(frame runtime.Frame) StackFrame {
-	pkg, name := packageAndName(frame.Func)
+	var pkg, name string
+	if frame.Func != nil {
+		pkg, name = packageAndName(frame.Func.Name())
+	} else if frame.Function != "" {
+		pkg, name = packageAndName(frame.Function)
+	} else {
+		return StackFrame{}
+	}
 	return StackFrame{
 		File:           frame.File,
 		LineNumber:     frame.Line,
@@ -81,10 +88,9 @@ func (frame *StackFrame) SourceLine() (string, error) {
 	return string(bytes.Trim(lines[frame.LineNumber-1], " \t")), nil
 }
 
-func packageAndName(fn *runtime.Func) (string, string) {
-	name := fn.Name()
-	pkg := ""
-
+// packageAndName splits a package path-qualified function name into the package path and function name.
+func packageAndName(qualifiedName string) (pkg string, name string) {
+	name = qualifiedName
 	// The name includes the path name to the package, which is unnecessary
 	// since the file name is already included.  Plus, it has center dots.
 	// That is, we see
@@ -103,7 +109,7 @@ func packageAndName(fn *runtime.Func) (string, string) {
 	}
 
 	name = strings.Replace(name, "·", ".", -1)
-	return pkg, name
+	return
 }
 
 func pcsToFrames(pcs []uintptr) []runtime.Frame {
