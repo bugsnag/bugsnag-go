@@ -76,7 +76,11 @@ func configureBasicBugsnag() {
 
 func handledError(w http.ResponseWriter, r *http.Request) {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
-		bugsnag.Notify(err, r.Context())
+		if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
+			bugsnag.Notify(err, r.Context(), bugsnag.ErrorClass{Name: errClass})
+		} else {
+			bugsnag.Notify(err, r.Context())
+		}
 	}
 }
 

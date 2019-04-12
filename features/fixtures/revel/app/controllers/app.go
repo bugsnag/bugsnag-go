@@ -18,7 +18,11 @@ func (c App) Index() revel.Result {
 
 func (c App) Handled() revel.Result {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
-		bugsnag.Notify(err, c.Args["context"])
+		if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
+			bugsnag.Notify(err, c.Args["context"], bugsnag.ErrorClass{Name: errClass})
+		} else {
+			bugsnag.Notify(err, c.Args["context"])
+		}
 	}
 	return c.Render()
 }
