@@ -7,6 +7,7 @@ This release re-introduces prioritizing user specified error classes over the in
 ### Bug fixes
 
 * Fixes a bug introduced in `v1.4.0` where `bugsnag.Notify(err, bugsnag.ErrorClass{Name: "MyCustomErrorClass"})` is not respected.
+  [#115](https://github.com/bugsnag/bugsnag-go/pull/115)
 
 ## 1.5.0 (2019-03-26)
 
