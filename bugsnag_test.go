@@ -95,7 +95,7 @@ func TestNotify(t *testing.T) {
 	md := MetaData{"test": {"password": "sneaky", "value": "able", "broken": complex(1, 2), "recurse": recurse}}
 	user := User{Id: "123", Name: "Conrad", Email: "me@cirw.in"}
 	config := generateSampleConfig(ts.URL)
-	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, Context{"testing"}, md)
+	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, ErrorClass{Name: "ExpectedErrorClass"}, Context{"testing"}, md)
 
 	json, err := simplejson.NewJson(<-reports)
 
@@ -116,7 +116,7 @@ func TestNotify(t *testing.T) {
 		Unhandled:      false,
 		Request:        &RequestJSON{},
 		User:           &User{Id: "123", Name: "Conrad", Email: "me@cirw.in"},
-		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "hello world"}},
+		Exceptions:     []exceptionJSON{{ErrorClass: "ExpectedErrorClass", Message: "hello world"}},
 	})
 	assertValidSession(t, event, handled)
 

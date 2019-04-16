@@ -130,7 +130,10 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		case error, errors.Error:
 			err = errors.New(datum.(error), 1)
 			event.Error = err
-			event.ErrorClass = err.TypeName()
+			// Only assign automatically if not explicitly set through ErrorClass already
+			if event.ErrorClass == "" {
+				event.ErrorClass = err.TypeName()
+			}
 			event.Message = err.Error()
 			event.Stacktrace = make([]stackFrame, len(err.StackFrames()))
 

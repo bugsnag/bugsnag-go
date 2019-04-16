@@ -135,7 +135,11 @@ func unhandledCrash() {
 
 func handledError() {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
-		bugsnag.Notify(err)
+		if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
+			bugsnag.Notify(err, bugsnag.ErrorClass{Name: errClass})
+		} else {
+			bugsnag.Notify(err)
+		}
 	}
 	// Give some time for the error to be sent before exiting
 	time.Sleep(200 * time.Millisecond)
