@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -32,14 +33,38 @@ func extractRequestInfo(ctx context.Context) (*RequestJSON, *http.Request) {
 // understands from the given HTTP request. Returns the sub-object supported by
 // the notify API.
 func extractRequestInfoFromReq(req *http.Request) *RequestJSON {
-	proto := "http://"
+	scheme := "http"
 	if req.TLS != nil {
-		proto = "https://"
+		scheme = "https"
 	}
+
+	var rawQuery string
+	parsedQuery, err := url.ParseQuery(req.URL.RawQuery)
+	if err != nil {
+		rawQuery = req.URL.RawQuery
+	} else {
+		for key, values := range parsedQuery {
+			if contains(Config.ParamsFilters, key) {
+				for i, v := range values {
+					if len(v) != 0 {
+						values[i] = "FILTERED"
+					}
+				}
+			}
+		}
+		rawQuery = parsedQuery.Encode()
+	}
+	u := url.URL{
+		Scheme:   scheme,
+		Host:     req.Host,
+		Path:     req.URL.Path,
+		RawQuery: rawQuery,
+	}
+
 	return &RequestJSON{
 		ClientIP:   req.RemoteAddr,
 		HTTPMethod: req.Method,
-		URL:        proto + req.Host + req.RequestURI,
+		URL:        u.String(),
 		Referer:    req.Referer(),
 		Headers:    parseRequestHeaders(req.Header),
 	}
