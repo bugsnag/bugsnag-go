@@ -71,7 +71,11 @@ func unhandledCrash(c *gin.Context) {
 
 func handledError(c *gin.Context) {
 	if _, err := os.Open("nonexistent_file.txt"); err != nil {
-		bugsnag.Notify(err, c.Request.Context())
+		if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
+			bugsnag.Notify(err, c.Request.Context(), bugsnag.ErrorClass{Name: errClass})
+		} else {
+			bugsnag.Notify(err, c.Request.Context())
+		}
 	}
 }
 

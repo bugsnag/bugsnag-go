@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.1 (2019-04-15)
+
+This release re-introduces prioritizing user specified error classes over the inferred error class.
+
+### Bug fixes
+
+* Fixes a bug introduced in `v1.4.0` where `bugsnag.Notify(err, bugsnag.ErrorClass{Name: "MyCustomErrorClass"})` is not respected.
+  [#115](https://github.com/bugsnag/bugsnag-go/pull/115)
+
 ## 1.5.0 (2019-03-26)
 
 ### Enhancements

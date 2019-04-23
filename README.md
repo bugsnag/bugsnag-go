@@ -1,6 +1,6 @@
 # Bugsnag error reporter for Go
 [![Latest Version](http://img.shields.io/github/release/bugsnag/bugsnag-go.svg?style=flat-square)](https://github.com/bugsnag/bugsnag-go/releases)
-[![Build Status](https://travis-ci.com/bugsnag/bugsnag-go.svg)](https://travis-ci.com/bugsnag/bugsnag-go)
+[![Build Status](https://travis-ci.com/bugsnag/bugsnag-go.svg?branch=master)](https://travis-ci.com/bugsnag/bugsnag-go?branch=master)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
 Automatically detect crashes and report errors in your Go apps. Get alerts about errors and panics in real-time, including detailed error reports with diagnostic information. Understand and resolve issues as fast as possible.
