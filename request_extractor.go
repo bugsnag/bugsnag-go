@@ -33,41 +33,53 @@ func extractRequestInfo(ctx context.Context) (*RequestJSON, *http.Request) {
 // understands from the given HTTP request. Returns the sub-object supported by
 // the notify API.
 func extractRequestInfoFromReq(req *http.Request) *RequestJSON {
+	return &RequestJSON{
+		ClientIP:   req.RemoteAddr,
+		HTTPMethod: req.Method,
+		URL:        sanitizeURL(req),
+		Referer:    req.Referer(),
+		Headers:    parseRequestHeaders(req.Header),
+	}
+}
+
+// sanitizeURL will build up the URL matching the request. It will filter query parameters to remove sensitive fields.
+// The query part of the URL might appear differently (different order of parameters) if any filtering was done.
+func sanitizeURL(req *http.Request) string {
 	scheme := "http"
 	if req.TLS != nil {
 		scheme = "https"
 	}
 
-	var rawQuery string
+	rawQuery := req.URL.RawQuery
 	parsedQuery, err := url.ParseQuery(req.URL.RawQuery)
-	if err != nil {
-		rawQuery = req.URL.RawQuery
-	} else {
+	if err == nil {
+		changed := false
 		for key, values := range parsedQuery {
 			if contains(Config.ParamsFilters, key) {
 				for i, v := range values {
-					if len(v) != 0 {
-						values[i] = "FILTERED"
+					if len(v) == 0 {
+						// No need to filter empty parameters.
+						continue
 					}
+
+					values[i] = "FILTERED"
+					changed = true
 				}
 			}
 		}
-		rawQuery = parsedQuery.Encode()
+
+		if changed {
+			rawQuery = parsedQuery.Encode()
+		}
 	}
+
 	u := url.URL{
 		Scheme:   scheme,
 		Host:     req.Host,
 		Path:     req.URL.Path,
 		RawQuery: rawQuery,
 	}
-
-	return &RequestJSON{
-		ClientIP:   req.RemoteAddr,
-		HTTPMethod: req.Method,
-		URL:        u.String(),
-		Referer:    req.Referer(),
-		Headers:    parseRequestHeaders(req.Header),
-	}
+	return u.String()
 }
 
 func parseRequestHeaders(header map[string][]string) map[string]string {

@@ -56,30 +56,34 @@ func TestRequestExtractorCanHandleAbsentContext(t *testing.T) {
 }
 
 func TestExtractRequestInfoFromReq_RedactURL(t *testing.T) {
-	testCases := []struct { originalURI, expectedURL string}{
-		{"", "http://example.com"},
-		{"/", "http://example.com/"},
-		{"/foo.html", "http://example.com/foo.html"},
-		{"/foo.html?q=something&bar=123", "http://example.com/foo.html?bar=123&q=something"},
-		{"/foo.html?foo=1&foo=2&foo=3", "http://example.com/foo.html?foo=1&foo=2&foo=3"},
+	testCases := []struct{ in, exp string }{
+		{in: "", exp: "http://example.com"},
+		{in: "/", exp: "http://example.com/"},
+		{in: "/foo.html", exp: "http://example.com/foo.html"},
+		{in: "/foo.html?q=something&bar=123", exp: "http://example.com/foo.html?q=something&bar=123"},
+		{in: "/foo.html?foo=1&foo=2&foo=3", exp: "http://example.com/foo.html?foo=1&foo=2&foo=3"},
 
-		{"/foo.html?access_token=something", "http://example.com/foo.html?access_token=FILTERED"},
-		{"/foo.html?access_token=something&access_token=", "http://example.com/foo.html?access_token=FILTERED&access_token="},
+		// Invalid query string.
+		{in: "/foo?%", exp: "http://example.com/foo?%"},
+
+		// Query params contain secrets
+		{in: "/foo.html?access_token=something", exp: "http://example.com/foo.html?access_token=FILTERED"},
+		{in: "/foo.html?access_token=something&access_token=", exp: "http://example.com/foo.html?access_token=FILTERED&access_token="},
 	}
 
 	for _, tc := range testCases {
-		parsedURL, err := url.Parse(tc.originalURI)
+		parsedURL, err := url.Parse(tc.in)
 		if err != nil {
-			t.Fatalf("error parsing originalURI: %v", err)
+			t.Fatalf("error parsing originalURI (bad test): %v", err)
 		}
 
 		req := &http.Request{
 			Host: "example.com",
-			URL: parsedURL,
+			URL:  parsedURL,
 		}
 		result := extractRequestInfoFromReq(req)
-		if result.URL != tc.expectedURL {
-			t.Errorf("expected URL to be '%s' but was '%s'", tc.expectedURL, result.URL)
+		if result.URL != tc.exp {
+			t.Errorf("expected URL to be '%s' but was '%s'", tc.exp, result.URL)
 		}
 	}
 }
