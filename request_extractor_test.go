@@ -75,9 +75,14 @@ func TestExtractRequestInfoFromReq_RedactURL(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		requestURI := tc.in.Path
+		if tc.in.RawQuery != "" {
+			requestURI += "?" + tc.in.RawQuery
+		}
 		req := &http.Request{
-			Host: "example.com",
-			URL:  &tc.in,
+			Host:       "example.com",
+			URL:        &tc.in,
+			RequestURI: requestURI,
 		}
 		result := extractRequestInfoFromReq(req)
 		if result.URL != tc.exp {

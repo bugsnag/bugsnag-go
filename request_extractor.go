@@ -52,26 +52,29 @@ func sanitizeURL(req *http.Request) string {
 
 	rawQuery := req.URL.RawQuery
 	parsedQuery, err := url.ParseQuery(req.URL.RawQuery)
-	if err == nil {
-		changed := false
-		for key, values := range parsedQuery {
-			if contains(Config.ParamsFilters, key) {
-				for i, v := range values {
-					if len(v) == 0 {
-						// No need to filter empty parameters.
-						continue
-					}
 
-					values[i] = "BUGSNAG_URL_FILTERED"
-					changed = true
+	if err != nil {
+		return scheme + "://" + req.Host + req.RequestURI
+	}
+
+	changed := false
+	for key, values := range parsedQuery {
+		if contains(Config.ParamsFilters, key) {
+			for i, v := range values {
+				if len(v) == 0 {
+					// No need to filter empty parameters.
+					continue
 				}
+
+				values[i] = "BUGSNAG_URL_FILTERED"
+				changed = true
 			}
 		}
+	}
 
-		if changed {
-			rawQuery = parsedQuery.Encode()
-			rawQuery = strings.Replace(rawQuery, "BUGSNAG_URL_FILTERED", "[FILTERED]", -1)
-		}
+	if changed {
+		rawQuery = parsedQuery.Encode()
+		rawQuery = strings.Replace(rawQuery, "BUGSNAG_URL_FILTERED", "[FILTERED]", -1)
 	}
 
 	u := url.URL{
