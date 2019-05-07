@@ -62,7 +62,7 @@ func sanitizeURL(req *http.Request) string {
 						continue
 					}
 
-					values[i] = "FILTERED"
+					values[i] = "BUGSNAG_URL_FILTERED"
 					changed = true
 				}
 			}
@@ -70,6 +70,7 @@ func sanitizeURL(req *http.Request) string {
 
 		if changed {
 			rawQuery = parsedQuery.Encode()
+			rawQuery = strings.Replace(rawQuery, "BUGSNAG_URL_FILTERED", "[FILTERED]", -1)
 		}
 	}
 
