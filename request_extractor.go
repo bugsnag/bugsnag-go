@@ -60,12 +60,7 @@ func sanitizeURL(req *http.Request) string {
 	changed := false
 	for key, values := range parsedQuery {
 		if contains(Config.ParamsFilters, key) {
-			for i, v := range values {
-				if len(v) == 0 {
-					// No need to filter empty parameters.
-					continue
-				}
-
+			for i := range values {
 				values[i] = "BUGSNAG_URL_FILTERED"
 				changed = true
 			}

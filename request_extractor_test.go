@@ -71,7 +71,7 @@ func TestExtractRequestInfoFromReq_RedactURL(t *testing.T) {
 
 		// Query params contain secrets
 		{in: url.URL{Path: "/foo.html", RawQuery: "access_token=something"}, exp: "http://example.com/foo.html?access_token=[FILTERED]"},
-		{in: url.URL{Path: "/foo.html", RawQuery: "access_token=something&access_token=&foo=bar"}, exp: "http://example.com/foo.html?access_token=[FILTERED]&access_token=&foo=bar"},
+		{in: url.URL{Path: "/foo.html", RawQuery: "access_token=something&access_token=&foo=bar"}, exp: "http://example.com/foo.html?access_token=[FILTERED]&access_token=[FILTERED]&foo=bar"},
 	}
 
 	for _, tc := range testCases {
