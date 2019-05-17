@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION defines the version of this Bugsnag notifier
-const VERSION = "1.5.1"
+const VERSION = "1.5.2"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
