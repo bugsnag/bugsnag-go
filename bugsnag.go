@@ -237,7 +237,7 @@ func init() {
 		AppVersion:          "",
 		AutoCaptureSessions: true,
 		ReleaseStage:        "",
-		ParamsFilters:       []string{"password", "secret", "authorization", "cookie"},
+		ParamsFilters:       []string{"password", "secret", "authorization", "cookie", "access_token"},
 		SourceRoot:          sourceRoot,
 		ProjectPackages:     []string{"main*"},
 		NotifyReleaseStages: nil,
