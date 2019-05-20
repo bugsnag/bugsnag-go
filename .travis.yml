@@ -12,6 +12,7 @@ addons:
 jobs:
   include:
     - stage: gotest
+      env: GO_VERSION=1.7
       script: make ci
       go: "1.7"
     - script: make ci

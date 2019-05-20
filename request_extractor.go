@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -32,17 +33,52 @@ func extractRequestInfo(ctx context.Context) (*RequestJSON, *http.Request) {
 // understands from the given HTTP request. Returns the sub-object supported by
 // the notify API.
 func extractRequestInfoFromReq(req *http.Request) *RequestJSON {
-	proto := "http://"
-	if req.TLS != nil {
-		proto = "https://"
-	}
 	return &RequestJSON{
 		ClientIP:   req.RemoteAddr,
 		HTTPMethod: req.Method,
-		URL:        proto + req.Host + req.RequestURI,
+		URL:        sanitizeURL(req),
 		Referer:    req.Referer(),
 		Headers:    parseRequestHeaders(req.Header),
 	}
+}
+
+// sanitizeURL will build up the URL matching the request. It will filter query parameters to remove sensitive fields.
+// The query part of the URL might appear differently (different order of parameters) if any filtering was done.
+func sanitizeURL(req *http.Request) string {
+	scheme := "http"
+	if req.TLS != nil {
+		scheme = "https"
+	}
+
+	rawQuery := req.URL.RawQuery
+	parsedQuery, err := url.ParseQuery(req.URL.RawQuery)
+
+	if err != nil {
+		return scheme + "://" + req.Host + req.RequestURI
+	}
+
+	changed := false
+	for key, values := range parsedQuery {
+		if contains(Config.ParamsFilters, key) {
+			for i := range values {
+				values[i] = "BUGSNAG_URL_FILTERED"
+				changed = true
+			}
+		}
+	}
+
+	if changed {
+		rawQuery = parsedQuery.Encode()
+		rawQuery = strings.Replace(rawQuery, "BUGSNAG_URL_FILTERED", "[FILTERED]", -1)
+	}
+
+	u := url.URL{
+		Scheme:   scheme,
+		Host:     req.Host,
+		Path:     req.URL.Path,
+		RawQuery: rawQuery,
+	}
+	return u.String()
 }
 
 func parseRequestHeaders(header map[string][]string) map[string]string {

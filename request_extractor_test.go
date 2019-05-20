@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -51,6 +52,42 @@ func TestRequestExtractorCanHandleAbsentContext(t *testing.T) {
 	if got, _ := extractRequestInfo(context.Background()); got != nil {
 		//really just testing that nothing panics here
 		t.Errorf("expected contexts without requst info to give nil sub-objects, but was '%s'", got)
+	}
+}
+
+func TestExtractRequestInfoFromReq_RedactURL(t *testing.T) {
+	testCases := []struct {
+		in  url.URL
+		exp string
+	}{
+		{in: url.URL{}, exp: "http://example.com"},
+		{in: url.URL{Path: "/"}, exp: "http://example.com/"},
+		{in: url.URL{Path: "/foo.html"}, exp: "http://example.com/foo.html"},
+		{in: url.URL{Path: "/foo.html", RawQuery: "q=something&bar=123"}, exp: "http://example.com/foo.html?q=something&bar=123"},
+		{in: url.URL{Path: "/foo.html", RawQuery: "foo=1&foo=2&foo=3"}, exp: "http://example.com/foo.html?foo=1&foo=2&foo=3"},
+
+		// Invalid query string.
+		{in: url.URL{Path: "/foo", RawQuery: "%"}, exp: "http://example.com/foo?%"},
+
+		// Query params contain secrets
+		{in: url.URL{Path: "/foo.html", RawQuery: "access_token=something"}, exp: "http://example.com/foo.html?access_token=[FILTERED]"},
+		{in: url.URL{Path: "/foo.html", RawQuery: "access_token=something&access_token=&foo=bar"}, exp: "http://example.com/foo.html?access_token=[FILTERED]&access_token=[FILTERED]&foo=bar"},
+	}
+
+	for _, tc := range testCases {
+		requestURI := tc.in.Path
+		if tc.in.RawQuery != "" {
+			requestURI += "?" + tc.in.RawQuery
+		}
+		req := &http.Request{
+			Host:       "example.com",
+			URL:        &tc.in,
+			RequestURI: requestURI,
+		}
+		result := extractRequestInfoFromReq(req)
+		if result.URL != tc.exp {
+			t.Errorf("expected URL to be '%s' but was '%s'", tc.exp, result.URL)
+		}
 	}
 }
 

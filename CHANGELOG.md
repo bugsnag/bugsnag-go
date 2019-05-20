@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.2 (2019-05-20)
+
+This release adds `"access_token"` to the default list of keys to filter and introduces filtering of URL query parameters under the request tab.
+
+### Enhancements
+
+* Adds filtering of URL parameters in the request tab of an event. Additionally adds `access_token` to the `ParamsFilters` by default.
+  [#117](https://github.com/bugsnag/bugsnag-go/pull/117)
+  [Adam Renberg Tamm](https://github.com/tgwizard)
+* Ignore Gin unit tests when running against the latest version of Gin on Go 1.7 as Gin has dropped support for Go 1.6 and Go 1.7.
+  [#118](https://github.com/bugsnag/bugsnag-go/pull/118)
+
 ## 1.5.1 (2019-04-15)
 
 This release re-introduces prioritizing user specified error classes over the inferred error class.
