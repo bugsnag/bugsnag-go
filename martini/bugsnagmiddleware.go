@@ -33,6 +33,7 @@ import (
 	"net/http"
 
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/go-martini/martini"
 )
 
@@ -47,6 +48,7 @@ const FrameworkName string = "Martini"
 func AutoNotify(rawData ...interface{}) martini.Handler {
 	updateGlobalConfig(rawData...)
 
+	device.AddVersion(FrameworkName, "v1.0.0") // Martini only has one release
 	state := bugsnag.HandledState{
 		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
 		OriginalSeverity: bugsnag.SeverityError,

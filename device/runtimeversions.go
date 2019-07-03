@@ -38,13 +38,13 @@ func AddVersion(framework, version string) {
 		versions = &RuntimeVersions{Go: runtime.Version()}
 	}
 	switch framework {
-	case "martini":
+	case "Martini":
 		versions.Martini = version
-	case "gin":
+	case "Gin":
 		versions.Gin = version
-	case "negroni":
+	case "Negroni":
 		versions.Negroni = version
-	case "revel":
+	case "Revel":
 		versions.Revel = version
 	}
 }
