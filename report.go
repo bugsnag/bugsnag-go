@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/bugsnag/bugsnag-go/sessions"
 	uuid "github.com/gofrs/uuid"
 )
@@ -57,6 +58,9 @@ type severityReasonJSON struct {
 
 type deviceJSON struct {
 	Hostname string `json:"hostname,omitempty"`
+	OsName   string `json:"osName,omitempty"`
+
+	RuntimeVersions *device.RuntimeVersions `json:"runtimeVersions,omitempty"`
 }
 
 // RequestJSON is the request information that populates the Request tab in the dashboard.
