@@ -48,7 +48,7 @@ const FrameworkName string = "Martini"
 func AutoNotify(rawData ...interface{}) martini.Handler {
 	updateGlobalConfig(rawData...)
 
-	device.AddVersion(FrameworkName, "v1.0.0") // Martini only has one release
+	device.AddVersion(FrameworkName, "v1.0") // The latest martini release from 2014
 	state := bugsnag.HandledState{
 		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
 		OriginalSeverity: bugsnag.SeverityError,
