@@ -16,8 +16,10 @@ jobs:
       script: make ci
       go: "1.7"
     - script: make ci
+      env: GO_VERSION=1.8
       go: "1.8"
     - script: make ci
+      env: GO_VERSION=1.9
       go: "1.9"
     - script: make ci
       go: "1.10"
