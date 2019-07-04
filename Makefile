@@ -14,8 +14,8 @@ updatedeps:
 test: alldeps
 	@#TODO: 2018-09-20 Not testing the 'errors' package as it relies on some very runtime-specific implementation details.
 	@# The testing of 'errors' needs to be revisited
-	@# Additionally skipping Gin if the Go version is 1.7, as the latest version of Gin has dropped support.
-	@if [ "$(GO_VERSION)" = "1.7" ]; then \
+	@# Additionally skipping Gin if the Go version is lower than 1.9, as the latest version of Gin has dropped support for these versions.
+	@if [ "$(GO_VERSION)" = "1.7" ] || [ "$(GO_VERSION)" = "1.8" ] || [ "$(GO_VERSION)" = "1.9" ]; then \
 		go test . ./martini ./negroni ./sessions ./headers; \
 	else \
 		go test . ./gin ./martini ./negroni ./sessions ./headers; \
