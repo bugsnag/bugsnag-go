@@ -36,7 +36,7 @@ func TestModifiedRuntimeVersions(t *testing.T) {
 		{name: "Revel", got: rv.Revel, exp: "0.20.1"},
 	} {
 		if tc.got != tc.exp {
-			t.Errorf("expected pristine '%s' runtime version to be '%s' but was '%s'", tc.name, tc.exp, tc.got)
+			t.Errorf("expected modified '%s' runtime version to be '%s' but was '%s'", tc.name, tc.exp, tc.got)
 		}
 	}
 

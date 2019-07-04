@@ -4,16 +4,16 @@ import (
 	"runtime"
 )
 
-// Cached runtime versions
+// Cached runtime versions that can be updated globally by framework
+// integrations through AddVersion.
 var versions *RuntimeVersions
 
 // RuntimeVersions define the various versions of Go and any framework that may
 // be in use.
 // As a user of the notifier you're unlikely to need to modify this struct.
 // As such, the authors reserve the right to introduce breaking changes to the
-// properties in this struct, in particular the framework versions are liable
-// to change in new versions of the notifier, in minor/patch versions. You have
-// been warned.
+// properties in this struct. In particular the framework versions are liable
+// to change in new versions of the notifier in minor/patch versions.
 type RuntimeVersions struct {
 	Go string `json:"go"`
 
