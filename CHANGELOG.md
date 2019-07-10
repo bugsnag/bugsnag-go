@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.3 (2019-07-11)
+
+This release adds runtime version data to the report and session payloads, which will show up under the Device tab in the Bugsnag dashboard.
+
+### Enhancements
+
+* Ignore Gin unit tests when running against the latest version of Gin on Go versions below 1.10 as Gin has dropped support for these versions.
+  [#121](https://github.com/bugsnag/bugsnag-go/pull/121)
+* Introduce runtime version data to the report and session payloads. Additionally adds the OS name to reports.
+  [#122](https://github.com/bugsnag/bugsnag-go/pull/122)
+
 ## 1.5.2 (2019-05-20)
 
 This release adds `"access_token"` to the default list of keys to filter and introduces filtering of URL query parameters under the request tab.
