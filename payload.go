@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/bugsnag/bugsnag-go/headers"
 	"github.com/bugsnag/bugsnag-go/sessions"
 )
@@ -69,7 +71,11 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 					Version:      p.AppVersion,
 				},
 				Context: p.Context,
-				Device:  &deviceJSON{Hostname: p.Hostname},
+				Device: &deviceJSON{
+					Hostname:        p.Hostname,
+					OsName:          runtime.GOOS,
+					RuntimeVersions: device.GetRuntimeVersions(),
+				},
 				Request: p.Request,
 				Exceptions: []exceptionJSON{
 					exceptionJSON{

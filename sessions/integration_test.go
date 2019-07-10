@@ -65,19 +65,24 @@ func TestStartSession(t *testing.T) {
 		tt := []struct {
 			prop string
 			exp  interface{}
-			got  interface{}
 		}{
-			{got: getString(json, "notifier.name"), prop: "notifier.name", exp: "Bugsnag Go"},
-			{got: getString(json, "notifier.url"), prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
-			{got: getString(json, "notifier.version"), prop: "notifier.version", exp: bugsnag.VERSION},
-			{got: getString(json, "app.releaseStage"), prop: "app.releaseStage", exp: "production"},
-			{got: getString(json, "app.version"), prop: "app.version", exp: ""},
-			{got: getString(json, "device.osName"), prop: "device.osName", exp: runtime.GOOS},
-			{got: getString(json, "device.hostname"), prop: "device.hostname", exp: hostname},
+			{prop: "notifier.name", exp: "Bugsnag Go"},
+			{prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
+			{prop: "notifier.version", exp: bugsnag.VERSION},
+			{prop: "app.releaseStage", exp: "production"},
+			{prop: "app.version", exp: ""},
+			{prop: "device.osName", exp: runtime.GOOS},
+			{prop: "device.hostname", exp: hostname},
+			{prop: "device.runtimeVersions.go", exp: runtime.Version()},
+			{prop: "device.runtimeVersions.gin", exp: ""},
+			{prop: "device.runtimeVersions.martini", exp: ""},
+			{prop: "device.runtimeVersions.negroni", exp: ""},
+			{prop: "device.runtimeVersions.revel", exp: ""},
 		}
 		for _, tc := range tt {
-			if tc.got != tc.exp {
-				t.Errorf("Expected '%s' to be '%s' but was %s", tc.prop, tc.exp, tc.got)
+			got := getString(json, tc.prop)
+			if got != tc.exp {
+				t.Errorf("Expected '%s' to be '%s' but was '%s'", tc.prop, tc.exp, got)
 			}
 		}
 		sessionCounts := getIndex(json, "sessionCounts", 0)

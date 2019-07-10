@@ -2,6 +2,7 @@ package bugsnaggin
 
 import (
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +21,7 @@ func AutoNotify(rawData ...interface{}) gin.HandlerFunc {
 		}
 	}
 
+	device.AddVersion(FrameworkName, gin.Version)
 	state := bugsnag.HandledState{
 		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
 		OriginalSeverity: bugsnag.SeverityError,
