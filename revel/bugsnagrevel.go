@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/revel/revel"
 )
 
@@ -109,6 +110,7 @@ func init() {
 			Logger:              new(bugsnagRevelLogger),
 			Synchronous:         c.BoolDefault("bugsnag.synchronous", config.Synchronous),
 		})
+		device.AddVersion(FrameworkName, revel.Version)
 	}, order)
 }
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/urfave/negroni"
 )
 
@@ -17,6 +18,7 @@ type handler struct {
 // AutoNotify sends any panics to bugsnag, and then re-raises them.
 func AutoNotify(rawData ...interface{}) negroni.Handler {
 	updateGlobalConfig(rawData...)
+	device.AddVersion(FrameworkName, "unknown") // Negroni exposes no version prop.
 	state := bugsnag.HandledState{
 		SeverityReason:   bugsnag.SeverityReasonUnhandledMiddlewareError,
 		OriginalSeverity: bugsnag.SeverityError,

@@ -25,6 +25,8 @@ type appPayload struct {
 type devicePayload struct {
 	OsName   string `json:"osName,omitempty"`
 	Hostname string `json:"hostname,omitempty"`
+
+	RuntimeVersions *device.RuntimeVersions `json:"runtimeVersions"`
 }
 
 // sessionCountsPayload defines the .sessionCounts subobject of the payload
@@ -64,8 +66,9 @@ func makeSessionPayload(sessions []*Session, config *SessionTrackingConfiguratio
 			ReleaseStage: releaseStage,
 		},
 		Device: &devicePayload{
-			OsName:   runtime.GOOS,
-			Hostname: hostname,
+			OsName:          runtime.GOOS,
+			Hostname:        hostname,
+			RuntimeVersions: device.GetRuntimeVersions(),
 		},
 		SessionCounts: []sessionCountsPayload{
 			{
