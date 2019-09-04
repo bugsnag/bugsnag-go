@@ -7,7 +7,7 @@ deps:
 
 alldeps:
 	@if [ "$(GO_VERSION)" = "1.7" ] || [ "$(GO_VERSION)" = "1.8" ] || [ "$(GO_VERSION)" = "1.9" ]; then \
-		go get -v -d -t . ./martini ./negroni ./sessions ./headers; \
+		go get -v -d -t . ./martini ./negroni ./sessions ./headers ./device; \
 	else \
 		go get -v -d -t ./...; \
 	fi
@@ -20,9 +20,9 @@ test: alldeps
 	@# The testing of 'errors' needs to be revisited
 	@# Additionally skipping Gin if the Go version is lower than 1.9, as the latest version of Gin has dropped support for these versions.
 	@if [ "$(GO_VERSION)" = "1.7" ] || [ "$(GO_VERSION)" = "1.8" ] || [ "$(GO_VERSION)" = "1.9" ]; then \
-		go test . ./martini ./negroni ./sessions ./headers; \
+		go test . ./martini ./negroni ./sessions ./headers ./device; \
 	else \
-		go test . ./gin ./martini ./negroni ./sessions ./headers; \
+		go test . ./gin ./martini ./negroni ./sessions ./headers ./device; \
 	fi
 	@go vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		go get golang.org/x/tools/cmd/vet; \
