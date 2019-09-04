@@ -6,7 +6,11 @@ deps:
 	go get -v -d ./...
 
 alldeps:
-	go get -v -d -t ./...
+	@if [ "$(GO_VERSION)" = "1.7" ] || [ "$(GO_VERSION)" = "1.8" ] || [ "$(GO_VERSION)" = "1.9" ]; then \
+		go get -v -d -t . ./martini ./negroni ./sessions ./headers; \
+	else \
+		go get -v -d -t ./...; \
+	fi
 
 updatedeps:
 	go get -v -d -u ./...
