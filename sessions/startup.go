@@ -3,9 +3,6 @@ package sessions
 import (
 	"context"
 	"net/http"
-	"os"
-
-	"github.com/bugsnag/panicwrap"
 )
 
 // SendStartupSession is called by Bugsnag on startup, which will send a
@@ -24,12 +21,4 @@ func SendStartupSession(config *SessionTrackingConfiguration) context.Context {
 	}
 	go publisher.publish([]*Session{session})
 	return context.WithValue(ctx, contextSessionKey, session)
-}
-
-// Checks to see if this is the application process, as opposed to the process
-// that monitors for panics
-func isApplicationProcess() bool {
-	// Application process is run first, and this will only have been set when
-	// the monitoring process runs
-	return "" == os.Getenv(panicwrap.DEFAULT_COOKIE_KEY)
 }
