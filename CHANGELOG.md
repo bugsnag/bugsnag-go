@@ -1,5 +1,9 @@
 # Changelog
 
+## Next Release
+
+* Support pkg/errors stack traces
+
 ## 1.5.3 (2019-07-11)
 
 This release adds runtime version data to the report and session payloads, which will show up under the Device tab in the Bugsnag dashboard.
