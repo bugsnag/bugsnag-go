@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"reflect"
 	"runtime/debug"
 	"testing"
+
+	pkgerrors "github.com/pkg/errors"
 )
 
 func TestStackFormatMatches(t *testing.T) {
@@ -146,4 +149,44 @@ func b(i int) {
 
 func c() {
 	panic('a')
+}
+
+func TestUsesStackFromPkgErrors(t *testing.T) {
+	pkgErr := newPkgError()
+
+	err := New(pkgErr, 0)
+
+	expectedCallers := pkgErrorCallers(pkgErr)
+	actualCallers := err.Callers()
+	if !reflect.DeepEqual(expectedCallers, actualCallers) {
+		t.Logf("expected frames: %v\n", trace(expectedCallers))
+		t.Logf("actual frames: %v\n", trace(actualCallers))
+		t.Fatal("actual stack trace does not match expected")
+	}
+}
+
+func newPkgError() error {
+	return pkgerrors.New("some error")
+}
+
+func pkgErrorCallers(err error) []uintptr {
+	type stackTracer interface {
+		StackTrace() pkgerrors.StackTrace
+	}
+
+	st := err.(stackTracer).StackTrace()
+
+	callers := make([]uintptr, 0, len(st))
+	for _, f := range st {
+		callers = append(callers, uintptr(f))
+	}
+	return callers
+}
+
+func trace(callers []uintptr) pkgerrors.StackTrace {
+	trace := make(pkgerrors.StackTrace, 0, len(callers))
+	for _, c := range callers {
+		trace = append(trace, pkgerrors.Frame(c))
+	}
+	return trace
 }

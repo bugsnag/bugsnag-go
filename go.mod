@@ -17,6 +17,7 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/myesui/uuid v1.0.0 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/revel/config v0.21.0 // indirect
 	github.com/revel/log15 v2.11.20+incompatible // indirect
 	github.com/revel/pathtree v0.0.0-20140121041023-41257a1839e9 // indirect
