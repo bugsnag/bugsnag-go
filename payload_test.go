@@ -75,7 +75,7 @@ func makeLargePayload() *payload {
 		User:         &user,
 		Ctx:          ctx,
 		MetaData: map[string]map[string]interface{}{
-			"custom tab": map[string]interface{}{
+			"custom tab": {
 				"my key": "my value",
 			},
 		},

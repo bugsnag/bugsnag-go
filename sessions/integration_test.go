@@ -75,6 +75,7 @@ func TestStartSession(t *testing.T) {
 			{prop: "device.hostname", exp: hostname},
 			{prop: "device.runtimeVersions.go", exp: runtime.Version()},
 			{prop: "device.runtimeVersions.gin", exp: ""},
+			{prop: "device.runtimeVersions.iris", exp: ""},
 			{prop: "device.runtimeVersions.martini", exp: ""},
 			{prop: "device.runtimeVersions.negroni", exp: ""},
 			{prop: "device.runtimeVersions.revel", exp: ""},

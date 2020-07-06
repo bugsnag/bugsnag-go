@@ -67,7 +67,11 @@ jobs:
       script: make testnethttp
       env: GO_VERSION=1.7
 
-
+    - stage: iris tests
+      script: make testiris
+      env:
+        - GO_VERSION=1.14
+        - IRIS_VERSION=v12.1.8
     - stage: gin tests
       script: make testgin
       env:
@@ -191,7 +195,7 @@ jobs:
       env:
         - GO_VERSION=1.7
         - GIN_VERSION=v1.0
-
+  
     - stage: martini tests
       script: make testmartini
       env: GO_VERSION=1.12

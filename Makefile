@@ -51,6 +51,9 @@ testnethttp: testsetup
 testgin: testsetup
 	bundle exec bugsnag-maze-runner -c features/gin_features
 
+testiris: testsetup
+	bundle exec bugsnag-maze-runner -c features/iris_features
+
 testmartini: testsetup
 	bundle exec bugsnag-maze-runner -c features/martini_features
 
@@ -60,4 +63,4 @@ testnegroni: testsetup
 testrevel: testsetup
 	bundle exec bugsnag-maze-runner -c features/revel_features
 
-.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testsetup testplain testnethttp testgin testmartini testrevel
+.PHONY: bin checkversion ci default deps generate releasebin test testacc testrace updatedeps testsetup testplain testnethttp testgin testiris testmartini testrevel

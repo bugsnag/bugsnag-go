@@ -24,6 +24,11 @@ function gin() {
     GIN_VERSION=$1 bundle exec bugsnag-maze-runner features/gin_features
 }
 
+function iris() {
+    echo "Running maze tests for Iris version $1"
+    IRIS_VERSION=$1 bundle exec bugsnag-maze-runner features/iris_features
+}
+
 function negroni() {
     echo "Running maze tests for Negroni version $1"
     NEGRONI_VERSION=$1 bundle exec bugsnag-maze-runner features/negroni_features

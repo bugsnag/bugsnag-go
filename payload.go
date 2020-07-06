@@ -64,7 +64,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(reportJSON{
 		APIKey: p.APIKey,
 		Events: []eventJSON{
-			eventJSON{
+			{
 				App: &appJSON{
 					ReleaseStage: p.ReleaseStage,
 					Type:         p.AppType,
@@ -78,7 +78,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 				},
 				Request: p.Request,
 				Exceptions: []exceptionJSON{
-					exceptionJSON{
+					{
 						ErrorClass: p.ErrorClass,
 						Message:    p.Message,
 						Stacktrace: p.Stacktrace,

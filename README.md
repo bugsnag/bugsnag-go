@@ -22,6 +22,7 @@ Learn more about Bugsnag's [Go error monitoring and error reporting](https://www
     * [Negroni](https://docs.bugsnag.com/platforms/go/negroni)
     * [net/http](https://docs.bugsnag.com/platforms/go/net-http)
     * [Revel](https://docs.bugsnag.com/platforms/go/revel)
+    * [Iris](https://github.com/bugsnag/bugsnag-go/blob/master/examples/iris/README.md)
     * [Other Go apps](https://docs.bugsnag.com/platforms/go/other)
 3. Relax!
 
