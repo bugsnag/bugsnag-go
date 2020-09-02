@@ -15,7 +15,7 @@ When contacting support, please include as much information as necessary, includ
     * Martini:
     * Negroni:
     * net/http:
-    * Ravel:
+    * Revel:
     * Other:
 
 ## Bug or Feature Requests
