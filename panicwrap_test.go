@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -44,10 +45,11 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 
 	// Yeah, we just caught a panic from the init() function below and sent it to the server running above (mindblown)
 	frame := getIndex(getIndex(event, "exceptions", 0), "stacktrace", 1)
-	if getBool(frame, "inProject") != true ||
-		getString(frame, "file") != "panicwrap_test.go" ||
-		getInt(frame, "lineNumber") == 0 {
-		t.Errorf("stack frame seems wrong at index 1: %v", frame)
+	if !strings.HasSuffix(getString(frame, "file"), "panicwrap_test.go") {
+		t.Errorf("stack frame 1 has an incorrect file: %v", frame)
+	}
+	if getInt(frame, "lineNumber") == 0 {
+		t.Errorf("stack frame 1 has an invalid line number: %v", frame)
 	}
 }
 
