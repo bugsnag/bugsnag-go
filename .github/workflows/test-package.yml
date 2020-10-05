@@ -23,14 +23,14 @@ jobs:
     - name: run tests (go1.7 - go1.10)
       # gin requires go1.11+
       if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
-      run: go test . ./martini ./negroni ./sessions ./headers
+      run: go test . ./martini ./negroni ./sessions ./headers ./errors
     - name: run tests
       if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10'
-      run: go test . ./gin ./martini ./negroni ./sessions ./headers
+      run: go test . ./gin ./martini ./negroni ./sessions ./headers ./errors
     - name: vet package (go1.7 - go1.10)
       if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
-      run: go vet . ./martini ./negroni ./sessions ./headers
+      run: go vet . ./martini ./negroni ./sessions ./headers ./errors
     - name: vet package
       # go1.12 vet shows spurious 'unknown identifier' issues
       if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.12'
-      run: go vet . ./gin ./martini ./negroni ./sessions ./headers
+      run: go vet . ./gin ./martini ./negroni ./sessions ./headers ./errors
