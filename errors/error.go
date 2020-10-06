@@ -105,10 +105,22 @@ func (err *Error) Stack() []byte {
 // stack.
 func (err *Error) StackFrames() []StackFrame {
 	if err.frames == nil {
-		err.frames = make([]StackFrame, len(err.stack))
-
-		for i, pc := range err.stack {
-			err.frames[i] = NewStackFrame(pc)
+		callers := runtime.CallersFrames(err.stack)
+		err.frames = make([]StackFrame, 0, len(err.stack))
+		for frame, more := callers.Next(); more; frame, more = callers.Next() {
+			if frame.Func == nil {
+				// Ignore fully inlined functions
+				continue
+			}
+			pkg, name := packageAndName(frame.Func)
+			err.frames = append(err.frames, StackFrame{
+				function:       frame.Func,
+				File:           frame.File,
+				LineNumber:     frame.Line,
+				Name:           name,
+				Package:        pkg,
+				ProgramCounter: frame.PC,
+			})
 		}
 	}
 
