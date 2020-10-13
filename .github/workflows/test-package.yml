@@ -1,0 +1,36 @@
+name: Test package against Go versions
+
+on: [ push, pull_request ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.7', '1.8', '1.9', '1.10', '1.11', '1.12', '1.13', '1.14', '1.15']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup go ${{ matrix.go-version }}
+      run: |
+        curl --silent --location --output gimme https://github.com/travis-ci/gimme/raw/v1.5.4/gimme
+        chmod +x ./gimme
+        eval "$(./gimme ${{ matrix.go-version }})"
+    - name: install dependencies
+      run: make alldeps
+    - name: run tests (go1.7 - go1.10)
+      # gin requires go1.11+
+      if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
+      run: go test . ./martini ./negroni ./sessions ./headers ./errors
+    - name: run tests
+      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10'
+      run: go test . ./gin ./martini ./negroni ./sessions ./headers ./errors
+    - name: vet package (go1.7 - go1.10)
+      if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
+      run: go vet . ./martini ./negroni ./sessions ./headers ./errors
+    - name: vet package
+      # go1.12 vet shows spurious 'unknown identifier' issues
+      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.12'
+      run: go vet . ./gin ./martini ./negroni ./sessions ./headers ./errors
