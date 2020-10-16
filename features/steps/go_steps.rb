@@ -1,9 +1,5 @@
 require 'net/http'
 
-When(/^I wait for the app to open port "(.*)"$/) do |port|
-  wait_for_port(port)
-end
-
 Then(/^the request(?: (\d+))? is a valid error report with api key "(.*)"$/) do |request_index, api_key|
   request_index ||= 0
   steps %Q{

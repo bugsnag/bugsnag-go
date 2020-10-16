@@ -34,3 +34,13 @@ jobs:
       # go1.12 vet shows spurious 'unknown identifier' issues
       if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.12'
       run: go vet . ./gin ./martini ./negroni ./sessions ./headers ./errors
+
+    - name: install integration dependencies
+      run: |
+        sudo apt-get install docker-compose
+        sudo gem install bundler
+        bundle install
+    - name: maze tests - plain Go apps
+      env:
+        GO_VERSION: ${{ matrix.go-version }}
+      run: bundle exec bugsnag-maze-runner --color --format progress features/plain_features features/net_http_features
