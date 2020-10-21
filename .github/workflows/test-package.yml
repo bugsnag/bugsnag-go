@@ -34,3 +34,39 @@ jobs:
       # go1.12 vet shows spurious 'unknown identifier' issues
       if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.12'
       run: go vet . ./gin ./martini ./negroni ./sessions ./headers ./errors
+
+    - name: install integration dependencies
+      run: |
+        sudo apt-get install docker-compose
+        sudo gem install bundler
+        bundle install
+    - name: maze tests - plain Go apps
+      env:
+        GO_VERSION: ${{ matrix.go-version }}
+      run: bundle exec bugsnag-maze-runner --color --format progress features/plain_features features/net_http_features
+    - name: maze tests - Martini apps
+      env:
+        GO_VERSION: ${{ matrix.go-version }}
+      run: bundle exec bugsnag-maze-runner --color --format progress features/martini_features
+    - name: maze tests - Gin apps
+      # gin requires go1.11+
+      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10'
+      env:
+        GO_VERSION: ${{ matrix.go-version }}
+      run: |
+        GIN_VERSION=v1.0 bundle exec bugsnag-maze-runner --color --format progress features/gin_features
+        GIN_VERSION=v1.3.0 bundle exec bugsnag-maze-runner --color --format progress features/gin_features
+    - name: maze tests - Negroni apps
+      env:
+        GO_VERSION: ${{ matrix.go-version }}
+      run: |
+        NEGRONI_VERSION=v1.0.0 bundle exec bugsnag-maze-runner --color --format progress features/negroni_features
+        NEGRONI_VERSION=v0.3.0 bundle exec bugsnag-maze-runner --color --format progress features/negroni_features
+    # Revel flakes out periodically on go1.12-1.15 (PLAT-5295)
+    # - name: maze tests - Revel apps
+    #   # Revel supports 1.12+
+    #   if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.11'
+    #   env:
+    #     GO_VERSION: ${{ matrix.go-version }}
+    #   run: |
+    #     REVEL_VERSION=v0.21.0 REVEL_CMD_VERSION=v0.21.1 bundle exec bugsnag-maze-runner --color --format progress features/revel_features

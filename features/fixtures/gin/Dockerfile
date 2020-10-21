@@ -10,7 +10,7 @@ ENV GOPATH /app
 COPY testbuild /app/src/github.com/bugsnag/bugsnag-go
 WORKDIR /app/src/github.com/bugsnag/bugsnag-go
 
-RUN go get -v -d ./...
+RUN go get -v -d . ./sessions ./headers ./errors ./gin
 
 FROM notifier_builder
 
@@ -19,7 +19,7 @@ ARG GIN_VERSION
 RUN test -n "$GIN_VERSION"
 
 RUN (cd /app/src/github.com/gin-gonic/gin && git checkout $GIN_VERSION)
-RUN go get -v -d ./...
+RUN go get -v -d . ./sessions ./headers ./errors ./gin
 RUN (cd /app/src/github.com/gin-gonic/gin && go install)
 
 

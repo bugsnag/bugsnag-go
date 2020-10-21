@@ -10,7 +10,7 @@ ENV GOPATH /app
 COPY testbuild /app/src/github.com/bugsnag/bugsnag-go
 WORKDIR /app/src/github.com/bugsnag/bugsnag-go
 
-RUN go get -v -d ./...
+RUN go get -v -d . ./sessions ./headers ./errors ./negroni
 
 FROM notifier_builder
 
@@ -19,7 +19,7 @@ ARG NEGRONI_VERSION
 RUN test -n "$NEGRONI_VERSION"
 
 RUN (cd /app/src/github.com/urfave/negroni && git checkout $NEGRONI_VERSION)
-RUN go get -v -d ./...
+RUN go get -v -d . ./sessions ./headers ./errors ./negroni
 RUN (cd /app/src/github.com/urfave/negroni && go install)
 
 
