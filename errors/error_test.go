@@ -8,80 +8,133 @@ import (
 	"testing"
 )
 
-// fixture functions
-func a() error {
-	b(5)
-	return nil
+// fixture functions doing work to avoid inlining
+func a(i int) error {
+	if b(i + 5) && b(i + 6) {
+		return nil
+	}
+	return fmt.Errorf("not gonna happen")
 }
 
-func b(i int) {
-	c()
+func b(i int) bool {
+	return c(i+2) > 12
 }
 
-func c() {
-	panic('a')
+// panicking function!
+func c(i int) int {
+	if i > 3 {
+		panic('a')
+	}
+	return i * i
 }
 
-func TestParseStack(t *testing.T) {
+func TestParsePanicStack(t *testing.T) {
 	defer func() {
 		err := New(recover(), 0)
-		if err.Err.Error() != "97" {
-			t.Errorf("Received incorrect error, expected 'a' got '%s'", err.Err.Error())
+		if err.Error() != "97" {
+			t.Errorf("Received incorrect error, expected 'a' got '%s'", err.Error())
 		}
 		if err.TypeName() != "*errors.errorString" {
 			t.Errorf("Error type was '%s'", err.TypeName())
 		}
+		for index, frame := range err.StackFrames() {
+			if frame.Func() == nil {
+				t.Errorf("Failed to remove nil frame %d", index)
+			}
+		}
 		expected := []StackFrame{
-			StackFrame{Name: "TestParseStack.func1", File: "errors/error_test.go"},
-			StackFrame{Name: "gopanic"},
-			StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 22},
-			StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 22},
-			StackFrame{Name: "b", File: "errors/error_test.go", LineNumber: 18},
+			StackFrame{Name: "TestParsePanicStack.func1", File: "errors/error_test.go"},
 			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 13},
 		}
 		assertStacksMatch(t, expected, err.StackFrames())
 	}()
 
-	a()
+	a(1)
+}
+
+func TestParseGeneratedStack(t *testing.T) {
+	err := New(fmt.Errorf("e_too_many_colander"), 0)
+	expected := []StackFrame{
+		StackFrame{Name: "TestParseGeneratedStack", File: "errors/error_test.go"},
+	}
+	if err.Error() != "e_too_many_colander" {
+		t.Errorf("Error name was '%s'", err.Error())
+	}
+	if err.TypeName() != "*errors.errorString" {
+		t.Errorf("Error type was '%s'", err.TypeName())
+	}
+	for index, frame := range err.StackFrames() {
+		if frame.Func() == nil {
+			t.Errorf("Failed to remove nil frame %d", index)
+		}
+	}
+	assertStacksMatch(t, expected, err.StackFrames())
 }
 
 func TestSkipWorks(t *testing.T) {
 	defer func() {
-		err := New(recover(), 2)
-		if err.Err.Error() != "97" {
-			t.Errorf("Received incorrect error, expected 'a' got '%s'", err.Err.Error())
+		err := New(recover(), 1)
+		if err.Error() != "97" {
+			t.Errorf("Received incorrect error, expected 'a' got '%s'", err.Error())
+		}
+
+		for index, frame := range err.StackFrames() {
+			if frame.Name == "TestSkipWorks.func1" {
+				t.Errorf("Failed to skip frame")
+			}
+			if frame.Func() == nil {
+				t.Errorf("Failed to remove inlined frame %d", index)
+			}
 		}
 
 		expected := []StackFrame{
-			StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 22},
-			StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 22},
-			StackFrame{Name: "b", File: "errors/error_test.go", LineNumber: 18},
 			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 13},
 		}
 
 		assertStacksMatch(t, expected, err.StackFrames())
 	}()
 
-	a()
+	a(4)
+}
+
+func checkFramesMatch(expected StackFrame, actual StackFrame) bool {
+	if actual.Name != expected.Name {
+		return false
+	}
+	// Not using exact match as it would change depending on whether
+	// the package is being tested within or outside of the $GOPATH
+	if expected.File != "" && !strings.HasSuffix(actual.File, expected.File) {
+		return false
+	}
+	if expected.Package != "" && actual.Package != expected.Package {
+		return false
+	}
+	if expected.LineNumber != 0 && actual.LineNumber != expected.LineNumber {
+		return false
+	}
+	return true
 }
 
 func assertStacksMatch(t *testing.T, expected []StackFrame, actual []StackFrame) {
-	for index, frame := range expected {
-		actualFrame := actual[index]
-		if actualFrame.Name != frame.Name {
-			t.Errorf("Frame %d method - Expected '%s' got '%s'", index, frame.Name, actualFrame.Name)
+	var lastmatch int = 0
+	var matched int = 0
+	// loop over the actual stacktrace, checking off expected frames as they
+	// are found. Each one might be in the middle of the stack, but the order
+	// should remain the same.
+	for _, actualFrame := range actual {
+		for index, expectedFrame := range expected {
+			if index < lastmatch {
+				continue
+			}
+			if checkFramesMatch(expectedFrame, actualFrame) {
+				lastmatch = index
+				matched += 1
+				break
+			}
 		}
-		// Not using exact match as it would change depending on whether
-		// the package is being tested within or outside of the $GOPATH
-		if frame.File != "" && !strings.HasSuffix(actualFrame.File, frame.File) {
-			t.Errorf("Frame %d file - Expected '%s' to end with '%s'", index, actualFrame.File, frame.File)
-		}
-		if frame.Package != "" && actualFrame.Package != frame.Package {
-			t.Errorf("Frame %d package - Expected '%s' to end with '%s'", index, actualFrame.Package, frame.Package)
-		}
-		if frame.LineNumber != 0 && actualFrame.LineNumber != frame.LineNumber {
-			t.Errorf("Frame %d line - Expected '%d' got '%d'", index, frame.LineNumber, actualFrame.LineNumber)
-		}
+	}
+	if matched != len(expected) {
+		t.Fatalf("failed to find matches for %d frames: '%v'\ngot: '%v'", len(expected)-matched, expected[matched:], actual)
 	}
 }
 
