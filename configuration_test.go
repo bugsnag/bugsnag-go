@@ -97,16 +97,18 @@ func TestIsProjectPackage(t *testing.T) {
 }
 
 func TestStripProjectPackage(t *testing.T) {
-
-	Configure(Configuration{ProjectPackages: []string{
-		"main",
-		"star*",
-		"example.com/a",
-		"example.com/b/*",
-		"example.com/c/**",
-	}})
-
 	gopath := os.Getenv("GOPATH")
+	Configure(Configuration{
+		ProjectPackages: []string{
+			"main",
+			"star*",
+			"example.com/a",
+			"example.com/b/*",
+			"example.com/c/**",
+		},
+		SourceRoot: gopath + "/src/",
+	})
+
 	var testCases = []struct {
 		File     string
 		Stripped string

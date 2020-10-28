@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.4 (2020-10-28)
+
+### Bug fixes
+
+* Account for inlined frames when unwinding stack traces by using
+  `runtime.CallersFrames`.
+  [#114](https://github.com/bugsnag/bugsnag-go/pull/114)
+  [#140](https://github.com/bugsnag/bugsnag-go/pull/140)
+
 ## 1.5.3 (2019-07-11)
 
 This release adds runtime version data to the report and session payloads, which will show up under the Device tab in the Bugsnag dashboard.

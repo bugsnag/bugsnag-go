@@ -612,15 +612,14 @@ func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
 }
 
 func verifyExistsInStackTrace(t *testing.T, exception *simplejson.Json, exp *stackFrame) {
-	isFile := func(frame *simplejson.Json) bool { return getString(frame, "file") == exp.File }
+	isFile := func(frame *simplejson.Json) bool { return strings.HasSuffix(getString(frame, "file"), exp.File) }
 	isMethod := func(frame *simplejson.Json) bool { return getString(frame, "method") == exp.Method }
 	isLineNumber := func(frame *simplejson.Json) bool { return getInt(frame, "lineNumber") == exp.LineNumber }
-	isInProject := func(frame *simplejson.Json) bool { return getBool(frame, "inProject") == exp.InProject }
 
 	arr, _ := exception.Get("stacktrace").Array()
 	for i := 0; i < len(arr); i++ {
 		frame := getIndex(exception, "stacktrace", i)
-		if isFile(frame) && isMethod(frame) && isLineNumber(frame) && isInProject(frame) {
+		if isFile(frame) && isMethod(frame) && isLineNumber(frame) {
 			return
 		}
 	}
