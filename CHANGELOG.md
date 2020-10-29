@@ -1,5 +1,13 @@
 # Changelog
 
+## TBD
+
+### Bug fixes
+
+* Send web framework name with severity reason if set. Previously this value was
+  ignored, obscuring the severity reason for failed web requests captured by
+  bugsnag middleware.
+
 ## 1.5.4 (2020-10-28)
 
 ### Bug fixes

@@ -14,6 +14,8 @@ Scenario: An error report is sent when an AutoNotified crash occurs which later 
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is true
+  And the event "severityReason.type" equals "unhandledErrorMiddleware" for request 0
+  And the event "severityReason.attributes.framework" equals "Martini" for request 0
   And the exception "errorClass" equals "*runtime.TypeAssertionError"
   And the exception "message" matches "interface conversion: interface ({} )?is struct {}, not string"
 
@@ -25,5 +27,6 @@ Scenario: An error report is sent when a go routine crashes which is reported th
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is true
+  And the event "severityReason.type" equals "handledPanic" for request 0
   And the exception "errorClass" equals "*errors.errorString"
   And the exception "message" equals "Go routine killed with auto notify"
