@@ -123,6 +123,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	}
 
 	var err *errors.Error
+	var callbacks []func(*Event)
 
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
@@ -169,6 +170,8 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		case HandledState:
 			event.handledState = datum
 			event.Severity = datum.OriginalSeverity
+		case func(*Event):
+			callbacks = append(callbacks, datum)
 		}
 	}
 
@@ -189,6 +192,13 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			File:       file,
 			LineNumber: frame.LineNumber,
 			InProject:  inProject,
+		}
+	}
+
+	for _, callback := range callbacks {
+		callback(event)
+		if event.Severity != event.handledState.OriginalSeverity {
+			event.handledState.SeverityReason = SeverityReasonCallbackSpecified
 		}
 	}
 
