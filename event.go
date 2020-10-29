@@ -43,7 +43,7 @@ type severity struct {
 }
 
 // The form of stacktrace that Bugsnag expects
-type stackFrame struct {
+type StackFrame struct {
 	Method     string `json:"method"`
 	File       string `json:"file"`
 	LineNumber int    `json:"lineNumber"`
@@ -85,7 +85,7 @@ type Event struct {
 	// The error message to be sent to Bugsnag. This defaults to the return value of Error.Error()
 	Message string
 	// The stacktrrace of the error to be sent to Bugsnag.
-	Stacktrace []stackFrame
+	Stacktrace []StackFrame
 
 	// The context to be sent to Bugsnag. This should be set to the part of the app that was running,
 	// e.g. for http requests, set it to the path.
@@ -136,7 +136,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 				event.ErrorClass = err.TypeName()
 			}
 			event.Message = err.Error()
-			event.Stacktrace = make([]stackFrame, len(err.StackFrames()))
+			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
 
 		case bool:
 			config = config.merge(&Configuration{Synchronous: bool(datum)})
@@ -187,7 +187,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			file = config.stripProjectPackages(file)
 		}
 
-		event.Stacktrace[i] = stackFrame{
+		event.Stacktrace[i] = StackFrame{
 			Method:     frame.Name,
 			File:       file,
 			LineNumber: frame.LineNumber,

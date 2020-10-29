@@ -37,3 +37,5 @@ Scenario: Sending an event using a callback to modify report contents
   And the event "context" equals "nonfatal.go:14"
   And the "file" of stack frame 0 equals "main.go"
   And stack frame 0 contains a local function spanning 238 to 244
+  And the "file" of stack frame 1 equals ">insertion<"
+  And the "lineNumber" of stack frame 1 equals 0

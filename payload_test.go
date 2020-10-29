@@ -43,7 +43,7 @@ func TestMarshalLargePayload(t *testing.T) {
 }
 
 func makeLargePayload() *payload {
-	stackframes := []stackFrame{
+	stackframes := []StackFrame{
 		{Method: "doA", File: "a.go", LineNumber: 65, InProject: false},
 		{Method: "fetchB", File: "b.go", LineNumber: 99, InProject: true},
 		{Method: "incrementI", File: "i.go", LineNumber: 651, InProject: false},

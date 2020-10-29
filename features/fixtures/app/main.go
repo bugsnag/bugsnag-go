@@ -238,6 +238,9 @@ func handledCallbackError() {
 	bugsnag.Notify(fmt.Errorf("Inadequent Prep Error"), func(event *bugsnag.Event) {
 		event.Context = "nonfatal.go:14"
 		event.Severity = bugsnag.SeverityInfo
+
+		event.Stacktrace[1].File = ">insertion<"
+		event.Stacktrace[1].LineNumber = 0
 	})
 	// Give some time for the error to be sent before exiting
 	time.Sleep(200 * time.Millisecond)

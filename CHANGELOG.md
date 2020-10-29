@@ -12,8 +12,15 @@
   bugsnag.Notify(err, func(event *bugsnag.Event) {
     event.ErrorClass = "Unexpected Termination"
     event.MetaData.Update(loadJobData())
+
+    if event.Stacktrace[0].File = "mylogger.go" {
+      event.Stacktrace = event.Stacktrace[1:]
+    }
   })
   ```
+
+  The stack trace of an event is now mutable so frames can be removed or
+  modified.
 
 ### Bug fixes
 
