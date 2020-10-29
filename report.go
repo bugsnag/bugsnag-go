@@ -53,7 +53,8 @@ type exceptionJSON struct {
 }
 
 type severityReasonJSON struct {
-	Type SeverityReason `json:"type,omitempty"`
+	Type                SeverityReason    `json:"type,omitempty"`
+	Attributes          map[string]string `json:"attributes,omitempty"`
 }
 
 type deviceJSON struct {

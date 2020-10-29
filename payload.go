@@ -128,7 +128,12 @@ func (p *payload) makeSession() *sessionJSON {
 
 func (p *payload) severityReasonPayload() *severityReasonJSON {
 	if reason := p.handledState.SeverityReason; reason != "" {
-		return &severityReasonJSON{Type: reason}
+		json := &severityReasonJSON{Type: reason}
+		if p.handledState.Framework != "" {
+			json.Attributes = make(map[string]string, 1)
+			json.Attributes["framework"] = p.handledState.Framework
+		}
+		return json
 	}
 	return nil
 }
