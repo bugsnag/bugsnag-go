@@ -2,6 +2,11 @@
 
 ## TBD
 
+### Enhancements
+
+* Extract stacktrace contents on errors wrapped by
+  [`pkg/errors`](https://github.com/pkg/errors).
+
 ### Bug fixes
 
 * Send web framework name with severity reason if set. Previously this value was

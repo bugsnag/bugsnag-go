@@ -4,6 +4,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	"github.com/pkg/errors"
 	"reflect"
 	"runtime"
 )
@@ -33,6 +34,11 @@ type ErrorWithStackFrames interface {
 	StackFrames() []StackFrame
 }
 
+type errorWithStack interface {
+	StackTrace() errors.StackTrace
+	Error() string
+}
+
 // New makes an Error from the given value. If that value is already an
 // error then it will be used directly, if not, it will be passed to
 // fmt.Errorf("%v"). The skip parameter indicates how far up the stack
@@ -47,6 +53,16 @@ func New(e interface{}, skip int) *Error {
 		return &Error{
 			Err:   e,
 			stack: e.Callers(),
+		}
+	case errorWithStack:
+		trace := e.StackTrace()
+		stack := make([]uintptr, len(trace))
+		for i, ptr := range trace {
+			stack[i] = uintptr(ptr) - 1
+		}
+		return &Error{
+			Err:   e,
+			stack: stack,
 		}
 	case ErrorWithStackFrames:
 		stack := make([]uintptr, len(e.StackFrames()))
