@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 // fixture functions doing work to avoid inlining
@@ -44,7 +47,7 @@ func TestParsePanicStack(t *testing.T) {
 		}
 		expected := []StackFrame{
 			StackFrame{Name: "TestParsePanicStack.func1", File: "errors/error_test.go"},
-			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 13},
+			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
 		}
 		assertStacksMatch(t, expected, err.StackFrames())
 	}()
@@ -88,7 +91,7 @@ func TestSkipWorks(t *testing.T) {
 		}
 
 		expected := []StackFrame{
-			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 13},
+			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
 		}
 
 		assertStacksMatch(t, expected, err.StackFrames())
@@ -180,6 +183,26 @@ func TestNewError(t *testing.T) {
 	if bytes.Compare(New(tews, 0).Stack(), err.Stack()) != 0 {
 		t.Errorf("Constructor with ErrorWithStackFrames failed")
 	}
+}
+
+func TestUnwrapPkgError(t *testing.T) {
+	_, _, line, ok := runtime.Caller(0) // grab line immediately before error generator
+	top := func() error {
+		err := fmt.Errorf("OH NO")
+		return errors.Wrap(err, "failed") // the correct line for the top of the stack
+	}
+	unwrapped := New(top(), 0) // if errors.StackTrace detection fails, this line will be top of stack
+	if !ok {
+		t.Fatalf("Something has gone wrong with loading the current stack")
+	}
+	if unwrapped.Error() != "failed: OH NO" {
+		t.Errorf("Failed to unwrap error: %s", unwrapped.Error())
+	}
+	expected := []StackFrame{
+		StackFrame{Name: "TestUnwrapPkgError.func1", File: "errors/error_test.go", LineNumber: line + 3},
+		StackFrame{Name: "TestUnwrapPkgError", File: "errors/error_test.go", LineNumber: line + 5},
+	}
+	assertStacksMatch(t, expected, unwrapped.StackFrames())
 }
 
 func ExampleErrorf() {
