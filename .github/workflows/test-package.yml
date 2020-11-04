@@ -6,6 +6,9 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'go/src/github.com/bugsnag/bugsnag-go' # relative to $GITHUB_WORKSPACE
     strategy:
       fail-fast: false
       matrix:
@@ -13,11 +16,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        path: 'go/src/github.com/bugsnag/bugsnag-go' # relative to $GITHUB_WORKSPACE
     - name: setup go ${{ matrix.go-version }}
       run: |
         curl --silent --location --output gimme https://github.com/travis-ci/gimme/raw/v1.5.4/gimme
         chmod +x ./gimme
         eval "$(./gimme ${{ matrix.go-version }})"
+    - name: set GOPATH
+      run: echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV
     - name: install dependencies
       run: make alldeps
     - name: run tests (go1.7 - go1.10)
