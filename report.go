@@ -49,7 +49,7 @@ type appJSON struct {
 type exceptionJSON struct {
 	ErrorClass string       `json:"errorClass"`
 	Message    string       `json:"message"`
-	Stacktrace []stackFrame `json:"stacktrace"`
+	Stacktrace []StackFrame `json:"stacktrace"`
 }
 
 type severityReasonJSON struct {

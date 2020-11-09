@@ -109,14 +109,36 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 	})
 }
 
-func assertStackframeCount(t *testing.T, expCount int) {
-	report, _ := simplejson.NewJson(<-bugsnaggedReports)
-	stacktrace := GetIndex(GetIndex(report, "events", 0), "exceptions", 0).Get("stacktrace")
-	if s := stacktrace.MustArray(); len(s) != expCount {
-		t.Errorf("Expected %d stackframe(s), but there were %d stackframes", expCount, len(s))
-		s, _ := stacktrace.EncodePretty()
-		t.Errorf(string(s))
-	}
+func TestModifyingEventsWithCallbacks(t *testing.T) {
+	server, eventQueue := Setup()
+	defer server.Close()
+	notifier := notifierSetup(server.URL)
+
+	bugsnag.Configure(bugsnag.Configuration{
+		APIKey:    TestAPIKey,
+		Endpoints: bugsnag.Endpoints{Notify: server.URL, Sessions: server.URL + "/sessions"},
+	})
+
+	t.Run("bugsnag.Notify with block", func(st *testing.T) {
+		notifier.Notify(fmt.Errorf("bnuuy"), bugsnag.Context{String: "should be overridden"}, func(event *bugsnag.Event) {
+			event.Context = "known unknowns"
+		})
+		json, _ := simplejson.NewJson(<-eventQueue)
+		event := GetIndex(json, "events", 0)
+		context := event.Get("context").MustString()
+		exception := GetIndex(event, "exceptions", 0)
+		class := exception.Get("errorClass").MustString()
+		message := exception.Get("message").MustString()
+		if class != "*errors.errorString" {
+			st.Errorf("incorrect error class '%s'", class)
+		}
+		if message != "bnuuy" {
+			st.Errorf("incorrect error message '%s'", message)
+		}
+		if context != "known unknowns" {
+			st.Errorf("failed to change context in block. '%s'", context)
+		}
+	})
 }
 
 func assertStackframesMatch(t *testing.T, expected []errors.StackFrame) {

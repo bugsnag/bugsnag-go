@@ -60,3 +60,12 @@ Then(/^I wait to receive (\d+) requests after the start up session?$/) do |reque
   sleep 1
   assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
 end
+
+Then("stack frame {int} contains a local function spanning {int} to {int}") do |frame, val, old_val|
+  # Old versions of Go put the line number on the end of the function
+  if ['1.7', '1.8'].include? ENV['GO_VERSION']
+    step "the \"lineNumber\" of stack frame #{frame} equals #{old_val}"
+  else
+    step "the \"lineNumber\" of stack frame #{frame} equals #{val}"
+  end
+end
