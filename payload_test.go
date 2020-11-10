@@ -79,6 +79,7 @@ func makeLargePayload() *payload {
 				"my key": "my value",
 			},
 		},
+		Unhandled: true,
 		handledState: handledState,
 	}
 	config := Configuration{
