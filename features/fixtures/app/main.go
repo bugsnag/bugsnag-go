@@ -76,6 +76,8 @@ func main() {
 		unhandledCrash()
 	case "handled", "endpoint legacy", "endpoint notify", "endpoint session":
 		handledError()
+	case "handled with callback":
+		handledCallbackError()
 	case "session":
 		session()
 	case "autonotify":
@@ -229,5 +231,17 @@ func user() {
 		Email: "test-user-email",
 	})
 
+	time.Sleep(200 * time.Millisecond)
+}
+
+func handledCallbackError() {
+	bugsnag.Notify(fmt.Errorf("Inadequent Prep Error"), func(event *bugsnag.Event) {
+		event.Context = "nonfatal.go:14"
+		event.Severity = bugsnag.SeverityInfo
+
+		event.Stacktrace[1].File = ">insertion<"
+		event.Stacktrace[1].LineNumber = 0
+	})
+	// Give some time for the error to be sent before exiting
 	time.Sleep(200 * time.Millisecond)
 }

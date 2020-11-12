@@ -132,7 +132,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &stackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 98, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 98, InProject: true})
 }
 
 type testPublisher struct {
@@ -315,7 +315,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &stackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 24})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 24})
 }
 
 func TestAutoNotify(t *testing.T) {
@@ -611,7 +611,7 @@ func assertValidSession(t *testing.T, event *simplejson.Json, unhandled bool) {
 	}
 }
 
-func verifyExistsInStackTrace(t *testing.T, exception *simplejson.Json, exp *stackFrame) {
+func verifyExistsInStackTrace(t *testing.T, exception *simplejson.Json, exp *StackFrame) {
 	isFile := func(frame *simplejson.Json) bool { return strings.HasSuffix(getString(frame, "file"), exp.File) }
 	isMethod := func(frame *simplejson.Json) bool { return getString(frame, "method") == exp.Method }
 	isLineNumber := func(frame *simplejson.Json) bool { return getInt(frame, "lineNumber") == exp.LineNumber }

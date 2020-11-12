@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.6.0 (2020-11-12)
+
+### Enhancements
+
+* Extract stacktrace contents on errors wrapped by
+  [`pkg/errors`](https://github.com/pkg/errors).
+  [#144](https://github.com/bugsnag/bugsnag-go/pull/144)
+* Support modifying an individual event using a callback function argument.
+
+  ```go
+  bugsnag.Notify(err, func(event *bugsnag.Event) {
+    event.ErrorClass = "Unexpected Termination"
+    event.MetaData.Update(loadJobData())
+
+    if event.Stacktrace[0].File = "mylogger.go" {
+      event.Stacktrace = event.Stacktrace[1:]
+    }
+  })
+  ```
+
+  The stack trace of an event is now mutable so frames can be removed or
+  modified.
+  [#146](https://github.com/bugsnag/bugsnag-go/pull/146)
+
+### Bug fixes
+
+* Send web framework name with severity reason if set. Previously this value was
+  ignored, obscuring the severity reason for failed web requests captured by
+  bugsnag middleware.
+  [#143](https://github.com/bugsnag/bugsnag-go/pull/143)
+
 ## 1.5.4 (2020-10-28)
 
 ### Bug fixes
