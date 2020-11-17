@@ -77,13 +77,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 					RuntimeVersions: device.GetRuntimeVersions(),
 				},
 				Request: p.Request,
-				Exceptions: []exceptionJSON{
-					exceptionJSON{
-						ErrorClass: p.ErrorClass,
-						Message:    p.Message,
-						Stacktrace: p.Stacktrace,
-					},
-				},
+				Exceptions:     p.exceptions(),
 				GroupingHash:   p.GroupingHash,
 				Metadata:       p.MetaData.sanitize(p.ParamsFilters),
 				PayloadVersion: notifyPayloadVersion,
@@ -139,4 +133,17 @@ func (p *payload) severityReasonPayload() *severityReasonJSON {
 		return json
 	}
 	return nil
+}
+
+func (p *payload) exceptions() []exceptionJSON {
+	exceptions := []exceptionJSON{
+		exceptionJSON{
+			ErrorClass: p.ErrorClass,
+			Message:    p.Message,
+			Stacktrace: p.Stacktrace,
+		},
+	}
+
+
+	return exceptions
 }
