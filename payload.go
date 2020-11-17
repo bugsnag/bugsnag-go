@@ -90,7 +90,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 				Session:        p.makeSession(),
 				Severity:       p.Severity.String,
 				SeverityReason: p.severityReasonPayload(),
-				Unhandled:      p.handledState.Unhandled,
+				Unhandled:      p.Unhandled,
 				User:           p.User,
 			},
 		},
@@ -111,7 +111,7 @@ func (p *payload) makeSession() *sessionJSON {
 
 	sessionMutex.Lock()
 	defer sessionMutex.Unlock()
-	session := sessions.IncrementEventCountAndGetSession(p.Ctx, p.handledState.Unhandled)
+	session := sessions.IncrementEventCountAndGetSession(p.Ctx, p.Unhandled)
 	if session != nil {
 		s := *session
 		return &sessionJSON{
@@ -128,7 +128,10 @@ func (p *payload) makeSession() *sessionJSON {
 
 func (p *payload) severityReasonPayload() *severityReasonJSON {
 	if reason := p.handledState.SeverityReason; reason != "" {
-		json := &severityReasonJSON{Type: reason}
+		json := &severityReasonJSON{
+			Type: reason,
+			UnhandledOverridden: p.handledState.Unhandled != p.Unhandled,
+		}
 		if p.handledState.Framework != "" {
 			json.Attributes = make(map[string]string, 1)
 			json.Attributes["framework"] = p.handledState.Framework

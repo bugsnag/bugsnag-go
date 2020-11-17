@@ -119,6 +119,27 @@ func TestModifyingEventsWithCallbacks(t *testing.T) {
 		Endpoints: bugsnag.Endpoints{Notify: server.URL, Sessions: server.URL + "/sessions"},
 	})
 
+	t.Run("bugsnag.Notify change unhandled in block", func(st *testing.T) {
+		notifier.Notify(fmt.Errorf("ahoy"), func(event *bugsnag.Event) {
+			event.Unhandled = true
+		})
+		json, _ := simplejson.NewJson(<-eventQueue)
+		event := GetIndex(json, "events", 0)
+		exception := GetIndex(event, "exceptions", 0)
+		message := exception.Get("message").MustString()
+		unhandled := event.Get("unhandled").MustBool()
+		overridden := event.Get("severityReason").Get("unhandledOverridden").MustBool()
+		if message != "ahoy" {
+			st.Errorf("incorrect error message '%s'", message)
+		}
+		if !unhandled {
+			st.Errorf("failed to change handled-ness in block")
+		}
+		if !overridden {
+			st.Errorf("failed to set handledness change in block")
+		}
+	})
+
 	t.Run("bugsnag.Notify with block", func(st *testing.T) {
 		notifier.Notify(fmt.Errorf("bnuuy"), bugsnag.Context{String: "should be overridden"}, func(event *bugsnag.Event) {
 			event.Context = "known unknowns"
@@ -137,6 +158,14 @@ func TestModifyingEventsWithCallbacks(t *testing.T) {
 		}
 		if context != "known unknowns" {
 			st.Errorf("failed to change context in block. '%s'", context)
+		}
+		if event.Get("unhandled").MustBool() {
+			st.Errorf("error is unexpectedly unhandled")
+		}
+		if overridden, err := event.Get("severityReason").Get("unhandledOverridden").Bool(); err == nil {
+			// if err == nil, then the value existed in the payload. the expectation
+			// is that unhandledOverridden is not sent when handled-ness is not changed.
+			st.Errorf("error unexpectedly has unhandledOverridden: %v", overridden)
 		}
 	})
 }
