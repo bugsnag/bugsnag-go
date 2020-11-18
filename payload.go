@@ -144,6 +144,19 @@ func (p *payload) exceptions() []exceptionJSON {
 		},
 	}
 
+	if p.Error == nil {
+		return exceptions
+	}
+
+	cause := p.Error.Cause
+	for cause != nil {
+		exceptions = append(exceptions, exceptionJSON{
+			ErrorClass: cause.TypeName(),
+			Message:    cause.Error(),
+			Stacktrace: generateStacktrace(cause, p.Configuration),
+		})
+		cause = cause.Cause
+	}
 
 	return exceptions
 }
