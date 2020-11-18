@@ -100,6 +100,8 @@ func main() {
 		multipleHandled()
 	case "multiple unhandled":
 		multipleUnhandled()
+	case "make unhandled with callback":
+		handledToUnhandled()
 	default:
 		log.Println("Not a valid test flag: " + *test)
 		os.Exit(1)
@@ -241,6 +243,15 @@ func handledCallbackError() {
 
 		event.Stacktrace[1].File = ">insertion<"
 		event.Stacktrace[1].LineNumber = 0
+	})
+	// Give some time for the error to be sent before exiting
+	time.Sleep(200 * time.Millisecond)
+}
+
+func handledToUnhandled() {
+	bugsnag.Notify(fmt.Errorf("unknown event"), func(event *bugsnag.Event) {
+		event.Unhandled = true
+		event.Severity = bugsnag.SeverityError
 	})
 	// Give some time for the error to be sent before exiting
 	time.Sleep(200 * time.Millisecond)

@@ -55,6 +55,7 @@ type exceptionJSON struct {
 type severityReasonJSON struct {
 	Type                SeverityReason    `json:"type,omitempty"`
 	Attributes          map[string]string `json:"attributes,omitempty"`
+	UnhandledOverridden bool              `json:"unhandledOverridden,omitempty"`
 }
 
 type deviceJSON struct {

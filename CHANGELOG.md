@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.0 (2020-11-18)
+
+### Enhancements
+
+* Support for changing the handled-ness of an event prior to delivery. This
+  allows for otherwise handled events to affect a project's stability score.
+
+  ```go
+  bugsnag.Notify(err, func(event *bugsnag.Event) {
+    event.Unhandled = true
+  })
+  ```
+
 ## 1.6.0 (2020-11-12)
 
 ### Enhancements

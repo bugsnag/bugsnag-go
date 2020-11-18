@@ -106,6 +106,8 @@ type Event struct {
 	Request *RequestJSON
 	// The reason for the severity and original value
 	handledState HandledState
+	// True if the event was caused by an automatic event
+	Unhandled bool
 }
 
 func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration) {
@@ -120,6 +122,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			Unhandled:        false,
 			Framework:        "",
 		},
+		Unhandled: false,
 	}
 
 	var err *errors.Error
@@ -170,6 +173,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		case HandledState:
 			event.handledState = datum
 			event.Severity = datum.OriginalSeverity
+			event.Unhandled = datum.Unhandled
 		case func(*Event):
 			callbacks = append(callbacks, datum)
 		}
