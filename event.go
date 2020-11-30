@@ -179,6 +179,20 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		}
 	}
 
+	event.Stacktrace = generateStacktrace(err, config)
+
+	for _, callback := range callbacks {
+		callback(event)
+		if event.Severity != event.handledState.OriginalSeverity {
+			event.handledState.SeverityReason = SeverityReasonCallbackSpecified
+		}
+	}
+
+	return event, config
+}
+
+func generateStacktrace(err *errors.Error, config *Configuration) []StackFrame {
+	stack := make([]StackFrame, len(err.StackFrames()))
 	for i, frame := range err.StackFrames() {
 		file := frame.File
 		inProject := config.isProjectPackage(frame.Package)
@@ -191,7 +205,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			file = config.stripProjectPackages(file)
 		}
 
-		event.Stacktrace[i] = StackFrame{
+		stack[i] = StackFrame{
 			Method:     frame.Name,
 			File:       file,
 			LineNumber: frame.LineNumber,
@@ -199,14 +213,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 		}
 	}
 
-	for _, callback := range callbacks {
-		callback(event)
-		if event.Severity != event.handledState.OriginalSeverity {
-			event.handledState.SeverityReason = SeverityReasonCallbackSpecified
-		}
-	}
-
-	return event, config
+	return stack
 }
 
 func populateEventWithContext(ctx context.Context, event *Event) {
