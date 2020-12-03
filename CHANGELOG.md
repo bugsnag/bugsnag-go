@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## 1.8.0 (2020-12-03)
 
 ### Enhancements
 
