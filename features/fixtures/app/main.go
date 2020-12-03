@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -102,6 +103,8 @@ func main() {
 		multipleUnhandled()
 	case "make unhandled with callback":
 		handledToUnhandled()
+	case "nested error":
+		nestedHandledError()
 	default:
 		log.Println("Not a valid test flag: " + *test)
 		os.Exit(1)
@@ -255,4 +258,72 @@ func handledToUnhandled() {
 	})
 	// Give some time for the error to be sent before exiting
 	time.Sleep(200 * time.Millisecond)
+}
+
+type customErr struct {
+	msg string
+	cause error
+	callers []uintptr
+}
+
+func newCustomErr(msg string, cause error) error {
+	callers := make([]uintptr, 8)
+	runtime.Callers(2, callers)
+	return customErr {
+		msg: msg,
+		cause: cause,
+		callers: callers,
+	}
+}
+
+func (err customErr) Error() string {
+	return err.msg
+}
+
+func (err customErr) Unwrap() error {
+	return err.cause
+}
+
+func (err customErr) Callers() []uintptr {
+	return err.callers
+}
+
+func nestedHandledError() {
+	if err := login("token " + os.Getenv("API_KEY")); err != nil {
+		bugsnag.Notify(newCustomErr("terminate process", err))
+		// Give some time for the error to be sent before exiting
+		time.Sleep(200 * time.Millisecond)
+	} else {
+		i := len(os.Getenv("API_KEY"))
+		// Some nonsense to avoid inlining checkValue
+		if val, err := checkValue(i); err != nil {
+			fmt.Printf("err: %v, val: %d", err, val)
+		}
+		if val, err := checkValue(i-46); err != nil {
+			fmt.Printf("err: %v, val: %d", err, val)
+		}
+
+		log.Fatalf("This test is broken - no error was generated.")
+	}
+}
+
+func login(token string) error {
+	val, err := checkValue(len(token) * -1)
+	if err != nil {
+		return newCustomErr("login failed", err)
+	}
+	fmt.Printf("val: %d", val)
+	return nil
+}
+
+func checkValue(i int) (int, error) {
+	if i < 0 {
+		return 0, newCustomErr("invalid token", nil)
+	} else if i % 2 == 0 {
+		return i / 2, nil
+	} else if i < 9 {
+		return i * 3, nil
+	}
+
+	return i * 4, nil
 }

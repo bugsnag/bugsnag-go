@@ -16,6 +16,7 @@ var MaxStackDepth = 50
 // wherever the builtin error interface is expected.
 type Error struct {
 	Err    error
+	Cause  *Error
 	stack  []uintptr
 	frames []StackFrame
 }
@@ -39,6 +40,10 @@ type errorWithStack interface {
 	Error() string
 }
 
+type errorWithCause interface {
+	Unwrap() error
+}
+
 // New makes an Error from the given value. If that value is already an
 // error then it will be used directly, if not, it will be passed to
 // fmt.Errorf("%v"). The skip parameter indicates how far up the stack
@@ -53,6 +58,7 @@ func New(e interface{}, skip int) *Error {
 		return &Error{
 			Err:   e,
 			stack: e.Callers(),
+			Cause: unwrapCause(e),
 		}
 	case errorWithStack:
 		trace := e.StackTrace()
@@ -62,6 +68,7 @@ func New(e interface{}, skip int) *Error {
 		}
 		return &Error{
 			Err:   e,
+			Cause: unwrapCause(e),
 			stack: stack,
 		}
 	case ErrorWithStackFrames:
@@ -71,6 +78,7 @@ func New(e interface{}, skip int) *Error {
 		}
 		return &Error{
 			Err:    e,
+			Cause:  unwrapCause(e),
 			stack:  stack,
 			frames: e.StackFrames(),
 		}
@@ -84,6 +92,7 @@ func New(e interface{}, skip int) *Error {
 	length := runtime.Callers(2+skip, stack[:])
 	return &Error{
 		Err:   err,
+		Cause: unwrapCause(err),
 		stack: stack[:length],
 	}
 }
@@ -152,4 +161,35 @@ func (err *Error) TypeName() string {
 		return name
 	}
 	return "error"
+}
+
+func unwrapCause(err interface{}) *Error {
+	if causer, ok := err.(errorWithCause); ok {
+		cause := causer.Unwrap()
+		if cause == nil {
+			return nil
+		} else if hasStack(cause) { // avoid generating a (duplicate) stack from the current frame
+			return New(cause, 0)
+		} else {
+			return &Error{
+				Err:   cause,
+				Cause: unwrapCause(cause),
+				stack: []uintptr{},
+			}
+		}
+	}
+	return nil
+}
+
+func hasStack(err error) bool {
+	if _, ok := err.(errorWithStack); ok {
+		return true
+	}
+	if _, ok := err.(ErrorWithStackFrames); ok {
+		return true
+	}
+	if _, ok := err.(ErrorWithCallers); ok {
+		return true
+	}
+	return false
 }

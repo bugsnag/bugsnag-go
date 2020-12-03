@@ -36,7 +36,7 @@ Scenario: Sending an event using a callback to modify report contents
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "context" equals "nonfatal.go:14"
   And the "file" of stack frame 0 equals "main.go"
-  And stack frame 0 contains a local function spanning 240 to 246
+  And stack frame 0 contains a local function spanning 243 to 249
   And the "file" of stack frame 1 equals ">insertion<"
   And the "lineNumber" of stack frame 1 equals 0
 
@@ -49,4 +49,21 @@ Scenario: Marking an error as unhandled in a callback
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "severityReason.unhandledOverridden" is true
   And the "file" of stack frame 0 equals "main.go"
-  And stack frame 0 contains a local function spanning 252 to 255
+  And stack frame 0 contains a local function spanning 255 to 258
+
+Scenario: Unwrapping the causes of a handled error
+  When I run the go service "app" with the test case "nested error"
+  Then I wait to receive a request
+  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  And the event "unhandled" is false
+  And the event "severity" equals "warning"
+  And the event "exceptions.0.message" equals "terminate process"
+  And the "lineNumber" of stack frame 0 equals 293
+  And the "file" of stack frame 0 equals "main.go"
+  And the "method" of stack frame 0 equals "nestedHandledError"
+  And the event "exceptions.1.message" equals "login failed"
+  And the event "exceptions.1.stacktrace.0.file" equals "main.go"
+  And the event "exceptions.1.stacktrace.0.lineNumber" equals 313
+  And the event "exceptions.2.message" equals "invalid token"
+  And the event "exceptions.2.stacktrace.0.file" equals "main.go"
+  And the event "exceptions.2.stacktrace.0.lineNumber" equals 321

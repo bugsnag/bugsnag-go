@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.8.0 (2020-12-03)
+
+### Enhancements
+
+* Support unwrapping the underlying causes from an error, including attached
+  stack trace contents if available.
+
+  Any reported error which implements the following interface:
+
+  ```go
+  type errorWithCause interface {
+    Unwrap() error
+  }
+  ```
+
+  will have the cause included as a previous error in the resulting event. The
+  cause information will be available on the Bugsnag dashboard and is available
+  for inspection in callbacks on the `errors.Error` object.
+
+  ```go
+  bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
+    if event.Error.Cause != nil {
+      fmt.Printf("This error was caused by %v", event.Error.Cause.Error())
+    }
+    return nil
+  })
+  ```
+
 ## 1.7.0 (2020-11-18)
 
 ### Enhancements

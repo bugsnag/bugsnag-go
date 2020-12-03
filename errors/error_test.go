@@ -205,6 +205,116 @@ func TestUnwrapPkgError(t *testing.T) {
 	assertStacksMatch(t, expected, unwrapped.StackFrames())
 }
 
+type customErr struct {
+	msg     string
+	cause   error
+	callers []uintptr
+}
+
+func newCustomErr(msg string, cause error) error {
+	callers := make([]uintptr, 8)
+	runtime.Callers(2, callers)
+	return customErr{
+		msg:     msg,
+		cause:   cause,
+		callers: callers,
+	}
+}
+
+func (err customErr) Error() string {
+	return err.msg
+}
+
+func (err customErr) Unwrap() error {
+	return err.cause
+}
+
+func (err customErr) Callers() []uintptr {
+	return err.callers
+}
+
+func TestUnwrapCustomCause(t *testing.T) {
+	_, _, line, ok := runtime.Caller(0) // grab line immediately before error generators
+	err1 := fmt.Errorf("invalid token")
+	err2 := newCustomErr("login failed", err1)
+	err3 := newCustomErr("terminate process", err2)
+	unwrapped := New(err3, 0)
+	if !ok {
+		t.Fatalf("Something has gone wrong with loading the current stack")
+	}
+	if unwrapped.Error() != "terminate process" {
+		t.Errorf("Failed to unwrap error: %s", unwrapped.Error())
+	}
+	if unwrapped.Cause == nil {
+		t.Fatalf("Failed to capture cause error")
+	}
+	assertStacksMatch(t, []StackFrame{
+		StackFrame{Name: "TestUnwrapCustomCause", File: "errors/error_test.go", LineNumber: line + 3},
+	}, unwrapped.StackFrames())
+	if unwrapped.Cause.Error() != "login failed" {
+		t.Errorf("Failed to unwrap cause error: %s", unwrapped.Cause.Error())
+	}
+	if unwrapped.Cause.Cause == nil {
+		t.Fatalf("Failed to capture nested cause error")
+	}
+	assertStacksMatch(t, []StackFrame{
+		StackFrame{Name: "TestUnwrapCustomCause", File: "errors/error_test.go", LineNumber: line + 2},
+	}, unwrapped.Cause.StackFrames())
+	if unwrapped.Cause.Cause.Error() != "invalid token" {
+		t.Errorf("Failed to unwrap nested cause error: %s", unwrapped.Cause.Cause.Error())
+	}
+	if len(unwrapped.Cause.Cause.StackFrames()) > 0 {
+		t.Errorf("Did not expect cause to have a stack: %v", unwrapped.Cause.Cause.StackFrames())
+	}
+	if unwrapped.Cause.Cause.Cause != nil {
+		t.Fatalf("Extra cause detected: %v", unwrapped.Cause.Cause.Cause)
+	}
+}
+
+func TestUnwrapErrorsCause(t *testing.T) {
+	if !goVersionSupportsErrorWrapping() {
+		t.Skip("%w formatter is supported by go1.13+")
+	}
+	_, _, line, ok := runtime.Caller(0) // grab line immediately before error generators
+	err1 := fmt.Errorf("invalid token")
+	err2 := fmt.Errorf("login failed: %w", err1)
+	err3 := fmt.Errorf("terminate process: %w", err2)
+	unwrapped := New(err3, 0)
+	if !ok {
+		t.Fatalf("Something has gone wrong with loading the current stack")
+	}
+	if unwrapped.Error() != "terminate process: login failed: invalid token" {
+		t.Errorf("Failed to unwrap error: %s", unwrapped.Error())
+	}
+	assertStacksMatch(t, []StackFrame{
+		StackFrame{Name: "TestUnwrapErrorsCause", File: "errors/error_test.go", LineNumber: line + 4},
+	}, unwrapped.StackFrames())
+	if unwrapped.Cause == nil {
+		t.Fatalf("Failed to capture cause error")
+	}
+	if unwrapped.Cause.Error() != "login failed: invalid token" {
+		t.Errorf("Failed to unwrap cause error: %s", unwrapped.Cause.Error())
+	}
+	if len(unwrapped.Cause.StackFrames()) > 0 {
+		t.Errorf("Did not expect cause to have a stack: %v", unwrapped.Cause.StackFrames())
+	}
+	if unwrapped.Cause.Cause == nil {
+		t.Fatalf("Failed to capture nested cause error")
+	}
+	if len(unwrapped.Cause.Cause.StackFrames()) > 0 {
+		t.Errorf("Did not expect cause to have a stack: %v", unwrapped.Cause.Cause.StackFrames())
+	}
+	if unwrapped.Cause.Cause.Cause != nil {
+		t.Fatalf("Extra cause detected: %v", unwrapped.Cause.Cause.Cause)
+	}
+}
+
+func goVersionSupportsErrorWrapping() bool {
+	err1 := fmt.Errorf("inner error")
+	err2 := fmt.Errorf("outer error: %w", err1)
+	return err2.Error() == "outer error: inner error"
+}
+
 func ExampleErrorf() {
 	for i := 1; i <= 2; i++ {
 		if i%2 == 1 {
