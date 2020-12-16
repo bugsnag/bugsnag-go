@@ -154,8 +154,8 @@ func (err *Error) StackFrames() []StackFrame {
 
 // TypeName returns the type this error. e.g. *errors.stringError.
 func (err *Error) TypeName() string {
-	if _, ok := err.Err.(uncaughtPanic); ok {
-		return "panic"
+	if p, ok := err.Err.(uncaughtPanic); ok {
+		return p.typeName
 	}
 	if name := reflect.TypeOf(err.Err).String(); len(name) > 0 {
 		return name
