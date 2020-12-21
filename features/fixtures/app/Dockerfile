@@ -1,9 +1,7 @@
 ARG GO_VERSION
 FROM golang:${GO_VERSION}-alpine
 
-RUN apk update && \
-    apk upgrade && \
-    apk add git
+RUN apk update && apk upgrade && apk add git bash
 
 ENV GOPATH /app
 
@@ -15,3 +13,6 @@ RUN go get . ./sessions ./headers ./errors
 # Copy test scenarios
 COPY ./app /app/src/test
 WORKDIR /app/src/test
+
+RUN chmod +x run.sh
+CMD ["/app/src/test/run.sh"]
