@@ -1,5 +1,12 @@
 # Changelog
 
+## TBD
+
+### Enhancements
+
+* Support capturing "fatal error"-style panics from go, such as from concurrent
+  map read/writes, out of memory errors, and nil goroutines.
+
 ## 1.8.0 (2020-12-03)
 
 ### Enhancements
