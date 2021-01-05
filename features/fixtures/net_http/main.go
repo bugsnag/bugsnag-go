@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	bugsnag "github.com/bugsnag/bugsnag-go"
+	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 )
 
 func main() {
