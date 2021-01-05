@@ -12,7 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ['1.7', '1.8', '1.9', '1.10', '1.11', '1.12', '1.13', '1.14', '1.15']
+        go-version: ['1.11', '1.12', '1.13', '1.14', '1.15']
+        major-version: ['v2']
 
     steps:
     - uses: actions/checkout@v2
@@ -23,57 +24,27 @@ jobs:
         curl --silent --location --output gimme https://github.com/travis-ci/gimme/raw/v1.5.4/gimme
         chmod +x ./gimme
         eval "$(./gimme ${{ matrix.go-version }})"
-    - name: set GOPATH
-      run: echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV
+        echo "GOOS=" >> $GITHUB_ENV
+        echo "GOARCH=" >> $GITHUB_ENV
+        echo "GOROOT=$GOROOT" >> $GITHUB_ENV
+        echo "PATH=$PATH" >> $GITHUB_ENV
+        echo "GIMME_ENV=$GIMME_ENV" >> $GITHUB_ENV
+        echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV
     - name: install dependencies
-      run: make alldeps
-    - name: run tests (go1.7 - go1.10)
-      # gin requires go1.11+
-      if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
-      run: go test . ./martini ./negroni ./sessions ./headers ./errors
+      run: go get -v -d ./${{ matrix.major-version }}/...
     - name: run tests
-      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10'
-      run: go test . ./gin ./martini ./negroni ./sessions ./headers ./errors
-    - name: vet package (go1.7 - go1.10)
-      if: matrix.go-version == '1.7' || matrix.go-version == '1.8' || matrix.go-version == '1.9' || matrix.go-version == '1.10'
-      run: go vet . ./martini ./negroni ./sessions ./headers ./errors
+      run: go test ./${{ matrix.major-version }}/...
     - name: vet package
       # go1.12 vet shows spurious 'unknown identifier' issues
-      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.12'
-      run: go vet . ./gin ./martini ./negroni ./sessions ./headers ./errors
+      if: matrix.go-version != '1.12'
+      run: go vet ./${{ matrix.major-version }}/...
 
     - name: install integration dependencies
       run: |
         sudo apt-get install docker-compose
         sudo gem install bundler
         bundle install
-    - name: maze tests - plain Go apps
+    - name: maze tests
       env:
         GO_VERSION: ${{ matrix.go-version }}
-      run: bundle exec bugsnag-maze-runner --color --format progress features/plain_features features/net_http_features
-    - name: maze tests - Martini apps
-      env:
-        GO_VERSION: ${{ matrix.go-version }}
-      run: bundle exec bugsnag-maze-runner --color --format progress features/martini_features
-    - name: maze tests - Gin apps
-      # gin requires go1.11+
-      if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10'
-      env:
-        GO_VERSION: ${{ matrix.go-version }}
-      run: |
-        GIN_VERSION=v1.0 bundle exec bugsnag-maze-runner --color --format progress features/gin_features
-        GIN_VERSION=v1.3.0 bundle exec bugsnag-maze-runner --color --format progress features/gin_features
-    - name: maze tests - Negroni apps
-      env:
-        GO_VERSION: ${{ matrix.go-version }}
-      run: |
-        NEGRONI_VERSION=v1.0.0 bundle exec bugsnag-maze-runner --color --format progress features/negroni_features
-        NEGRONI_VERSION=v0.3.0 bundle exec bugsnag-maze-runner --color --format progress features/negroni_features
-    # Revel flakes out periodically on go1.12-1.15 (PLAT-5295)
-    # - name: maze tests - Revel apps
-    #   # Revel supports 1.12+
-    #   if: matrix.go-version != '1.7' && matrix.go-version != '1.8' && matrix.go-version != '1.9' && matrix.go-version != '1.10' && matrix.go-version != '1.11'
-    #   env:
-    #     GO_VERSION: ${{ matrix.go-version }}
-    #   run: |
-    #     REVEL_VERSION=v0.21.0 REVEL_CMD_VERSION=v0.21.1 bundle exec bugsnag-maze-runner --color --format progress features/revel_features
+      run: bundle exec bugsnag-maze-runner --color --format progress
