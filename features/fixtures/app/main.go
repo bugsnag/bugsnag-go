@@ -45,11 +45,11 @@ func configureBasicBugsnag(testcase string) {
 	}
 
 	switch testcase {
-	case "endpoint legacy":
+	case "endpoint-legacy":
 		config.Endpoint = os.Getenv("BUGSNAG_ENDPOINT")
-	case "endpoint notify":
+	case "endpoint-notify":
 		config.Endpoints = bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_ENDPOINT")}
-	case "endpoint session":
+	case "endpoint-session":
 		config.Endpoints = bugsnag.Endpoints{Sessions: os.Getenv("BUGSNAG_ENDPOINT")}
 	default:
 		config.Endpoints = bugsnag.Endpoints{
@@ -75,9 +75,9 @@ func main() {
 	switch *test {
 	case "unhandled":
 		unhandledCrash()
-	case "handled", "endpoint legacy", "endpoint notify", "endpoint session":
+	case "handled", "endpoint-legacy", "endpoint-notify", "endpoint-session":
 		handledError()
-	case "handled with callback":
+	case "handled-with-callback":
 		handledCallbackError()
 	case "session":
 		session()
@@ -91,19 +91,19 @@ func main() {
 		filtered()
 	case "recover":
 		dontDie()
-	case "session and error":
+	case "session-and-error":
 		sessionAndError()
-	case "send and exit":
+	case "send-and-exit":
 		sendAndExit()
 	case "user":
 		user()
-	case "multiple handled":
+	case "multiple-handled":
 		multipleHandled()
-	case "multiple unhandled":
+	case "multiple-unhandled":
 		multipleUnhandled()
-	case "make unhandled with callback":
+	case "make-unhandled-with-callback":
 		handledToUnhandled()
-	case "nested error":
+	case "nested-error":
 		nestedHandledError()
 	default:
 		log.Println("Not a valid test flag: " + *test)

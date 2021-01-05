@@ -30,7 +30,7 @@ Then(/^the number of sessions started equals (\d+) for request (\d+)$/) do |coun
 end
 
 When("I run the go service {string} with the test case {string}") do  |service, testcase|
-  run_service_with_command(service, "go run main.go -test=\"#{testcase}\"")
+  run_service_with_command(service, "./run.sh go run main.go -test=\"#{testcase}\"")
 end
 
 Then(/^I wait to receive a request after the start up session$/) do
@@ -61,6 +61,21 @@ Then(/^I wait to receive (\d+) requests after the start up session?$/) do |reque
   assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
 end
 
+Then("the in-project frames of the stacktrace are:") do |table|
+  body = find_request(0)[:body]
+  stacktrace = body["events"][0]["exceptions"][0]["stacktrace"]
+  found = 0 # counts matching frames and ensures ordering is correct
+  expected = table.hashes.length
+  stacktrace.each do |frame|
+    if found < expected and frame["inProject"] and
+        frame["file"] == table.hashes[found]["file"] and
+        frame["method"] == table.hashes[found]["method"]
+      found = found + 1
+    end
+  end
+  assert_equal(found, expected, "expected #{expected} matching frames but found #{found}. stacktrace:\n#{stacktrace}")
+end
+
 Then("stack frame {int} contains a local function spanning {int} to {int}") do |frame, val, old_val|
   # Old versions of Go put the line number on the end of the function
   if ['1.7', '1.8'].include? ENV['GO_VERSION']
@@ -68,4 +83,11 @@ Then("stack frame {int} contains a local function spanning {int} to {int}") do |
   else
     step "the \"lineNumber\" of stack frame #{frame} equals #{val}"
   end
+end
+
+Then("the exception {string} is one of:") do |key, table|
+  body = find_request(0)[:body]
+  exception = body["events"][0]["exceptions"][0]
+  options = table.raw.flatten
+  assert(options.include?(exception[key]), "expected '#{key}' to be one of #{options}")
 end

@@ -28,7 +28,7 @@ Scenario: A handled error sends a report with a custom name
   And the "file" of stack frame 0 equals "main.go"
 
 Scenario: Sending an event using a callback to modify report contents
-  When I run the go service "app" with the test case "handled with callback"
+  When I run the go service "app" with the test case "handled-with-callback"
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is false
@@ -41,7 +41,7 @@ Scenario: Sending an event using a callback to modify report contents
   And the "lineNumber" of stack frame 1 equals 0
 
 Scenario: Marking an error as unhandled in a callback
-  When I run the go service "app" with the test case "make unhandled with callback"
+  When I run the go service "app" with the test case "make-unhandled-with-callback"
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is true
@@ -52,7 +52,7 @@ Scenario: Marking an error as unhandled in a callback
   And stack frame 0 contains a local function spanning 255 to 258
 
 Scenario: Unwrapping the causes of a handled error
-  When I run the go service "app" with the test case "nested error"
+  When I run the go service "app" with the test case "nested-error"
   Then I wait to receive a request
   And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And the event "unhandled" is false
