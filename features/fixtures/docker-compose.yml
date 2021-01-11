@@ -42,6 +42,12 @@ services:
       - BUGSNAG_SESSIONS_ENDPOINT
       - BUGSNAG_SOURCE_ROOT
       - BUGSNAG_SYNCHRONOUS
+      - BUGSNAG_METADATA_Carrot
+      - BUGSNAG_METADATA_device_instance
+      - BUGSNAG_METADATA_device_runtime_level
+      - BUGSNAG_METADATA_framework_version
+      - BUGSNAG_METADATA_fruit_Tomato
+      - BUGSNAG_METADATA_snacks_Carrot
     restart: "no"
     command: go run .
 
