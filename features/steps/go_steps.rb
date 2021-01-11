@@ -1,5 +1,19 @@
 require 'net/http'
 
+Given("I set environment variable {string} to the app directory") do |key|
+  step("I set environment variable \"#{key}\" to \"/app/src/test/\"")
+end
+
+Given("I set environment variable {string} to the notify endpoint") do |key|
+  step("I set environment variable \"#{key}\" to \"http://#{current_ip}:#{MOCK_API_PORT}\"")
+end
+
+Given("I set environment variable {string} to the sessions endpoint") do |key|
+  # they're the same picture dot gif
+  # split them out for the future endpoint splitting work
+  step("I set environment variable \"#{key}\" to \"http://#{current_ip}:#{MOCK_API_PORT}\"")
+end
+
 Then(/^the request(?: (\d+))? is a valid error report with api key "(.*)"$/) do |request_index, api_key|
   request_index ||= 0
   steps %Q{
@@ -30,7 +44,7 @@ Then(/^the number of sessions started equals (\d+) for request (\d+)$/) do |coun
 end
 
 When("I run the go service {string} with the test case {string}") do  |service, testcase|
-  run_service_with_command(service, "./run.sh go run main.go -test=\"#{testcase}\"")
+  run_service_with_command(service, "./run.sh go run . -test=\"#{testcase}\"")
 end
 
 Then(/^I wait to receive a request after the start up session$/) do
@@ -57,6 +71,11 @@ Then(/^I wait to receive (\d+) requests after the start up session?$/) do |reque
   end
   raise "Requests not received in 10s (received #{stored_requests.size})" unless received
   # Wait an extra second to ensure there are no further requests
+  sleep 1
+  assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
+end
+
+Then(/^(\d+) requests? (?:was|were) received$/) do |request_count|
   sleep 1
   assert_equal(request_count, stored_requests.size, "#{stored_requests.size} requests received")
 end
