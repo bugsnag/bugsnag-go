@@ -21,6 +21,29 @@ services:
       - SERVER_PORT
     restart: "no"
 
+  autoconfigure:
+    build:
+      context: .
+      dockerfile: autoconfigure/Dockerfile
+      args:
+       - GO_VERSION
+    environment:
+      - BUGSNAG_API_KEY
+      - BUGSNAG_APP_TYPE
+      - BUGSNAG_APP_VERSION
+      - BUGSNAG_AUTO_CAPTURE_SESSIONS
+      - BUGSNAG_HOSTNAME
+      - BUGSNAG_NOTIFY_ENDPOINT
+      - BUGSNAG_NOTIFY_RELEASE_STAGES
+      - BUGSNAG_PARAMS_FILTERS
+      - BUGSNAG_PROJECT_PACKAGES
+      - BUGSNAG_RELEASE_STAGE
+      - BUGSNAG_SESSIONS_ENDPOINT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_SYNCHRONOUS
+    restart: "no"
+    command: go run .
+
   nethttp:
     build:
       context: .

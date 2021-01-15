@@ -25,6 +25,7 @@ const VERSION = "1.9.0"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
+var readEnvConfigOnce sync.Once
 var middleware middlewareStack
 
 // Config is the configuration for the default bugsnag notifier.
@@ -43,6 +44,8 @@ var sessionTracker sessions.SessionTracker
 // is also responsible for installing the global panic handler, so it should be
 // called as early as possible in your initialization process.
 func Configure(config Configuration) {
+	// Load configuration from the environment, if any
+	readEnvConfigOnce.Do(Config.loadEnv)
 	Config.update(&config)
 	updateSessionConfig()
 	// Only do once in case the user overrides the default panichandler, and

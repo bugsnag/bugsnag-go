@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -261,4 +262,49 @@ func (config *Configuration) notifyInReleaseStage() bool {
 		}
 	}
 	return false
+}
+
+func (config *Configuration) loadEnv() {
+	envConfig := Configuration{}
+	if apiKey := os.Getenv("BUGSNAG_API_KEY"); apiKey != "" {
+		envConfig.APIKey = apiKey
+	}
+	if endpoint := os.Getenv("BUGSNAG_SESSIONS_ENDPOINT"); endpoint != "" {
+		envConfig.Endpoints.Sessions = endpoint
+	}
+	if endpoint := os.Getenv("BUGSNAG_NOTIFY_ENDPOINT"); endpoint != "" {
+		envConfig.Endpoints.Notify = endpoint
+	}
+	if stage := os.Getenv("BUGSNAG_RELEASE_STAGE"); stage != "" {
+		envConfig.ReleaseStage = stage
+	}
+	if appVersion := os.Getenv("BUGSNAG_APP_VERSION"); appVersion != "" {
+		envConfig.AppVersion = appVersion
+	}
+	if hostname := os.Getenv("BUGSNAG_HOSTNAME"); hostname != "" {
+		envConfig.Hostname = hostname
+	}
+	if sourceRoot := os.Getenv("BUGSNAG_SOURCE_ROOT"); sourceRoot != "" {
+		envConfig.SourceRoot = sourceRoot
+	}
+	if appType := os.Getenv("BUGSNAG_APP_TYPE"); appType != "" {
+		envConfig.AppType = appType
+	}
+	if stages := os.Getenv("BUGSNAG_NOTIFY_RELEASE_STAGES"); stages != "" {
+		envConfig.NotifyReleaseStages = strings.Split(stages, ",")
+	}
+	if packages := os.Getenv("BUGSNAG_PROJECT_PACKAGES"); packages != "" {
+		envConfig.ProjectPackages = strings.Split(packages, ",")
+	}
+	if synchronous := os.Getenv("BUGSNAG_SYNCHRONOUS"); synchronous != "" {
+		envConfig.Synchronous = synchronous == "1"
+	}
+	if autoSessions := os.Getenv("BUGSNAG_AUTO_CAPTURE_SESSIONS"); autoSessions != "" {
+		envConfig.AutoCaptureSessions = autoSessions == "1"
+	}
+	if filters := os.Getenv("BUGSNAG_PARAMS_FILTERS"); filters != "" {
+		envConfig.ParamsFilters = strings.Split(filters, ",")
+	}
+
+	config.update(&envConfig)
 }
