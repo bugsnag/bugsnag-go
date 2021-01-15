@@ -10,7 +10,6 @@ import (
 
 	"github.com/bitly/go-simplejson"
 	"github.com/bugsnag/bugsnag-go/v2/sessions"
-	"github.com/kardianos/osext"
 )
 
 // Test the panic handler by launching a new process which runs the init()
@@ -85,7 +84,7 @@ func TestPanicHandlerUnhandledPanic(t *testing.T) {
 }
 
 func startPanickingProcess(t *testing.T, variant string, endpoint string) {
-	exePath, err := osext.Executable()
+	exePath, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
