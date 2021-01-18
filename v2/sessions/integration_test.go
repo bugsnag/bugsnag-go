@@ -28,9 +28,6 @@ func init() {
 func get(j *simplejson.Json, path string) *simplejson.Json {
 	return j.GetPath(strings.Split(path, ".")...)
 }
-func getBool(j *simplejson.Json, path string) bool {
-	return get(j, path).MustBool()
-}
 func getInt(j *simplejson.Json, path string) int {
 	return get(j, path).MustInt()
 }
@@ -39,9 +36,6 @@ func getString(j *simplejson.Json, path string) string {
 }
 func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
 	return get(j, path).GetIndex(index)
-}
-func getFirstString(j *simplejson.Json, path string) string {
-	return getIndex(j, path, 0).MustString()
 }
 
 // Spins up a session server and checks that for every call to

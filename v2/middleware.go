@@ -52,11 +52,6 @@ func (stack *middlewareStack) runBeforeFilter(f beforeFunc, event *Event, config
 	return f(event, config)
 }
 
-// catchMiddlewarePanic is used to log any panics that happen inside Middleware,
-// we wouldn't want to not notify Bugsnag in this case.
-func catchMiddlewarePanic(event *Event, config *Configuration, next func() error) {
-}
-
 // httpRequestMiddleware is added OnBeforeNotify by default. It takes information
 // from an http.Request passed in as rawData, and adds it to the Event. You can
 // use this as a template for writing your own Middleware.
