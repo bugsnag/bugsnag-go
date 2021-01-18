@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	bugsnag "github.com/bugsnag/bugsnag-go"
+	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 )
 
 func configureBasicBugsnag(testcase string) {
@@ -45,8 +45,6 @@ func configureBasicBugsnag(testcase string) {
 	}
 
 	switch testcase {
-	case "endpoint-legacy":
-		config.Endpoint = os.Getenv("BUGSNAG_ENDPOINT")
 	case "endpoint-notify":
 		config.Endpoints = bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_ENDPOINT")}
 	case "endpoint-session":

@@ -11,5 +11,6 @@ Dir.mkdir testBuildFolder
 `find . -name '*.go' \
         -not -path "./examples/*" \
         -not -path "./testutil/*" \
+        -not -path "./v2/testutil/*" \
         -not -path "./features/*" \
         -not -name '*_test.go' | cpio -pdm #{testBuildFolder}`
