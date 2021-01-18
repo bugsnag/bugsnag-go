@@ -2,6 +2,11 @@
 
 ## TBD
 
+### Breaking Changes
+
+* Removed `Configuration.Endpoint`. Use `Configuration.Endpoints` instead. For
+  more info and an example, see the [Upgrading guide](./UPGRADING.md)
+
 ### Enhancements
 
 * Support configuring Bugsnag through environment variables

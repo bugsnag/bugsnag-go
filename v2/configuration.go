@@ -20,11 +20,6 @@ type Configuration struct {
 	// find this by clicking Settings on https://bugsnag.com/.
 	APIKey string
 
-	// Deprecated: Use Endpoints (with an 's') instead.
-	// The Endpoint to notify about crashes. This defaults to
-	// "https://notify.bugsnag.com/", if you're using Bugsnag Enterprise then
-	// set it to your internal Bugsnag endpoint.
-	Endpoint string
 	// Endpoints define the HTTP endpoints that the notifier should notify
 	// about crashes and sessions. These default to notify.bugsnag.com for
 	// error reports and sessions.bugsnag.com for sessions.
@@ -155,7 +150,7 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.AutoCaptureSessions != nil {
 		config.AutoCaptureSessions = other.AutoCaptureSessions
 	}
-	config.updateEndpoints(other.Endpoint, &other.Endpoints)
+	config.updateEndpoints(&other.Endpoints)
 	return config
 }
 
@@ -174,13 +169,7 @@ func (config *Configuration) IsAutoCaptureSessions() bool {
 	return false
 }
 
-func (config *Configuration) updateEndpoints(endpoint string, endpoints *Endpoints) {
-
-	if endpoint != "" {
-		config.Logger.Printf("WARNING: the 'Endpoint' Bugsnag configuration parameter is deprecated in favor of 'Endpoints'")
-		config.Endpoints.Notify = endpoint
-		config.Endpoints.Sessions = ""
-	}
+func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 	if endpoints.Notify != "" {
 		config.Endpoints.Notify = endpoints.Notify
 		if endpoints.Sessions == "" {

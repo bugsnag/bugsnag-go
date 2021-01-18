@@ -230,27 +230,6 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 		}, logger
 	}
 
-	t.Run("Setting Endpoint gives deprecation warning", func(st *testing.T) {
-		c, logger := setUp()
-		config := Configuration{Endpoint: "https://endpoint.whatever.com/"}
-		c.update(&config)
-		if got := logger.loggedMessages; len(got) != 1 {
-			st.Errorf("Expected exactly one logged message but got %d: %v", len(got), got)
-		}
-		got := logger.loggedMessages[0]
-		for _, exp := range []string{"WARNING", "Bugsnag", "Endpoint", "Endpoints", "deprecated"} {
-			if !strings.Contains(got, exp) {
-				st.Errorf("Expected logger message containing '%s' when configuring but got %s.", exp, got)
-			}
-		}
-		if got, exp := c.Endpoints.Notify, config.Endpoint; got != exp {
-			st.Errorf("Expected notify endpoint '%s' but got '%s'", exp, got)
-		}
-		if got, exp := c.Endpoints.Sessions, ""; got != exp {
-			st.Errorf("Expected sessions endpoint '%s' but got '%s'", exp, got)
-		}
-	})
-
 	t.Run("Setting Endpoints.Notify without setting Endpoints.Sessions gives session disabled warning", func(st *testing.T) {
 		c, logger := setUp()
 		config := Configuration{
