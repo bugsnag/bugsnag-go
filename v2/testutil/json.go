@@ -47,9 +47,6 @@ func getInt(j *simplejson.Json, path string) int {
 func getString(j *simplejson.Json, path string) string {
 	return Get(j, path).MustString()
 }
-func getFirstString(j *simplejson.Json, path string) string {
-	return GetIndex(j, path, 0).MustString()
-}
 
 // AssertPayload compares the payload that was received by the event-server to
 // the expected report JSON payload

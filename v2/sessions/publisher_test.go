@@ -38,9 +38,6 @@ func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 func get(j *simplejson.Json, path string) *simplejson.Json {
 	return j.GetPath(strings.Split(path, ".")...)
 }
-func getBool(j *simplejson.Json, path string) bool {
-	return get(j, path).MustBool()
-}
 func getInt(j *simplejson.Json, path string) int {
 	return get(j, path).MustInt()
 }
@@ -49,9 +46,6 @@ func getString(j *simplejson.Json, path string) string {
 }
 func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
 	return get(j, path).GetIndex(index)
-}
-func getFirstString(j *simplejson.Json, path string) string {
-	return getIndex(j, path, 0).MustString()
 }
 
 func TestSendsCorrectPayloadForSmallConfig(t *testing.T) {
