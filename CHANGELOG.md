@@ -6,6 +6,11 @@
 
 * Removed `Configuration.Endpoint`. Use `Configuration.Endpoints` instead. For
   more info and an example, see the [Upgrading guide](./UPGRADING.md)
+* Web framework integrations have been moved to separate repositories:
+  * [bugsnag-go-gin](https://github.com/bugsnag/bugsnag-go-gin)
+  * [bugsnag-go-negroni](https://github.com/bugsnag/bugsnag-go-negroni)
+  * [bugsnag-go-revel](https://github.com/bugsnag/bugsnag-go-revel)
+  * The `martini` framework integration has been retired
 
 ### Enhancements
 

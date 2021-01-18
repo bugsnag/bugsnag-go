@@ -20,3 +20,24 @@ options for configuring both event and session delivery.
 + 	Sessions: "https://sessions.myserver.example.com"
 + }
 ```
+
+### Moved web framework integrations into separate repositories
+
+Integrations with Negroni, Revel, and Gin now live in separate repositories, to
+prevent implicit dependencies on every framework and to improve the ease of
+updating each integration independently.
+
+```diff+go
+- import "github.com/bugsnag/bugsnag-go/negroni"
++ import "github.com/bugsnag/bugsnag-go-negroni"
+```
+
+```diff+go
+- import "github.com/bugsnag/bugsnag-go/revel"
++ import "github.com/bugsnag/bugsnag-go-revel"
+```
+
+```diff+go
+- import "github.com/bugsnag/bugsnag-go/gin"
++ import "github.com/bugsnag/bugsnag-go-gin"
+```
