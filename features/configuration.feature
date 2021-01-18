@@ -66,6 +66,13 @@ Feature: Configure integration with environment variables
         And I run the go service "autoconfigure" with the test case "panic"
         Then 0 requests were received
 
+    Scenario: Suppressing events using panic handler
+        Given I set environment variable "BUGSNAG_DISABLE_PANIC_HANDLER" to "1"
+        And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
+        And I run the go service "autoconfigure" with the test case "panic"
+        And I wait for 2 seconds
+        Then 0 requests were received
+
     Scenario: Enabling synchronous event delivery
         Given I set environment variable "BUGSNAG_SYNCHRONOUS" to "1"
         And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
