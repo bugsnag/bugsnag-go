@@ -41,3 +41,10 @@ updating each integration independently.
 - import "github.com/bugsnag/bugsnag-go/gin"
 + import "github.com/bugsnag/bugsnag-go-gin"
 ```
+
+### Renamed constants for platform consistency
+
+```diff+go
+- bugsnag.VERSION
++ bugsnag.Version
+```

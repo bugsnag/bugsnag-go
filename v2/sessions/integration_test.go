@@ -62,7 +62,7 @@ func TestStartSession(t *testing.T) {
 		}{
 			{prop: "notifier.name", exp: "Bugsnag Go"},
 			{prop: "notifier.url", exp: "https://github.com/bugsnag/bugsnag-go"},
-			{prop: "notifier.version", exp: bugsnag.VERSION},
+			{prop: "notifier.version", exp: bugsnag.Version},
 			{prop: "app.releaseStage", exp: "production"},
 			{prop: "app.version", exp: ""},
 			{prop: "device.osName", exp: runtime.GOOS},
