@@ -558,7 +558,7 @@ func assertPayload(t *testing.T, report *simplejson.Json, exp eventJSON) {
 		{prop: "API Key", exp: testAPIKey, got: getString(report, "apiKey")},
 
 		{prop: "notifier name", exp: "Bugsnag Go", got: getString(report, "notifier.name")},
-		{prop: "notifier version", exp: VERSION, got: getString(report, "notifier.version")},
+		{prop: "notifier version", exp: Version, got: getString(report, "notifier.version")},
 		{prop: "notifier url", exp: "https://github.com/bugsnag/bugsnag-go", got: getString(report, "notifier.url")},
 
 		{prop: "exception message", exp: expException.Message, got: getString(exception, "message")},

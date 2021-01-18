@@ -20,8 +20,8 @@ import (
 	_ "crypto/sha512"
 )
 
-// VERSION defines the version of this Bugsnag notifier
-const VERSION = "1.9.0"
+// Version defines the version of this Bugsnag notifier
+const Version = "1.9.0"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
@@ -265,7 +265,7 @@ func updateSessionConfig() {
 		APIKey:              Config.APIKey,
 		AutoCaptureSessions: Config.AutoCaptureSessions,
 		Endpoint:            Config.Endpoints.Sessions,
-		Version:             VERSION,
+		Version:             Version,
 		PublishInterval:     DefaultSessionPublishInterval,
 		Transport:           Config.Transport,
 		ReleaseStage:        Config.ReleaseStage,

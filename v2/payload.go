@@ -91,7 +91,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 		Notifier: notifierJSON{
 			Name:    "Bugsnag Go",
 			URL:     "https://github.com/bugsnag/bugsnag-go",
-			Version: VERSION,
+			Version: Version,
 		},
 	})
 }
