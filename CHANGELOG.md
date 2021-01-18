@@ -1,6 +1,16 @@
 # Changelog
 
-## TBD
+## 2.0.0 (2021-01-18)
+
+The v2 release adds support for Go modules, removes web framework
+integrations from the main repository, and supports library configuration
+through environment variables.
+
+The new module is available via:
+
+```go
+import "github.com/bugsnag/bugsnag-go/v2"
+```
 
 ### Breaking Changes
 
@@ -11,6 +21,7 @@
   * [bugsnag-go-negroni](https://github.com/bugsnag/bugsnag-go-negroni)
   * [bugsnag-go-revel](https://github.com/bugsnag/bugsnag-go-revel)
   * The `martini` framework integration has been retired
+* `bugsnag.VERSION` has been renamed `bugsnag.Version`
 
 ### Enhancements
 

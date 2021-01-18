@@ -7,6 +7,13 @@ integrations from the main repository, and supports library configuration
 through environment variables. The following breaking changes occurred as a part
 of this release:
 
+### Importing the package
+
+```diff+go
+- import "github.com/bugsnag/bugsnag-go"
++ import "github.com/bugsnag/bugsnag-go/v2"
+```
+
 ### Removed `Configuration.Endpoint`
 
 The `Endpoint` configuration option was deprecated as a part of the v1.4.0
