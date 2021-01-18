@@ -299,6 +299,9 @@ func (config *Configuration) loadEnv() {
 	if synchronous := os.Getenv("BUGSNAG_SYNCHRONOUS"); synchronous != "" {
 		envConfig.Synchronous = synchronous == "1"
 	}
+	if disablePanics := os.Getenv("BUGSNAG_DISABLE_PANIC_HANDLER"); disablePanics == "1" {
+		envConfig.PanicHandler = func() {}
+	}
 	if autoSessions := os.Getenv("BUGSNAG_AUTO_CAPTURE_SESSIONS"); autoSessions != "" {
 		envConfig.AutoCaptureSessions = autoSessions == "1"
 	}
