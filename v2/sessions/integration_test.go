@@ -17,7 +17,7 @@ import (
 )
 
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
-const testPublishInterval = time.Millisecond * 20
+const testPublishInterval = time.Millisecond * 200
 const sessionsCount = 50000
 
 func init() {
@@ -41,6 +41,10 @@ func getIndex(j *simplejson.Json, path string, index int) *simplejson.Json {
 // Spins up a session server and checks that for every call to
 // bugsnag.StartSession() a session is being recorded.
 func TestStartSession(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("not compatible with windows builds")
+		return
+	}
 	sessionsStarted := 0
 	mutex := sync.Mutex{}
 
