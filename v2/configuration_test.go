@@ -3,6 +3,7 @@ package bugsnag
 import (
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -109,6 +110,9 @@ func TestStripProjectPackage(t *testing.T) {
 		SourceRoot: gopath + "/src/",
 	})
 
+	// on windows, source lines always use '/' but GOPATH may use '\' depending
+	// on user settings.
+	adjustedGopath := strings.Replace(gopath, "\\", "/", -1)
 	var testCases = []struct {
 		File     string
 		Stripped string
@@ -126,10 +130,10 @@ func TestStripProjectPackage(t *testing.T) {
 
 		{"example.com/c/a/b/foo.go", "a/b/foo.go"},
 
-		{gopath + "/src/runtime.go", "runtime.go"},
-		{gopath + "/src/example.com/a/foo.go", "foo.go"},
-		{gopath + "/src/example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
-		{gopath + "/src/example.com/c/a/b/foo.go", "a/b/foo.go"},
+		{adjustedGopath + "/src/runtime.go", "runtime.go"},
+		{adjustedGopath + "/src/example.com/a/foo.go", "foo.go"},
+		{adjustedGopath + "/src/example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
+		{adjustedGopath + "/src/example.com/c/a/b/foo.go", "a/b/foo.go"},
 	}
 
 	for _, tc := range testCases {
@@ -171,6 +175,51 @@ func TestStripCustomSourceRoot(t *testing.T) {
 		{"/Users/bob/code/go/src/example.com/a/foo.go", "foo.go"},
 		{"/Users/bob/code/go/src/example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
 		{"/Users/bob/code/go/src/example.com/c/a/b/foo.go", "a/b/foo.go"},
+	}
+
+	for _, tc := range testCases {
+		if s := Config.stripProjectPackages(tc.File); s != tc.Stripped {
+			t.Error("stripProjectPackage did not remove expected path:", tc.File, tc.Stripped, "was:", s)
+		}
+	}
+}
+
+func TestStripCustomWindowsSourceRoot(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("not compatible with non-windows builds")
+		return
+	}
+	Configure(Configuration{
+		ProjectPackages: []string{
+			"main",
+			"star*",
+			"example.com/a",
+			"example.com\\b\\*",
+			"example.com/c/**",
+		},
+		SourceRoot: "C:\\Users\\bob\\code\\go\\src\\",
+	})
+	var testCases = []struct {
+		File     string
+		Stripped string
+	}{
+		{"main.go", "main.go"},
+		{"runtime.go", "runtime.go"},
+		{"star.go", "star.go"},
+
+		{"example.com/a/foo.go", "foo.go"},
+
+		{"example.com/b/foo/bar.go", "foo/bar.go"},
+		{"example.com/b/foo.go", "foo.go"},
+
+		{"example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
+
+		{"example.com/c/a/b/foo.go", "a/b/foo.go"},
+
+		{"C:/Users/bob/code/go/src/runtime.go", "runtime.go"},
+		{"C:/Users/bob/code/go/src/example.com/a/foo.go", "foo.go"},
+		{"C:/Users/bob/code/go/src/example.com/x/a/b/foo.go", "example.com/x/a/b/foo.go"},
+		{"C:/Users/bob/code/go/src/example.com/c/a/b/foo.go", "a/b/foo.go"},
 	}
 
 	for _, tc := range testCases {
