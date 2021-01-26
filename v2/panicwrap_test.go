@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -60,6 +61,10 @@ func TestPanicHandlerHandledPanic(t *testing.T) {
 // Test the panic handler by launching a new process which runs the init()
 // method in this file and causing an unhandled panic
 func TestPanicHandlerUnhandledPanic(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("not compatible with windows builds")
+		return
+	}
 	ts, reports := setup()
 	defer ts.Close()
 

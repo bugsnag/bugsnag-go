@@ -1,5 +1,12 @@
 # Changelog
 
+## TBD
+
+### Bug fixes
+
+* Fix `GOPATH`, `SourceRoot` and project package path stripping from stack
+  traces on Windows by using the correct path separators.
+
 ## 2.0.0 (2021-01-18)
 
 The v2 release adds support for Go modules, removes web framework

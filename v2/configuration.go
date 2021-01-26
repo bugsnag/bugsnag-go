@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -121,6 +122,11 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.SourceRoot != "" {
 		config.SourceRoot = other.SourceRoot
+		// Use '/' as the separator as Go stacktraces are printed with '/' as
+		// the separator regardless of os.PathSeparator.
+		if runtime.GOOS == "windows" {
+			config.SourceRoot = strings.Replace(config.SourceRoot, "\\", "/", -1)
+		}
 	}
 	if other.ReleaseStage != "" {
 		config.ReleaseStage = other.ReleaseStage
@@ -130,6 +136,13 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.ProjectPackages != nil {
 		config.ProjectPackages = other.ProjectPackages
+		// Use '/' as the separator as Go stacktraces are printed with '/' as
+		// the separator regardless of os.PathSeparator.
+		if runtime.GOOS == "windows" {
+			for idx, pkg := range config.ProjectPackages {
+				config.ProjectPackages[idx] = strings.Replace(pkg, "\\", "/", -1)
+			}
+		}
 	}
 	if other.Logger != nil {
 		config.Logger = other.Logger
@@ -194,8 +207,16 @@ func (config *Configuration) clone() *Configuration {
 	return &clone
 }
 
-func (config *Configuration) isProjectPackage(pkg string) bool {
-	for _, p := range config.ProjectPackages {
+func (config *Configuration) isProjectPackage(_pkg string) bool {
+	sep := string(filepath.Separator)
+	// filepath functions only work if the contents of the paths use the system
+	// file separator
+	format := func(s string) string {
+		return strings.Replace(s, "/", sep, -1)
+	}
+	pkg := format(_pkg)
+	for _, _p := range config.ProjectPackages {
+		p := format(_p)
 		if d, f := filepath.Split(p); f == "**" {
 			if strings.HasPrefix(pkg, d) {
 				return true
