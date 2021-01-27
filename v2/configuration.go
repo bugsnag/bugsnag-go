@@ -319,5 +319,14 @@ func (config *Configuration) loadEnv() {
 		envConfig.ParamsFilters = strings.Split(filters, ",")
 	}
 
+	metadata := loadEnvMetadata(os.Environ())
+	OnBeforeNotify(func(event *Event, config *Configuration) error {
+		for _, m := range metadata {
+			event.MetaData.Add(m.tab, m.key, m.value)
+		}
+
+		return nil
+	})
+
 	config.update(&envConfig)
 }

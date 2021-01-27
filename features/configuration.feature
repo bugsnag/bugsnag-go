@@ -23,11 +23,19 @@ Feature: Configure integration with environment variables
             | panic    | BUGSNAG_APP_TYPE                      | mailer-daemon   | app.type                      |
             | panic    | BUGSNAG_RELEASE_STAGE                 | beta1           | app.releaseStage              |
             | panic    | BUGSNAG_HOSTNAME                      | dream-machine-2 | device.hostname               |
+            | panic    | BUGSNAG_METADATA_device_instance      | kube2-33-A      | metaData.device.instance      |
+            | panic    | BUGSNAG_METADATA_framework_version    | v3.1.0          | metaData.framework.version    |
+            | panic    | BUGSNAG_METADATA_device_runtime_level | 1C              | metaData.device.runtime_level |
+            | panic    | BUGSNAG_METADATA_Carrot               | orange          | metaData.custom.Carrot        |
 
             | handled  | BUGSNAG_APP_VERSION                   | 1.4.34          | app.version                   |
             | handled  | BUGSNAG_APP_TYPE                      | mailer-daemon   | app.type                      |
             | handled  | BUGSNAG_RELEASE_STAGE                 | beta1           | app.releaseStage              |
             | handled  | BUGSNAG_HOSTNAME                      | dream-machine-2 | device.hostname               |
+            | handled  | BUGSNAG_METADATA_device_instance      | kube2-33-A      | metaData.device.instance      |
+            | handled  | BUGSNAG_METADATA_framework_version    | v3.1.0          | metaData.framework.version    |
+            | handled  | BUGSNAG_METADATA_device_runtime_level | 1C              | metaData.device.runtime_level |
+            | handled  | BUGSNAG_METADATA_Carrot               | orange          | metaData.custom.Carrot        |
 
     Scenario: Configuring project packages
         Given I set environment variable "BUGSNAG_PROJECT_PACKAGES" to "main,test"
