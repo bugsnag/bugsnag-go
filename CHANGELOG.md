@@ -2,6 +2,11 @@
 
 ## TBD
 
+### Enhancements
+
+* Support appending metadata through environment variables prefixed with
+  `BUGSNAG_METADATA_`
+
 ### Bug fixes
 
 * Fix `GOPATH`, `SourceRoot` and project package path stripping from stack
