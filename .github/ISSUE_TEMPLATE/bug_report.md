@@ -19,13 +19,13 @@ A clear and concise description of what the bug is.
 4. See error
 
 ### Environment
-* Bugsnag version:
+* Bugsnag Go version:
 * Go version:
 * Integration framework version:
     * Martini:
     * Negroni:
     * net/http:
-    * Ravel:
+    * Revel:
     * Other:
 
 <!--
