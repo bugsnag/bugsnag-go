@@ -9,7 +9,7 @@ When contacting support, please include as much information as necessary, includ
 - steps to reproduce
 - expected/actual behaviour 
 
-* Bugsnag version:
+* Bugsnag Go version:
 * Go version:
 * Integration framework version:
     * Martini:
