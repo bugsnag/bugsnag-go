@@ -1,6 +1,6 @@
 module github.com/bugsnag/bugsnag-go/v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
