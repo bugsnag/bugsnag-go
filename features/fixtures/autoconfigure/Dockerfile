@@ -4,6 +4,7 @@ FROM golang:${GO_VERSION}-alpine
 RUN apk update && apk upgrade && apk add git bash
 
 ENV GOPATH /app
+ENV GO111MODULE auto
 
 COPY testbuild /app/src/github.com/bugsnag/bugsnag-go
 WORKDIR /app/src/github.com/bugsnag/bugsnag-go

@@ -6,6 +6,7 @@ RUN apk update && \
     apk add git
 
 ENV GOPATH /app
+ENV GO111MODULE auto
 
 COPY testbuild /app/src/github.com/bugsnag/bugsnag-go
 WORKDIR /app/src/github.com/bugsnag/bugsnag-go

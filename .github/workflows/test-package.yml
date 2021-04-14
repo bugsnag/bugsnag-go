@@ -13,13 +13,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, windows]
-        go-version: ['1.11', '1.12', '1.13', '1.14', '1.15']
+        go-version: ['1.11', '1.12', '1.13', '1.14', '1.15', '1.16']
         major-version: ['v2']
 
     steps:
     - uses: actions/checkout@v2
       with:
         path: 'go/src/github.com/bugsnag/bugsnag-go' # relative to $GITHUB_WORKSPACE
+    - name: enable legacy module support
+      run: |
+        bash -c 'echo "GO111MODULE=auto" >> $GITHUB_ENV'
     - name: set GOPATH
       if: matrix.os == 'ubuntu'
       run: |
