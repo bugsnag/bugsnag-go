@@ -17,7 +17,7 @@ import (
 )
 
 const testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
-const testPublishInterval = time.Millisecond * 20
+const testPublishInterval = time.Millisecond * 200
 const sessionsCount = 50000
 
 func init() {
