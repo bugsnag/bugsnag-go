@@ -23,6 +23,16 @@ Then(/^the request(?: (\d+))? is a valid error report with api key "(.*)"$/) do 
   }
 end
 
+Then(/^the exception is a PathError for request (\d+)$/) do |request_index|
+  body = find_request(request_index)[:body]
+  error_class = body["events"][0]["exceptions"][0]["errorClass"]
+  if ['1.11', '1.12', '1.13', '1.14', '1.15'].include? ENV['GO_VERSION']
+    assert_equal(error_class, '*os.PathError')
+  else
+    assert_equal(error_class, '*fs.PathError')
+  end
+end
+
 Then(/^the request(?: (\d+))? is a valid session report with api key "(.*)"$/) do |request_index, api_key|
   request_index ||= 0
   steps %Q{
