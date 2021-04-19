@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1 (2021-04-19)
+
+### Enhancements
+
+* Update panicwrap dependency to 1.3.2, adding support for darwin arm64
+
 ## 2.1.0 (2021-01-27)
 
 ### Enhancements
