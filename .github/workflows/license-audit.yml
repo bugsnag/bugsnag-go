@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   license-audit:
-    runs-on: {matrix.os}-latest
+    runs-on: ${{matrix.os}}-latest
 
     strategy:
       matrix:
