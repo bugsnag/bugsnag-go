@@ -1,0 +1,42 @@
+name: Audit bugsnag-go dependency licenses
+
+on: [push, pull_request]
+
+jobs:
+  license-audit:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: 'go/src/github.com/bugsnag/bugsnag-go' # relative to $GITHUB_WORKSPACE
+
+    - name: set GOPATH
+      if: matrix.os == 'ubuntu'
+      run: |
+        bash -c 'echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV'
+
+    - name: set GOPATH
+      if: matrix.os == 'windows'
+      run: |
+        bash -c 'echo "GOPATH=$GITHUB_WORKSPACE\\\\go" >> $GITHUB_ENV'
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.16'
+
+    - name: install dependencies
+      run: go get -v -d ./...
+
+    - name: Run License Finder
+      # for some reason license finder doesn't run without a login shell (-l)
+      run: >
+        docker run -v $PWD:/scan licensefinder/license_finder /bin/bash -lc "
+          cd /scan &&
+          license_finder --decisions-file decisions.yml
+        "
