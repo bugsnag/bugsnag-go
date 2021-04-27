@@ -35,9 +35,17 @@ jobs:
       run: go get -v -d ./...
 
     - name: Run License Finder
-      # for some reason license finder doesn't run without a login shell (-l)
+      if: matrix.os == 'ubuntu'
       run: >
         docker run -v $PWD:/scan licensefinder/license_finder /bin/bash -lc "
+          cd /scan &&
+          license_finder --decisions-file decisions.yml
+        "
+
+    - name: Run License Finder
+      if: matrix.os == 'windows'
+      run: >
+        docker run -v %cd%:/scan licensefinder/license_finder /bin/bash -lc "
           cd /scan &&
           license_finder --decisions-file decisions.yml
         "
