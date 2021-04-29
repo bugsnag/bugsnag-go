@@ -1,0 +1,36 @@
+name: Audit bugsnag-go dependency licenses
+
+on: [push, pull_request]
+
+jobs:
+  license-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'go/src/github.com/bugsnag/bugsnag-go/v2'
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: 'go/src/github.com/bugsnag/bugsnag-go' # relative to $GITHUB_WORKSPACE
+
+    - name: set GOPATH
+      run: |
+        bash -c 'echo "GOPATH=$GITHUB_WORKSPACE/go" >> $GITHUB_ENV'
+
+    - name: Fetch decisions.yml
+      run: curl https://raw.githubusercontent.com/bugsnag/license-audit/master/config/decision_files/global.yml -o decisions.yml
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.16'
+
+    - name: install dependencies
+      run: go get -v -d ./...
+
+    - name: Run License Finder
+      run: >
+        docker run -v $PWD:/scan licensefinder/license_finder /bin/bash -lc "
+          cd /scan &&
+          license_finder --decisions-file decisions.yml --enabled-package-managers=gomodules
+        "
