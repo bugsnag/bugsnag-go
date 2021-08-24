@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD (TBD)
+## 2.1.2 (2021-08-24)
 
 ### Enhancements
 
