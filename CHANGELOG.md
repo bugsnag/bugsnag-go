@@ -1,5 +1,11 @@
 # Changelog
 
+## TBD (TBD)
+
+### Enhancements
+
+* Update panicwrap dependency to v1.3.4 which fixes build support for linux & darwin arm64.
+
 ## 2.1.1 (2021-04-19)
 
 ### Enhancements
