@@ -64,7 +64,8 @@ type Configuration struct {
 	// to group errors and how to display them on your dashboard. You should
 	// include any packages that are part of your app, and exclude libraries
 	// and helpers. You can list wildcards here, and they'll be expanded using
-	// filepath.Glob. The default value is []string{"main*"}
+	// filepath.Glob. For matching subpackages within a package you may use the
+	// `**` notation. The default value is []string{"main*"}
 	ProjectPackages []string
 
 	// The SourceRoot is the directory where the application is built, and the
