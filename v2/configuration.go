@@ -87,6 +87,8 @@ type Configuration struct {
 	// and you can disable this feature by passing an empty: func() {}
 	PanicHandler func()
 
+	// If enabled, logs will be disabled.
+	DisableLogging bool
 	// The logger that Bugsnag should log to. Uses the same defaults as go's
 	// builtin logging package. bugsnag-go logs whenever it notifies Bugsnag
 	// of an error, and when any error occurs inside the library itself.
@@ -252,6 +254,9 @@ func (config *Configuration) stripProjectPackages(file string) string {
 }
 
 func (config *Configuration) logf(fmt string, args ...interface{}) {
+	if config.DisableLogging {
+		return
+	}
 	if config != nil && config.Logger != nil {
 		config.Logger.Printf(fmt, args...)
 	} else {
