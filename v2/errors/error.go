@@ -109,6 +109,11 @@ func (err *Error) Error() string {
 	return err.Err.Error()
 }
 
+// Unwrap returns the result of calling errors.Unwrap on the underlying error
+func (err *Error) Unwrap() error {
+	return errors.Unwrap(err.Err)
+}
+
 // Callers returns the raw stack frames as returned by runtime.Callers()
 func (err *Error) Callers() []uintptr {
 	return err.stack[:]
