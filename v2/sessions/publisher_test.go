@@ -11,7 +11,7 @@ import (
 	"time"
 
 	simplejson "github.com/bitly/go-simplejson"
-	uuid "github.com/gofrs/uuid"
+	uuid "github.com/google/uuid"
 )
 
 const (
@@ -219,11 +219,10 @@ func makeHeavyConfig() *SessionTrackingConfiguration {
 
 func makeSessions() ([]*Session, string) {
 	earliestTime := time.Now().Add(-6 * time.Minute)
-	genUUID := func() uuid.UUID { sessionID, _ := uuid.NewV4(); return sessionID }
 	return []*Session{
-		{StartedAt: earliestTime, ID: genUUID()},
-		{StartedAt: earliestTime.Add(2 * time.Minute), ID: genUUID()},
-		{StartedAt: earliestTime.Add(4 * time.Minute), ID: genUUID()},
+		{StartedAt: earliestTime, ID: uuid.New()},
+		{StartedAt: earliestTime.Add(2 * time.Minute), ID: uuid.New()},
+		{StartedAt: earliestTime.Add(4 * time.Minute), ID: uuid.New()},
 	}, earliestTime.UTC().Format(time.RFC3339)
 }
 

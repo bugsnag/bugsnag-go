@@ -3,7 +3,7 @@ package bugsnag
 import (
 	"github.com/bugsnag/bugsnag-go/device"
 	"github.com/bugsnag/bugsnag-go/sessions"
-	uuid "github.com/gofrs/uuid"
+	uuid "github.com/google/uuid"
 )
 
 type reportJSON struct {
