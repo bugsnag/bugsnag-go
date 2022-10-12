@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.2.0 (2022-10-12)
+
+### Enhancements
+
+* Support pkg/errors `Unwrap()` on `errors.Error` objects
+  [#194](https://github.com/bugsnag/bugsnag-go/pull/194)
+  [Jayce Pulsipher](https://github.com/jaycetde)
+
+* Document double star glob patterns are available for `ProjectPackages`
+  subpackage names.
+  [#184](https://github.com/bugsnag/bugsnag-go/pull/184)
+  [Genta Kamitani](https://github.com/genkami)
+
+### Bug fixes
+
+* Replace the gofrs/uuid dependency to maintain support for older versions of Go
+  [#196](https://github.com/bugsnag/bugsnag-go/pull/196)
+
+## 1.9.1 (2022-10-12)
+
+### Bug fixes
+
+* Replace the gofrs/uuid dependency to maintain support for older versions of Go
+  [#196](https://github.com/bugsnag/bugsnag-go/pull/196)
+
 ## 2.1.2 (2021-08-24)
 
 ### Enhancements
