@@ -41,7 +41,7 @@ type Configuration struct {
 	// framework used, like "rails", "mailman", or "celery"
 	AppType string
 	// The currently running version of the app. This is used to filter errors
-	// in the Bugsnag dasboard. If you set this then Bugsnag will only re-open
+	// in the Bugsnag dashboard. If you set this then Bugsnag will only re-open
 	// resolved errors if they happen in different app versions.
 	AppVersion string
 
