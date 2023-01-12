@@ -39,14 +39,18 @@ jobs:
       if: matrix.go-version != '1.12'
       run: go vet ./...
 
+    - name: install Ruby
+      if: matrix.os == 'ubuntu'
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true
+        working-directory: go/src/github.com/bugsnag/bugsnag-go # relative to $GITHUB_WORKSPACE
     - name: install integration dependencies
       if: matrix.os == 'ubuntu'
-      run: |
-        sudo apt-get install docker-compose
-        sudo gem install bundler
-        bundle install
+      run: sudo apt-get install docker-compose
     - name: maze tests
-      working-directory: go/src/github.com/bugsnag/bugsnag-go # relative to $GITHUB_WORKSPACE
+      working-directory: go/src/github.com/bugsnag/bugsnag-go
       if: matrix.os == 'ubuntu'
       env:
         GO_VERSION: ${{ matrix.go-version }}
