@@ -44,7 +44,7 @@ jobs:
       run: |
         sudo apt-get install docker-compose
         sudo gem install bundler
-        bundle install
+        sudo bundle install
     - name: maze tests
       working-directory: go/src/github.com/bugsnag/bugsnag-go # relative to $GITHUB_WORKSPACE
       if: matrix.os == 'ubuntu'
