@@ -7,7 +7,6 @@ This package contains an example `net/http` application, with Bugsnag configured
 1. Change the API key in `main.go` to a project you've created in [Bugsnag](https://app.bugsnag.com).
 1. Inside `bugsnag-go/examples/http` do:
     ```bash
-    go get github.com/bugsnag/bugsnag-go/v2
     go run main.go
     ```
 1. The application is now running. You can now visit
