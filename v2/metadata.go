@@ -1,9 +1,11 @@
 package bugsnag
 
 import (
+	"encoding"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // MetaData is added to the Bugsnag dashboard in tabs. Each tab is
@@ -44,7 +46,7 @@ func (meta MetaData) Add(tab string, key string, value interface{}) {
 // As a safety measure, if you pass a non-struct the value will be
 // sent to Bugsnag under the "Extra data" tab.
 func (meta MetaData) AddStruct(tab string, obj interface{}) {
-	val := sanitizer{}.Sanitize(obj)
+	val := Sanitizer{}.Sanitize(obj)
 	content, ok := val.(map[string]interface{})
 	if ok {
 		meta[tab] = content
@@ -58,20 +60,20 @@ func (meta MetaData) AddStruct(tab string, obj interface{}) {
 // Remove any values from meta-data that have keys matching the filters,
 // and any that are recursive data-structures
 func (meta MetaData) sanitize(filters []string) interface{} {
-	return sanitizer{
+	return Sanitizer{
 		Filters: filters,
 		Seen:    make([]interface{}, 0),
 	}.Sanitize(meta)
 
 }
 
-// The sanitizer is used to remove filtered params and recursion from meta-data.
-type sanitizer struct {
+// Sanitizer is used to remove filtered params and recursion from meta-data.
+type Sanitizer struct {
 	Filters []string
 	Seen    []interface{}
 }
 
-func (s sanitizer) Sanitize(data interface{}) interface{} {
+func (s Sanitizer) Sanitize(data interface{}) interface{} {
 	for _, s := range s.Seen {
 		// TODO: we don't need deep equal here, just type-ignoring equality
 		if reflect.DeepEqual(data, s) {
@@ -82,6 +84,25 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 	// Sanitizers are passed by value, so we can modify s and it only affects
 	// s.Seen for nested calls.
 	s.Seen = append(s.Seen, data)
+
+	// Handle certain well known interfaces and types
+	switch data := data.(type) {
+	case error:
+		return data.Error()
+
+	case time.Time:
+		return data.Format(time.RFC3339Nano)
+
+	case fmt.Stringer:
+		// This also covers time.Duration
+		return data.String()
+
+	case encoding.TextUnmarshaler:
+		var b []byte
+		if err := data.UnmarshalText(b); err == nil {
+			return string(b)
+		}
+	}
 
 	t := reflect.TypeOf(data)
 	v := reflect.ValueOf(data)
@@ -123,12 +144,10 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
 	default:
 		return "[" + t.String() + "]"
-
 	}
-
 }
 
-func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
+func (s Sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	ret := make(map[string]interface{})
 
 	for _, key := range v.MapKeys() {
@@ -145,7 +164,7 @@ func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	return ret
 }
 
-func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
+func (s Sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 	ret := make(map[string]interface{})
 
 	for i := 0; i < v.NumField(); i++ {
@@ -175,14 +194,13 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 			} else {
 				ret[name] = sanitized
 			}
-
 		}
 	}
 
 	return ret
 }
 
-func (s sanitizer) shouldRedact(key string) bool {
+func (s Sanitizer) shouldRedact(key string) bool {
 	for _, filter := range s.Filters {
 		if strings.Contains(strings.ToLower(key), strings.ToLower(filter)) {
 			return true

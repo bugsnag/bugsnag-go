@@ -185,7 +185,7 @@ func TestSanitizerSanitize(t *testing.T) {
 		{nilPointer, "<nil>"},
 		{nilInterface, "<nil>"},
 	} {
-		s := &sanitizer{}
+		s := &Sanitizer{}
 		gotValue := s.Sanitize(tc.input)
 
 		if got, want := gotValue, tc.want; got != want {
