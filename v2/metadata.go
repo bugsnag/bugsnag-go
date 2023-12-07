@@ -97,9 +97,8 @@ func (s Sanitizer) Sanitize(data interface{}) interface{} {
 		// This also covers time.Duration
 		return data.String()
 
-	case encoding.TextUnmarshaler:
-		var b []byte
-		if err := data.UnmarshalText(b); err == nil {
+	case encoding.TextMarshaler:
+		if b, err := data.MarshalText(); err == nil {
 			return string(b)
 		}
 	}
