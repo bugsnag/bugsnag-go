@@ -1,8 +1,10 @@
 package bugsnag
 
 import (
+	stderrors "errors"
 	"reflect"
 	"testing"
+	"time"
 	"unsafe"
 
 	"github.com/bugsnag/bugsnag-go/v2/errors"
@@ -24,6 +26,12 @@ type _account struct {
 type _broken struct {
 	Me   *_broken
 	Data string
+}
+
+type _textMarshaller struct{}
+
+func (_textMarshaller) MarshalText() ([]byte, error) {
+	return []byte("marshalled text"), nil
 }
 
 var account = _account{}
@@ -123,6 +131,10 @@ func TestMetaDataSanitize(t *testing.T) {
 			"unsafe":   unsafe.Pointer(broken.Me),
 			"string":   "string",
 			"password": "secret",
+			"error":    stderrors.New("some error"),
+			"time":     time.Date(2023, 12, 5, 23, 59, 59, 123456789, time.UTC),
+			"duration": 105567462 * time.Millisecond,
+			"text":     _textMarshaller{},
 			"array": []hash{{
 				"creditcard": "1234567812345678",
 				"broken":     broken,
@@ -144,6 +156,10 @@ func TestMetaDataSanitize(t *testing.T) {
 			"unsafe":   "[unsafe.Pointer]",
 			"func":     "[func()]",
 			"password": "[FILTERED]",
+			"error":    "some error",
+			"time":     "2023-12-05T23:59:59.123456789Z",
+			"duration": "29h19m27.462s",
+			"text":     "marshalled text",
 			"array": []interface{}{map[string]interface{}{
 				"creditcard": "[FILTERED]",
 				"broken": map[string]interface{}{
