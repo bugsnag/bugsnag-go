@@ -130,7 +130,7 @@ func multipleUnhandled() {
 	defer notifier.AutoNotify(ctx)
 	panic("oops")
 }
-
+//go:noinline
 func unhandledCrash() {
 	// Invalid type assertion, will panic
 	func(a interface{}) string {
