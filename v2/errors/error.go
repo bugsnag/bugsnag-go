@@ -4,9 +4,10 @@ package errors
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
 	"runtime"
+
+	"github.com/pkg/errors"
 )
 
 // The maximum number of stackframes on any error.
@@ -64,7 +65,7 @@ func New(e interface{}, skip int) *Error {
 		trace := e.StackTrace()
 		stack := make([]uintptr, len(trace))
 		for i, ptr := range trace {
-			stack[i] = uintptr(ptr) - 1
+			stack[i] = uintptr(ptr)
 		}
 		return &Error{
 			Err:   e,
@@ -132,20 +133,29 @@ func (err *Error) StackFrames() []StackFrame {
 	if err.frames == nil {
 		callers := runtime.CallersFrames(err.stack)
 		err.frames = make([]StackFrame, 0, len(err.stack))
+
 		for frame, more := callers.Next(); more; frame, more = callers.Next() {
-			if frame.Func == nil {
-				// Ignore fully inlined functions
-				continue
-			}
-			pkg, name := packageAndName(frame.Func)
-			err.frames = append(err.frames, StackFrame{
+			processedStackFrame := StackFrame{
 				function:       frame.Func,
 				File:           frame.File,
 				LineNumber:     frame.Line,
-				Name:           name,
-				Package:        pkg,
 				ProgramCounter: frame.PC,
-			})
+			}
+
+			frameFunc := frame.Func
+			if frameFunc == nil {
+				frameFunc = runtime.FuncForPC(frame.PC)
+				file, line := frameFunc.FileLine(frame.PC)
+				// Unwrap fully inlined functions
+				processedStackFrame.File = file
+				processedStackFrame.LineNumber = line
+				processedStackFrame.function = frameFunc
+			}
+
+			pkg, name := packageAndName(frameFunc)
+			processedStackFrame.Name = name
+			processedStackFrame.Package = pkg
+			err.frames = append(err.frames, processedStackFrame)
 		}
 	}
 
