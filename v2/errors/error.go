@@ -144,12 +144,15 @@ func (err *Error) StackFrames() []StackFrame {
 
 			frameFunc := frame.Func
 			if frameFunc == nil {
-				frameFunc = runtime.FuncForPC(frame.PC)
-				file, line := frameFunc.FileLine(frame.PC)
-				// Unwrap fully inlined functions
-				processedStackFrame.File = file
-				processedStackFrame.LineNumber = line
-				processedStackFrame.function = frameFunc
+				newFrameFunc := runtime.FuncForPC(frame.PC)
+				if newFrameFunc != nil {
+					file, line := newFrameFunc.FileLine(frame.PC)
+					// Unwrap fully inlined functions
+					processedStackFrame.File = file
+					processedStackFrame.LineNumber = line
+					processedStackFrame.function = newFrameFunc
+					frameFunc = newFrameFunc
+				}
 			}
 
 			pkg, name := packageAndName(frameFunc)
