@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 )
 
@@ -51,26 +50,22 @@ func TestParsePanicStack(t *testing.T) {
 			StackFrame{Name: "gopanic"},
 		}
 
-		golangVersion, verr := version.NewVersion(strings.TrimPrefix(runtime.Version(), "go"))
-		if verr != nil {
-			t.Errorf("Failed to check golang version")
-		}
+		golangVersion := runtime.Version()
 
 		// TODO remove this after dropping support for Golang 1.11
 		// Golang version < 1.12 cannot unwrap inlined functions correctly.
-		constraints, verr := version.NewConstraint("< 1.12")
-		if constraints.Check(golangVersion) {
+		if strings.HasPrefix(golangVersion, "go1.11") {
 			expected = append(expected,
-				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 30},
-				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 30},
-				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 17},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
 			)
 		} else {
 			// For versions >= 1.12 inlined functions show normally
 			expected = append(expected,
-				StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 30},
-				StackFrame{Name: "b", File: "errors/error_test.go", LineNumber: 24},
-				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 17},
+				StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "b", File: "errors/error_test.go", LineNumber: 23},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
 			)
 		}
 
@@ -116,7 +111,7 @@ func TestSkipWorks(t *testing.T) {
 		}
 
 		expected := []StackFrame{
-			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 17},
+			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
 		}
 
 		assertStacksMatch(t, expected, err.StackFrames())
