@@ -70,6 +70,10 @@ func (frame *StackFrame) SourceLine() (string, error) {
 }
 
 func packageAndName(fn *runtime.Func) (string, string) {
+	if fn == nil {
+		return "", ""
+	}
+
 	name := fn.Name()
 	pkg := ""
 
