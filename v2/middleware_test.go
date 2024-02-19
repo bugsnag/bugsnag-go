@@ -3,10 +3,12 @@ package bugsnag
 import (
 	"bytes"
 	"fmt"
-	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"log"
+	"net/http"
 	"reflect"
 	"testing"
+
+	"github.com/bugsnag/bugsnag-go/v2/errors"
 )
 
 func TestMiddlewareOrder(t *testing.T) {
@@ -93,5 +95,17 @@ func TestBeforeNotifyPanic(t *testing.T) {
 
 	if called == false {
 		t.Errorf("Notify was not called when BeforeNotify panicked")
+	}
+}
+
+func TestHttpRequestMiddleware(t *testing.T) {
+	var req *http.Request
+	rawData := []interface{}{req}
+
+	event := &Event{RawData: rawData}
+	config := &Configuration{}
+	err := httpRequestMiddleware(event, config)
+	if err != nil {
+		t.Errorf("Should not happen")
 	}
 }
