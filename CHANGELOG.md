@@ -1,5 +1,12 @@
 # Changelog
 
+## TBD
+
+### Bug fixes
+
+* Start showing inlined functions in stack trace
+  [#208](https://github.com/bugsnag/bugsnag-go/pull/208)
+
 ## 2.2.0 (2022-10-12)
 
 ### Enhancements
