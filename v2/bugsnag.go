@@ -21,7 +21,7 @@ import (
 )
 
 // Version defines the version of this Bugsnag notifier
-const Version = "2.2.0"
+const Version = "2.2.1"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
@@ -91,11 +91,13 @@ func Notify(err error, rawData ...interface{}) error {
 // The rawData is used to send extra information along with any
 // panics that are handled this way.
 // Usage:
-//  go func() {
-//      ctx := bugsnag.StartSession(context.Background())
-//		defer bugsnag.AutoNotify(ctx)
-//      // (possibly crashy code)
-//  }()
+//
+//	 go func() {
+//	     ctx := bugsnag.StartSession(context.Background())
+//			defer bugsnag.AutoNotify(ctx)
+//	     // (possibly crashy code)
+//	 }()
+//
 // See also: bugsnag.Recover()
 func AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
@@ -122,18 +124,22 @@ func AutoNotify(rawData ...interface{}) {
 // The rawData is used to send extra information along with
 // any panics that are handled this way
 // Usage:
-// go func() {
-//     ctx := bugsnag.StartSession(context.Background())
-//     defer bugsnag.Recover(ctx)
-//     // (possibly crashy code)
-// }()
+//
+//	go func() {
+//	    ctx := bugsnag.StartSession(context.Background())
+//	    defer bugsnag.Recover(ctx)
+//	    // (possibly crashy code)
+//	}()
+//
 // If you wish that any panics caught by the call to Recover shall affect your
 // stability score (it does not by default):
-// go func() {
-//     ctx := bugsnag.StartSession(context.Background())
-//     defer bugsnag.Recover(ctx, bugsnag.HandledState{Unhandled: true})
-//     // (possibly crashy code)
-// }()
+//
+//	go func() {
+//	    ctx := bugsnag.StartSession(context.Background())
+//	    defer bugsnag.Recover(ctx, bugsnag.HandledState{Unhandled: true})
+//	    // (possibly crashy code)
+//	}()
+//
 // See also: bugsnag.AutoNotify()
 func Recover(rawData ...interface{}) {
 	if err := recover(); err != nil {
