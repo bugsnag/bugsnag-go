@@ -291,23 +291,29 @@ func TestUnwrapCustomCause(t *testing.T) {
 	}
 }
 
-func ExampleErrorf() {
+func TestExampleErrorf(t *testing.T) {
+	errorStr := ""
 	for i := 1; i <= 2; i++ {
 		if i%2 == 1 {
 			e := Errorf("can only halve even numbers, got %d", i)
-			fmt.Printf("Error: %+v", e)
+			errorStr += fmt.Sprintf("Error: %+v", e)
 		}
 	}
-	// Output:
-	// Error: can only halve even numbers, got 1
+
+	expected := "Error: can only halve even numbers, got 1"
+	if expected != errorStr {
+		t.Errorf("Actual error does not match expected")
+	}
 }
 
-func ExampleNew() {
+func TestExampleNew(t *testing.T) {
 	// Wrap io.EOF with the current stack-trace and return it
 	e := New(io.EOF, 0)
-	fmt.Printf("%+v", e)
-	// Output:
-	// EOF
+	errorStr := fmt.Sprintf("%+v", e)
+	expected := "EOF"
+	if expected != errorStr {
+		t.Errorf("Actual error does not match expected")
+	}
 }
 
 func ExampleNew_skip() {
