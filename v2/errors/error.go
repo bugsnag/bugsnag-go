@@ -65,6 +65,10 @@ func New(e interface{}, skip int) *Error {
 		trace := e.StackTrace()
 		stack := make([]uintptr, len(trace))
 		for i, ptr := range trace {
+			// We do not modify the uintptr representation of the stack frame
+			// stack is processed by runtime.CallersFrames and then by Next() on Frames slice
+			// it's already doing uintptr-1
+			// refer to: https://github.com/golang/go/blob/897b3da2e079b9b940b309747305a5379fffa6ec/src/runtime/symtab.go#L108
 			stack[i] = uintptr(ptr)
 		}
 		return &Error{
