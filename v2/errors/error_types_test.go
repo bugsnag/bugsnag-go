@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 
 	pkgerror "github.com/pkg/errors"
@@ -16,7 +17,7 @@ const (
 	stringType      = "stringType"
 )
 
-// Prepared to test inlining
+// Prepare to test inlining
 func AInternal() interface{} { return fmt.Errorf("pure golang error") }
 func BInternal() interface{} { return AInternal() }
 func CInternal() interface{} { return BInternal() }
@@ -43,10 +44,11 @@ func TestInternalError(t *testing.T) {
 	err := CInternal()
 	typeAssert(t, err, internalType)
 
+	_, _, line, _ := runtime.Caller(0) // grab line immediately before error generator
 	bgError := New(err, 0)
 	actualStack := bgError.StackFrames()
 	expected := []StackFrame{
-		{Name: "TestInternalError", File: "errors/error_types_test.go", LineNumber: 46},
+		{Name: "TestInternalError", File: "errors/error_types_test.go", LineNumber: line + 1},
 	}
 	assertStacksMatch(t, expected, actualStack)
 }
@@ -57,10 +59,11 @@ func TestStringError(t *testing.T) {
 	err := CString()
 	typeAssert(t, err, stringType)
 
+	_, _, line, _ := runtime.Caller(0) // grab line immediately before error generator
 	bgError := New(err, 0)
 	actualStack := bgError.StackFrames()
 	expected := []StackFrame{
-		{Name: "TestStringError", File: "errors/error_types_test.go", LineNumber: 60},
+		{Name: "TestStringError", File: "errors/error_types_test.go", LineNumber: line + 1},
 	}
 	assertStacksMatch(t, expected, actualStack)
 }
@@ -68,16 +71,17 @@ func TestStringError(t *testing.T) {
 // Errors from pkg/errors have their own stack
 // Inlined functions should be visible in StackFrames
 func TestStackError(t *testing.T) {
+	_, _, line, _ := runtime.Caller(0) // grab line immediately before error generator
 	err := CStack()
 	typeAssert(t, err, stackType)
 
 	bgError := New(err, 0)
 	actualStack := bgError.StackFrames()
 	expected := []StackFrame{
-		{Name: "AStack", File: "errors/error_types_test.go", LineNumber: 28},
-		{Name: "BStack", File: "errors/error_types_test.go", LineNumber: 29},
-		{Name: "CStack", File: "errors/error_types_test.go", LineNumber: 30},
-		{Name: "TestStackError", File: "errors/error_types_test.go", LineNumber: 71},
+		{Name: "AStack", File: "errors/error_types_test.go", LineNumber: 29},
+		{Name: "BStack", File: "errors/error_types_test.go", LineNumber: 30},
+		{Name: "CStack", File: "errors/error_types_test.go", LineNumber: 31},
+		{Name: "TestStackError", File: "errors/error_types_test.go", LineNumber: line + 1},
 	}
 
 	assertStacksMatch(t, expected, actualStack)
@@ -86,33 +90,35 @@ func TestStackError(t *testing.T) {
 // Errors implementing Callers() interface should have their own stack
 // Inlined functions should be visible in StackFrames
 func TestCallersError(t *testing.T) {
+	_, _, line, _ := runtime.Caller(0) // grab line immediately before error generator
 	err := CCallers()
 	typeAssert(t, err, callersType)
 
 	bgError := New(err, 0)
 	actualStack := bgError.StackFrames()
 	expected := []StackFrame{
-		{Name: "ACallers", File: "errors/error_types_test.go", LineNumber: 32},
-		{Name: "BCallers", File: "errors/error_types_test.go", LineNumber: 33},
-		{Name: "CCallers", File: "errors/error_types_test.go", LineNumber: 34},
-		{Name: "TestCallersError", File: "errors/error_types_test.go", LineNumber: 89},
+		{Name: "ACallers", File: "errors/error_types_test.go", LineNumber: 33},
+		{Name: "BCallers", File: "errors/error_types_test.go", LineNumber: 34},
+		{Name: "CCallers", File: "errors/error_types_test.go", LineNumber: 35},
+		{Name: "TestCallersError", File: "errors/error_types_test.go", LineNumber: line + 1},
 	}
 	assertStacksMatch(t, expected, actualStack)
 }
 
-// Errors with StackFrames are explicilty adding stacktrace to error
+// Errors with StackFrames are explicitly adding stacktrace to error
 // Inlined functions should be visible in StackFrames
 func TestFramesError(t *testing.T) {
+	_, _, line, _ := runtime.Caller(0) // grab line immediately before error generator
 	err := CFrames()
 	typeAssert(t, err, stackFramesType)
 
 	bgError := New(err, 0)
 	actualStack := bgError.StackFrames()
 	expected := []StackFrame{
-		{Name: "AFrames", File: "errors/error_types_test.go", LineNumber: 36},
-		{Name: "BFrames", File: "errors/error_types_test.go", LineNumber: 37},
-		{Name: "CFrames", File: "errors/error_types_test.go", LineNumber: 38},
-		{Name: "TestFramesError", File: "errors/error_types_test.go", LineNumber: 106},
+		{Name: "AFrames", File: "errors/error_types_test.go", LineNumber: 37},
+		{Name: "BFrames", File: "errors/error_types_test.go", LineNumber: 38},
+		{Name: "CFrames", File: "errors/error_types_test.go", LineNumber: 39},
+		{Name: "TestFramesError", File: "errors/error_types_test.go", LineNumber: line + 1},
 	}
 
 	assertStacksMatch(t, expected, actualStack)
