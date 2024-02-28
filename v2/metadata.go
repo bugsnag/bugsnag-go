@@ -46,7 +46,7 @@ func (meta MetaData) Add(tab string, key string, value interface{}) {
 // As a safety measure, if you pass a non-struct the value will be
 // sent to Bugsnag under the "Extra data" tab.
 func (meta MetaData) AddStruct(tab string, obj interface{}) {
-	val := Sanitizer{}.Sanitize(obj)
+	val := sanitizer{}.Sanitize(obj)
 	content, ok := val.(map[string]interface{})
 	if ok {
 		meta[tab] = content
@@ -60,20 +60,20 @@ func (meta MetaData) AddStruct(tab string, obj interface{}) {
 // Remove any values from meta-data that have keys matching the filters,
 // and any that are recursive data-structures
 func (meta MetaData) sanitize(filters []string) interface{} {
-	return Sanitizer{
+	return sanitizer{
 		Filters: filters,
 		Seen:    make([]interface{}, 0),
 	}.Sanitize(meta)
 
 }
 
-// Sanitizer is used to remove filtered params and recursion from meta-data.
-type Sanitizer struct {
+// sanitizer is used to remove filtered params and recursion from meta-data.
+type sanitizer struct {
 	Filters []string
 	Seen    []interface{}
 }
 
-func (s Sanitizer) Sanitize(data interface{}) interface{} {
+func (s sanitizer) Sanitize(data interface{}) interface{} {
 	for _, s := range s.Seen {
 		// TODO: we don't need deep equal here, just type-ignoring equality
 		if reflect.DeepEqual(data, s) {
@@ -146,7 +146,7 @@ func (s Sanitizer) Sanitize(data interface{}) interface{} {
 	}
 }
 
-func (s Sanitizer) sanitizeMap(v reflect.Value) interface{} {
+func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	ret := make(map[string]interface{})
 
 	for _, key := range v.MapKeys() {
@@ -163,7 +163,7 @@ func (s Sanitizer) sanitizeMap(v reflect.Value) interface{} {
 	return ret
 }
 
-func (s Sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
+func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 	ret := make(map[string]interface{})
 
 	for i := 0; i < v.NumField(); i++ {
@@ -199,7 +199,7 @@ func (s Sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 	return ret
 }
 
-func (s Sanitizer) shouldRedact(key string) bool {
+func (s sanitizer) shouldRedact(key string) bool {
 	for _, filter := range s.Filters {
 		if strings.Contains(strings.ToLower(key), strings.ToLower(filter)) {
 			return true
