@@ -198,7 +198,7 @@ func generateStacktrace(err *errors.Error, config *Configuration) []StackFrame {
 		inProject := config.isProjectPackage(frame.Package)
 
 		// remove $GOROOT and $GOHOME from other frames
-		if idx := strings.Index(file, frame.Package); idx > -1 {
+		if idx := strings.Index(file, frame.Package); idx > -1 && frame.Package != "main" {
 			file = file[idx:]
 		}
 		if inProject {
