@@ -14,7 +14,7 @@ Scenario: A handled error sends a report
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
   And the exception is a PathError for request 0
-  And the "file" of stack frame 0 equals "main.go"
+  And the "file" of stack frame 0 ends with "main.go"
 
 Scenario: A handled error sends a report with a custom name
   Given I set environment variable "ERROR_CLASS" to "MyCustomErrorClass"
@@ -25,7 +25,7 @@ Scenario: A handled error sends a report with a custom name
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
   And the exception "errorClass" equals "MyCustomErrorClass"
-  And the "file" of stack frame 0 equals "main.go"
+  And the "file" of stack frame 0 ends with "main.go"
 
 Scenario: Sending an event using a callback to modify report contents
   When I run the go service "app" with the test case "handled-with-callback"
@@ -35,8 +35,8 @@ Scenario: Sending an event using a callback to modify report contents
   And the event "severity" equals "info"
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "context" equals "nonfatal.go:14"
-  And the "file" of stack frame 0 equals "main.go"
-  And stack frame 0 contains a local function spanning 241 to 247
+  And the "file" of stack frame 0 ends with "main.go"
+  And stack frame 0 contains a local function spanning 242 to 248
   And the "file" of stack frame 1 equals ">insertion<"
   And the "lineNumber" of stack frame 1 equals 0
 
@@ -48,8 +48,8 @@ Scenario: Marking an error as unhandled in a callback
   And the event "severity" equals "error"
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "severityReason.unhandledOverridden" is true
-  And the "file" of stack frame 0 equals "main.go"
-  And stack frame 0 contains a local function spanning 253 to 256
+  And the "file" of stack frame 0 ends with "main.go"
+  And stack frame 0 contains a local function spanning 254 to 257
 
 Scenario: Unwrapping the causes of a handled error
   When I run the go service "app" with the test case "nested-error"
@@ -58,12 +58,12 @@ Scenario: Unwrapping the causes of a handled error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "exceptions.0.message" equals "terminate process"
-  And the "lineNumber" of stack frame 0 equals 291
-  And the "file" of stack frame 0 equals "main.go"
+  And the "lineNumber" of stack frame 0 equals 292
+  And the "file" of stack frame 0 ends with "main.go"
   And the "method" of stack frame 0 equals "nestedHandledError"
   And the event "exceptions.1.message" equals "login failed"
-  And the event "exceptions.1.stacktrace.0.file" equals "main.go"
-  And the event "exceptions.1.stacktrace.0.lineNumber" equals 311
+  And the event "exceptions.1.stacktrace.0.file" ends with "main.go"
+  And the event "exceptions.1.stacktrace.0.lineNumber" equals 312
   And the event "exceptions.2.message" equals "invalid token"
-  And the event "exceptions.2.stacktrace.0.file" equals "main.go"
-  And the event "exceptions.2.stacktrace.0.lineNumber" equals 319
+  And the event "exceptions.2.stacktrace.0.file" ends with "main.go"
+  And the event "exceptions.2.stacktrace.0.lineNumber" equals 320

@@ -130,6 +130,7 @@ func multipleUnhandled() {
 	defer notifier.AutoNotify(ctx)
 	panic("oops")
 }
+
 //go:noinline
 func unhandledCrash() {
 	// Invalid type assertion, will panic
@@ -259,17 +260,17 @@ func handledToUnhandled() {
 }
 
 type customErr struct {
-	msg string
-	cause error
+	msg     string
+	cause   error
 	callers []uintptr
 }
 
 func newCustomErr(msg string, cause error) error {
 	callers := make([]uintptr, 8)
 	runtime.Callers(2, callers)
-	return customErr {
-		msg: msg,
-		cause: cause,
+	return customErr{
+		msg:     msg,
+		cause:   cause,
 		callers: callers,
 	}
 }
@@ -297,7 +298,7 @@ func nestedHandledError() {
 		if val, err := checkValue(i); err != nil {
 			fmt.Printf("err: %v, val: %d", err, val)
 		}
-		if val, err := checkValue(i-46); err != nil {
+		if val, err := checkValue(i - 46); err != nil {
 			fmt.Printf("err: %v, val: %d", err, val)
 		}
 
@@ -317,7 +318,7 @@ func login(token string) error {
 func checkValue(i int) (int, error) {
 	if i < 0 {
 		return 0, newCustomErr("invalid token", nil)
-	} else if i % 2 == 0 {
+	} else if i%2 == 0 {
 		return i / 2, nil
 	} else if i < 9 {
 		return i * 3, nil

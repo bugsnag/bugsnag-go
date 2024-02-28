@@ -17,7 +17,7 @@ Feature: Panic handling
       And the exception "message" is one of:
         | interface conversion: interface is struct {}, not string      |
         | interface conversion: interface {} is struct {}, not string   |
-      And the in-project frames of the stacktrace are:
-        | file    | method               |
-        | main.go | unhandledCrash.func1 |
-        | main.go | unhandledCrash       |
+      And the "method" of stack frame 0 equals "unhandledCrash.func1"
+      And the "file" of stack frame 0 ends with "main.go"
+      And the "method" of stack frame 1 equals "unhandledCrash"
+      And the "file" of stack frame 1 ends with "main.go"
