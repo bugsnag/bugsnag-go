@@ -2,6 +2,7 @@ Feature: Panic handling
 
     Background:
       Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
+      Given I set environment variable "BUGSNAG_SOURCE_ROOT" to the app directory
       And I configure the bugsnag endpoint
       And I have built the service "app"
       And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
@@ -17,7 +18,7 @@ Feature: Panic handling
       And the exception "message" is one of:
         | interface conversion: interface is struct {}, not string      |
         | interface conversion: interface {} is struct {}, not string   |
-      And the "method" of stack frame 0 equals "unhandledCrash.func1"
-      And the "file" of stack frame 0 ends with "main.go"
-      And the "method" of stack frame 1 equals "unhandledCrash"
-      And the "file" of stack frame 1 ends with "main.go"
+      And the in-project frames of the stacktrace are:
+        | file    | method               |
+        | main.go | unhandledCrash.func1 |
+        | main.go | unhandledCrash       |
