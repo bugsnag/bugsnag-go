@@ -2,6 +2,7 @@ Feature: Handled errors
 
 Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  Given I set environment variable "BUGSNAG_SOURCE_ROOT" to the app directory
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4512"
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"

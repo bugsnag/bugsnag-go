@@ -232,10 +232,7 @@ func (config *Configuration) isProjectPackage(_pkg string) bool {
 }
 
 func (config *Configuration) stripProjectPackages(file string) string {
-	trimmedFile := file
-	if strings.HasPrefix(trimmedFile, config.SourceRoot) {
-		trimmedFile = strings.TrimPrefix(trimmedFile, config.SourceRoot)
-	}
+	trimmedFile := strings.TrimPrefix(file, config.SourceRoot)
 	for _, p := range config.ProjectPackages {
 		if len(p) > 2 && p[len(p)-2] == '/' && p[len(p)-1] == '*' {
 			p = p[:len(p)-1]

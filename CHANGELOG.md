@@ -11,6 +11,10 @@
   [#215](https://github.com/bugsnag/bugsnag-go/pull/215)
   [Chris Duncan](https://github.com/veqryn)
 
+* Stop trimming everything before "main.go" on main packages
+  [#217](https://github.com/bugsnag/bugsnag-go/pull/217)
+  [Chris Duncan](https://github.com/veqryn)
+
 ## 2.2.0 (2022-10-12)
 
 ### Enhancements

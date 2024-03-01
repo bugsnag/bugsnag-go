@@ -197,10 +197,19 @@ func generateStacktrace(err *errors.Error, config *Configuration) []StackFrame {
 		file := frame.File
 		inProject := config.isProjectPackage(frame.Package)
 
-		// remove $GOROOT and $GOHOME from other frames
-		if idx := strings.Index(file, frame.Package); idx > -1 {
+		// This will trim path before package name for external packages and golang default packages
+		// Excluding main package as it's special case
+		// This will NOT trim paths for packages in current module because path won't contain the package name
+		// Example: path is "/user/name/work/internal/internal.go" and module package name is "example.com/mymodule/internal"
+		if idx := strings.Index(file, frame.Package); idx > -1 && frame.Package != "main" {
 			file = file[idx:]
 		}
+
+		// This should trim path for main and other current module packages with correct config
+		// If input path is "/user/name/work/internal/internal.go"
+		// SourceRoot is "/user/name/work" and ProjectPackages are []string{"main*", "example.com/mymodule/**"}
+		// Then when package name is "example.com/mymodule/internal"
+		// The path will be trimmed to "/internal/internal.go"
 		if inProject {
 			file = config.stripProjectPackages(file)
 		}
