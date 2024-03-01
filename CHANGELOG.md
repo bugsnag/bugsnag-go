@@ -7,6 +7,10 @@
 * Start showing inlined functions in stack trace
   [#208](https://github.com/bugsnag/bugsnag-go/pull/208)
 
+* Handle complex structs in metadata
+  [#215](https://github.com/bugsnag/bugsnag-go/pull/215)
+  [Chris Duncan](https://github.com/veqryn)
+
 ## 2.2.0 (2022-10-12)
 
 ### Enhancements
