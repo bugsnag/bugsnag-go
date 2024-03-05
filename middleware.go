@@ -62,7 +62,7 @@ func catchMiddlewarePanic(event *Event, config *Configuration, next func() error
 // use this as a template for writing your own Middleware.
 func httpRequestMiddleware(event *Event, config *Configuration) error {
 	for _, datum := range event.RawData {
-		if request, ok := datum.(*http.Request); ok {
+		if request, ok := datum.(*http.Request); ok && request != nil {
 			event.MetaData.Update(MetaData{
 				"request": {
 					"params": request.URL.Query(),

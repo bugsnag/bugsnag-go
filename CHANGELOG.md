@@ -15,6 +15,13 @@
   [#217](https://github.com/bugsnag/bugsnag-go/pull/217)
   [Chris Duncan](https://github.com/veqryn)
 
+## 2.2.1 (2022-02-21)
+
+### Bug fixes
+
+* Fix middleware panic on nil *http.Request
+  [#212](https://github.com/bugsnag/bugsnag-go/pull/212)
+
 ## 2.2.0 (2022-10-12)
 
 ### Enhancements
