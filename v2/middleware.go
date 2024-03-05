@@ -57,7 +57,7 @@ func (stack *middlewareStack) runBeforeFilter(f beforeFunc, event *Event, config
 // use this as a template for writing your own Middleware.
 func httpRequestMiddleware(event *Event, config *Configuration) error {
 	for _, datum := range event.RawData {
-		if request, ok := datum.(*http.Request); ok {
+		if request, ok := datum.(*http.Request); ok && request != nil {
 			event.MetaData.Update(MetaData{
 				"request": {
 					"params": request.URL.Query(),
