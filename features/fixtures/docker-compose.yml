@@ -19,6 +19,8 @@ services:
       - PARAMS_FILTERS
       - SYNCHRONOUS
       - SERVER_PORT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
 
   autoconfigure:
@@ -72,6 +74,8 @@ services:
       - AUTO_CAPTURE_SESSIONS
       - SYNCHRONOUS
       - SERVER_PORT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
     command: go run main.go
 
@@ -97,6 +101,8 @@ services:
       - AUTO_CAPTURE_SESSIONS
       - SYNCHRONOUS
       - SERVER_PORT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
     command: go run main.go
 
@@ -121,6 +127,8 @@ services:
       - AUTO_CAPTURE_SESSIONS
       - SYNCHRONOUS
       - SERVER_PORT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
     command: go run main.go
 
@@ -146,6 +154,8 @@ services:
       - AUTO_CAPTURE_SESSIONS
       - SYNCHRONOUS
       - SERVER_PORT
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
     command: go run main.go
 
@@ -173,5 +183,7 @@ services:
       - SYNCHRONOUS
       - SERVER_PORT
       - USE_PROPERTIES_FILE_CONFIG
+      - BUGSNAG_SOURCE_ROOT
+      - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
     command: ./test/run.sh

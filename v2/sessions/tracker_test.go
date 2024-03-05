@@ -55,7 +55,7 @@ func TestShouldOnlyWriteWhenReceivingSessions(t *testing.T) {
 	for i := 0; i < 50000; i++ {
 		st.StartSession(context.Background())
 	}
-	time.Sleep(st.config.PublishInterval * 2)
+	time.Sleep(time.Millisecond * 500) // wait for sessions to get consumed
 
 	var sessions []*Session
 	pub.mutex.Lock()

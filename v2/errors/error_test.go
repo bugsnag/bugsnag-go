@@ -13,7 +13,7 @@ import (
 
 // fixture functions doing work to avoid inlining
 func a(i int) error {
-	if b(i + 5) && b(i + 6) {
+	if b(i+5) && b(i+6) {
 		return nil
 	}
 	return fmt.Errorf("not gonna happen")
@@ -47,8 +47,28 @@ func TestParsePanicStack(t *testing.T) {
 		}
 		expected := []StackFrame{
 			StackFrame{Name: "TestParsePanicStack.func1", File: "errors/error_test.go"},
-			StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
+			StackFrame{Name: "gopanic"},
 		}
+
+		golangVersion := runtime.Version()
+
+		// TODO remove this after dropping support for Golang 1.11
+		// Golang version < 1.12 cannot unwrap inlined functions correctly.
+		if strings.HasPrefix(golangVersion, "go1.11") {
+			expected = append(expected,
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
+			)
+		} else {
+			// For versions >= 1.12 inlined functions show normally
+			expected = append(expected,
+				StackFrame{Name: "c", File: "errors/error_test.go", LineNumber: 29},
+				StackFrame{Name: "b", File: "errors/error_test.go", LineNumber: 23},
+				StackFrame{Name: "a", File: "errors/error_test.go", LineNumber: 16},
+			)
+		}
+
 		assertStacksMatch(t, expected, err.StackFrames())
 	}()
 
@@ -271,23 +291,29 @@ func TestUnwrapCustomCause(t *testing.T) {
 	}
 }
 
-func ExampleErrorf() {
+func TestExampleErrorf(t *testing.T) {
+	errorStr := ""
 	for i := 1; i <= 2; i++ {
 		if i%2 == 1 {
 			e := Errorf("can only halve even numbers, got %d", i)
-			fmt.Printf("Error: %+v", e)
+			errorStr += fmt.Sprintf("Error: %+v", e)
 		}
 	}
-	// Output:
-	// Error: can only halve even numbers, got 1
+
+	expected := "Error: can only halve even numbers, got 1"
+	if expected != errorStr {
+		t.Errorf("Actual error does not match expected")
+	}
 }
 
-func ExampleNew() {
+func TestExampleNew(t *testing.T) {
 	// Wrap io.EOF with the current stack-trace and return it
 	e := New(io.EOF, 0)
-	fmt.Printf("%+v", e)
-	// Output:
-	// EOF
+	errorStr := fmt.Sprintf("%+v", e)
+	expected := "EOF"
+	if expected != errorStr {
+		t.Errorf("Actual error does not match expected")
+	}
 }
 
 func ExampleNew_skip() {

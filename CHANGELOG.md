@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.3.0 (2024-03-05)
+
+### Bug fixes
+
+* Start showing inlined functions in stack trace
+  [#208](https://github.com/bugsnag/bugsnag-go/pull/208)
+
+* Handle complex structs in metadata
+  [#215](https://github.com/bugsnag/bugsnag-go/pull/215)
+  [Chris Duncan](https://github.com/veqryn)
+
+* Stop trimming everything before "main.go" on main packages
+  [#217](https://github.com/bugsnag/bugsnag-go/pull/217)
+  [Chris Duncan](https://github.com/veqryn)
+
 ## 2.2.1 (2022-02-21)
 
 ### Bug fixes

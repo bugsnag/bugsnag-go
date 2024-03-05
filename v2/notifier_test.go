@@ -2,6 +2,7 @@ package bugsnag_test
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -61,10 +62,26 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 			defer notifier.AutoNotify()
 			crash("NaN")
 		}()
-		assertStackframesMatch(t, []errors.StackFrame{
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4.1", File: "notifier_test.go"},
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4", File: "notifier_test.go"},
-		})
+
+		var expected []errors.StackFrame
+		golangVersion := runtime.Version()
+		// TODO remove this after dropping support for Golang 1.11
+		// Golang version < 1.12 cannot unwrap inlined functions correctly.
+		if strings.HasPrefix(golangVersion, "go1.11") {
+			expected = append(expected,
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4.1", File: "notifier_test.go"}, //inlined crash func
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4", File: "notifier_test.go"},
+			)
+		} else {
+			expected = append(expected,
+				errors.StackFrame{Name: "crash", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func4", File: "notifier_test.go"},
+			)
+		}
+
+		assertStackframesMatch(t, expected)
 	})
 	t.Run("bugsnag.AutoNotify", func(st *testing.T) {
 		func() {
@@ -72,10 +89,25 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 			defer bugsnag.AutoNotify()
 			crash("NaN")
 		}()
-		assertStackframesMatch(t, []errors.StackFrame{
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5.1", File: "notifier_test.go"},
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5", File: "notifier_test.go"},
-		})
+		var expected []errors.StackFrame
+		golangVersion := runtime.Version()
+		// TODO remove this after dropping support for Golang 1.11
+		// Golang version < 1.12 cannot unwrap inlined functions correctly.
+		if strings.HasPrefix(golangVersion, "go1.11") {
+			expected = append(expected,
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5.1", File: "notifier_test.go"}, //inlined crash func
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5", File: "notifier_test.go"},
+			)
+		} else {
+			expected = append(expected,
+				errors.StackFrame{Name: "crash", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func5", File: "notifier_test.go"},
+			)
+		}
+
+		assertStackframesMatch(t, expected)
 	})
 
 	// Expect the following frames to be present for *.Recover
@@ -92,20 +124,50 @@ func TestStackframesAreSkippedCorrectly(t *testing.T) {
 			defer notifier.Recover()
 			crash("NaN")
 		}()
-		assertStackframesMatch(t, []errors.StackFrame{
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6.1", File: "notifier_test.go"},
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6", File: "notifier_test.go"},
-		})
+		var expected []errors.StackFrame
+		golangVersion := runtime.Version()
+		// TODO remove this after dropping support for Golang 1.11
+		// Golang version < 1.12 cannot unwrap inlined functions correctly.
+		if strings.HasPrefix(golangVersion, "go1.11") {
+			expected = append(expected,
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6.1", File: "notifier_test.go"}, //inlined crash func
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6", File: "notifier_test.go"},
+			)
+		} else {
+			expected = append(expected,
+				errors.StackFrame{Name: "crash", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func6", File: "notifier_test.go"},
+			)
+		}
+
+		assertStackframesMatch(t, expected)
 	})
 	t.Run("bugsnag.Recover", func(st *testing.T) {
 		func() {
 			defer bugsnag.Recover()
 			crash("NaN")
 		}()
-		assertStackframesMatch(t, []errors.StackFrame{
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7.1", File: "notifier_test.go"},
-			errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7", File: "notifier_test.go"},
-		})
+		var expected []errors.StackFrame
+		golangVersion := runtime.Version()
+		// TODO remove this after dropping support for Golang 1.11
+		// Golang version < 1.12 cannot unwrap inlined functions correctly.
+		if strings.HasPrefix(golangVersion, "go1.11") {
+			expected = append(expected,
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7.1", File: "notifier_test.go"}, //inlined crash func
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7", File: "notifier_test.go"},
+			)
+		} else {
+			expected = append(expected,
+				errors.StackFrame{Name: "crash", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7.1", File: "notifier_test.go"},
+				errors.StackFrame{Name: "TestStackframesAreSkippedCorrectly.func7", File: "notifier_test.go"},
+			)
+		}
+
+		assertStackframesMatch(t, expected)
 	})
 }
 
@@ -187,6 +249,7 @@ func assertStackframesMatch(t *testing.T, expected []errors.StackFrame) {
 			if strings.HasSuffix(file, expectedFrame.File) && expectedFrame.Name == method {
 				lastmatch = index
 				matched++
+				break
 			}
 		}
 	}

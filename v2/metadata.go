@@ -1,9 +1,11 @@
 package bugsnag
 
 import (
+	"encoding"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // MetaData is added to the Bugsnag dashboard in tabs. Each tab is
@@ -65,7 +67,7 @@ func (meta MetaData) sanitize(filters []string) interface{} {
 
 }
 
-// The sanitizer is used to remove filtered params and recursion from meta-data.
+// sanitizer is used to remove filtered params and recursion from meta-data.
 type sanitizer struct {
 	Filters []string
 	Seen    []interface{}
@@ -82,6 +84,24 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 	// Sanitizers are passed by value, so we can modify s and it only affects
 	// s.Seen for nested calls.
 	s.Seen = append(s.Seen, data)
+
+	// Handle certain well known interfaces and types
+	switch data := data.(type) {
+	case error:
+		return data.Error()
+
+	case time.Time:
+		return data.Format(time.RFC3339Nano)
+
+	case fmt.Stringer:
+		// This also covers time.Duration
+		return data.String()
+
+	case encoding.TextMarshaler:
+		if b, err := data.MarshalText(); err == nil {
+			return string(b)
+		}
+	}
 
 	t := reflect.TypeOf(data)
 	v := reflect.ValueOf(data)
@@ -123,9 +143,7 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		// case t.Chan, t.Func, reflect.Complex64, reflect.Complex128, reflect.UnsafePointer:
 	default:
 		return "[" + t.String() + "]"
-
 	}
-
 }
 
 func (s sanitizer) sanitizeMap(v reflect.Value) interface{} {
@@ -175,7 +193,6 @@ func (s sanitizer) sanitizeStruct(v reflect.Value, t reflect.Type) interface{} {
 			} else {
 				ret[name] = sanitized
 			}
-
 		}
 	}
 
