@@ -34,6 +34,12 @@ func (_textMarshaller) MarshalText() ([]byte, error) {
 	return []byte("marshalled text"), nil
 }
 
+type _testStringer struct{}
+
+func (s _testStringer) String() string {
+	return "something"
+}
+
 var account = _account{}
 var notifier = New(Configuration{})
 
@@ -74,6 +80,23 @@ func TestMetaDataAdd(t *testing.T) {
 		},
 	}) {
 		t.Errorf("metadata.Add didn't work: %#v", m)
+	}
+}
+
+func TestMetadataAddPointer(t *testing.T) {
+	var pointer *_testStringer
+	md := MetaData{}
+	md.AddStruct("emptypointer", pointer)
+	fullPointer := &_testStringer{}
+	md.AddStruct("fullpointer", fullPointer)
+
+	if !reflect.DeepEqual(md, MetaData{
+		"Extra data": {
+			"emptypointer": "<nil>",
+			"fullpointer":  "something",
+		},
+	}) {
+		t.Errorf("metadata.AddStruct didn't work: %#v", md)
 	}
 }
 

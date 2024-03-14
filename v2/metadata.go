@@ -52,7 +52,7 @@ func (meta MetaData) AddStruct(tab string, obj interface{}) {
 		meta[tab] = content
 	} else {
 		// Wasn't a struct
-		meta.Add("Extra data", tab, obj)
+		meta.Add("Extra data", tab, val)
 	}
 
 }
@@ -84,30 +84,36 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 	// Sanitizers are passed by value, so we can modify s and it only affects
 	// s.Seen for nested calls.
 	s.Seen = append(s.Seen, data)
-
-	// Handle certain well known interfaces and types
-	switch data := data.(type) {
-	case error:
-		return data.Error()
-
-	case time.Time:
-		return data.Format(time.RFC3339Nano)
-
-	case fmt.Stringer:
-		// This also covers time.Duration
-		return data.String()
-
-	case encoding.TextMarshaler:
-		if b, err := data.MarshalText(); err == nil {
-			return string(b)
-		}
-	}
-
 	t := reflect.TypeOf(data)
 	v := reflect.ValueOf(data)
 
 	if t == nil {
 		return "<nil>"
+	}
+
+	// Handle nil pointers and interfaces specifically
+	if t.Kind() == reflect.Interface || t.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return "<nil>"
+		}
+	}
+
+	// Handle certain well known interfaces and types
+	switch dataT := data.(type) {
+	case error:
+		return dataT.Error()
+
+	case time.Time:
+		return dataT.Format(time.RFC3339Nano)
+
+	case fmt.Stringer:
+		// This also covers time.Duration
+		return dataT.String()
+
+	case encoding.TextMarshaler:
+		if b, err := dataT.MarshalText(); err == nil {
+			return string(b)
+		}
 	}
 
 	switch t.Kind() {
@@ -121,9 +127,6 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		return data
 
 	case reflect.Interface, reflect.Ptr:
-		if v.IsNil() {
-			return "<nil>"
-		}
 		return s.Sanitize(v.Elem().Interface())
 
 	case reflect.Array, reflect.Slice:
