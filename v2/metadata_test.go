@@ -34,6 +34,22 @@ func (_textMarshaller) MarshalText() ([]byte, error) {
 	return []byte("marshalled text"), nil
 }
 
+type _testStringer struct{}
+
+func (s _testStringer) String() string {
+	return "something"
+}
+
+type _testError struct{}
+
+func (s _testError) Error() string {
+	return "errorstr"
+}
+
+type _testStruct struct {
+	Name *_testStringer
+}
+
 var account = _account{}
 var notifier = New(Configuration{})
 
@@ -74,6 +90,70 @@ func TestMetaDataAdd(t *testing.T) {
 		},
 	}) {
 		t.Errorf("metadata.Add didn't work: %#v", m)
+	}
+}
+
+func TestMetadataAddPointer(t *testing.T) {
+	var pointer *_testStringer
+	md := MetaData{}
+	md.AddStruct("emptypointer", pointer)
+	fullPointer := &_testStringer{}
+	md.AddStruct("fullpointer", fullPointer)
+
+	if !reflect.DeepEqual(md, MetaData{
+		"Extra data": {
+			"emptypointer": "<nil>",
+			"fullpointer":  "something",
+		},
+	}) {
+		t.Errorf("metadata.AddStruct didn't work: %#v", md)
+	}
+}
+
+func TestMetadataAddNil(t *testing.T) {
+	md := MetaData{}
+	md.AddStruct("map", map[string]interface{}{
+		"data": _testStruct{Name: nil},
+	})
+
+	var nilMap map[string]interface{}
+	md.AddStruct("nilmap", nilMap)
+
+	var nilError _testError
+	md.AddStruct("error", nilError)
+
+	var nilErrorPtr *_testError
+	md.AddStruct("errorNilPtr", nilErrorPtr)
+
+	var timeVar time.Time
+	md.AddStruct("timeUnset", timeVar)
+
+	var duration time.Duration
+	md.AddStruct("durationUnset", duration)
+
+	var marshalNilPtr *_textMarshaller
+	md.AddStruct("marshalNilPtr", marshalNilPtr)
+
+	var marshalFullPtr = &_textMarshaller{}
+	md.AddStruct("marshalFullPtr", marshalFullPtr)
+
+	if !reflect.DeepEqual(md, MetaData{
+		"map": {
+			"data": map[string]interface{}{
+				"Name": "<nil>",
+			},
+		},
+		"nilmap": map[string]interface{}{},
+		"Extra data": {
+			"error":          "errorstr",
+			"errorNilPtr":    "<nil>",
+			"timeUnset":      "0001-01-01T00:00:00Z",
+			"durationUnset":  "0s",
+			"marshalFullPtr": "marshalled text",
+			"marshalNilPtr":  "<nil>",
+		},
+	}) {
+		t.Errorf("metadata.AddStruct didn't work: %#v", md)
 	}
 }
 
