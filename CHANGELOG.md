@@ -1,6 +1,13 @@
 # Changelog
 
-## TBD
+## 2.3.1 (2024-03-18)
+
+### Bug fixes
+
+* Handle empty pointers to complex structs in metadata.Add
+  [#221](https://github.com/bugsnag/bugsnag-go/pull/221)
+
+## 2.3.0 (2024-03-05)
 
 ### Bug fixes
 
