@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"encoding"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -112,6 +113,11 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 
 	case encoding.TextMarshaler:
 		if b, err := dataT.MarshalText(); err == nil {
+			return string(b)
+		}
+
+	case json.Marshaler:
+		if b, err := dataT.MarshalJSON(); err == nil {
 			return string(b)
 		}
 	}
