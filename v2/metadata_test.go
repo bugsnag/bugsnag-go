@@ -216,7 +216,8 @@ func TestMetaDataSanitize(t *testing.T) {
 			"time":     time.Date(2023, 12, 5, 23, 59, 59, 123456789, time.UTC),
 			"duration": 105567462 * time.Millisecond,
 			"text":     _textMarshaller{},
-			"json":     json.RawMessage(`{"hello": "world"}`),
+			"json":     json.RawMessage(`{"json_property": "json_value"}`),
+			"bytes":    []byte(`lots of bytes`),
 			"array": []hash{{
 				"creditcard": "1234567812345678",
 				"broken":     broken,
@@ -242,7 +243,8 @@ func TestMetaDataSanitize(t *testing.T) {
 			"time":     "2023-12-05T23:59:59.123456789Z",
 			"duration": "29h19m27.462s",
 			"text":     "marshalled text",
-			"json":     `{"hello": "world"}`,
+			"json":     `{"json_property": "json_value"}`,
+			"bytes":    "lots of bytes",
 			"array": []interface{}{map[string]interface{}{
 				"creditcard": "[FILTERED]",
 				"broken": map[string]interface{}{
