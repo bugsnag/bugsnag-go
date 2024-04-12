@@ -113,9 +113,6 @@ func TestMetadataAddPointer(t *testing.T) {
 
 func TestMetadataAddNil(t *testing.T) {
 	md := MetaData{}
-	md.AddStruct("map", map[string]interface{}{
-		"data": _testStruct{Name: nil},
-	})
 
 	var nilMap map[string]interface{}
 	md.AddStruct("nilmap", nilMap)
@@ -144,34 +141,74 @@ func TestMetadataAddNil(t *testing.T) {
 	var nullJsonMarshaller json.RawMessage
 	md.AddStruct("nullJsonMarshaller", nullJsonMarshaller)
 
-	var fullJsonMarshaller = &json.RawMessage{}
-	md.AddStruct("fullJsonMarshaller", fullJsonMarshaller)
+	var nullJsonMarshallerPtr *json.RawMessage
+	md.AddStruct("nullJsonMarshallerPtr", nullJsonMarshallerPtr)
+
+	var emptyJsonMarshaller = &json.RawMessage{}
+	md.AddStruct("emptyJsonMarshaller", emptyJsonMarshaller)
 
 	var nilBytes []byte
 	md.AddStruct("nilBytes", nilBytes)
 
+	var nilBytesPtr *[]byte
+	md.AddStruct("nilBytesPtr", nilBytesPtr)
+
 	var emptyBytes = []byte{}
 	md.AddStruct("emptyBytes", emptyBytes)
+
+	md.AddStruct("map", map[string]interface{}{
+		"data":                  _testStruct{Name: nil},
+		"nilmap":                nilMap,
+		"nilSlice":              nilSlice,
+		"error":                 nilError,
+		"errorNilPtr":           nilErrorPtr,
+		"timeUnset":             timeVar,
+		"durationUnset":         duration,
+		"marshalNilPtr":         marshalNilPtr,
+		"marshalFullPtr":        marshalFullPtr,
+		"nullJsonMarshaller":    nullJsonMarshaller,
+		"nullJsonMarshallerPtr": nullJsonMarshallerPtr,
+		"emptyJsonMarshaller":   emptyJsonMarshaller,
+		"nilBytes":              nilBytes,
+		"nilBytesPtr":           nilBytesPtr,
+		"emptyBytes":            emptyBytes,
+	})
 
 	if !reflect.DeepEqual(md, MetaData{
 		"map": {
 			"data": map[string]interface{}{
 				"Name": "<nil>",
 			},
+			"nilmap":                map[string]interface{}{},
+			"nilSlice":              []interface{}{},
+			"error":                 "errorstr",
+			"errorNilPtr":           "<nil>",
+			"timeUnset":             "0001-01-01T00:00:00Z",
+			"durationUnset":         "0s",
+			"marshalFullPtr":        "marshalled text",
+			"marshalNilPtr":         "<nil>",
+			"nullJsonMarshaller":    "null",
+			"nullJsonMarshallerPtr": "<nil>",
+			"emptyJsonMarshaller":   "",
+			"nilBytes":              "",
+			"nilBytesPtr":           "<nil>",
+			"emptyBytes":            "",
 		},
 		"nilmap": map[string]interface{}{},
 		"Extra data": {
-			"nilSlice":           []interface{}{},
-			"error":              "errorstr",
-			"errorNilPtr":        "<nil>",
-			"timeUnset":          "0001-01-01T00:00:00Z",
-			"durationUnset":      "0s",
-			"marshalFullPtr":     "marshalled text",
-			"marshalNilPtr":      "<nil>",
-			"nullJsonMarshaller": "null",
-			"fullJsonMarshaller": "",
-			"nilBytes":           "",
-			"emptyBytes":         "",
+			"nilSlice":              []interface{}{},
+			"error":                 "errorstr",
+			"errorNilPtr":           "<nil>",
+			"timeUnset":             "0001-01-01T00:00:00Z",
+			"durationUnset":         "0s",
+			"marshalFullPtr":        "marshalled text",
+			"marshalNilPtr":         "<nil>",
+			"nullJsonMarshaller":    "null",
+			"nullJsonMarshallerPtr": "<nil>",
+			"emptyJsonMarshaller":   "",
+			"nilBytes":              "",
+			"nilBytesPtr":           "<nil>",
+			"emptyBytes":            "",
 		},
 	}) {
 		t.Errorf("metadata.AddStruct didn't work: %#v", md)
