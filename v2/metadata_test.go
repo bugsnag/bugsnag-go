@@ -120,6 +120,9 @@ func TestMetadataAddNil(t *testing.T) {
 	var nilMap map[string]interface{}
 	md.AddStruct("nilmap", nilMap)
 
+	var nilSlice []interface{}
+	md.AddStruct("nilSlice", nilSlice)
+
 	var nilError _testError
 	md.AddStruct("error", nilError)
 
@@ -138,6 +141,18 @@ func TestMetadataAddNil(t *testing.T) {
 	var marshalFullPtr = &_textMarshaller{}
 	md.AddStruct("marshalFullPtr", marshalFullPtr)
 
+	var nullJsonMarshaller json.RawMessage
+	md.AddStruct("nullJsonMarshaller", nullJsonMarshaller)
+
+	var fullJsonMarshaller = &json.RawMessage{}
+	md.AddStruct("fullJsonMarshaller", fullJsonMarshaller)
+
+	var nilBytes []byte
+	md.AddStruct("nilBytes", nilBytes)
+
+	var emptyBytes = []byte{}
+	md.AddStruct("emptyBytes", emptyBytes)
+
 	if !reflect.DeepEqual(md, MetaData{
 		"map": {
 			"data": map[string]interface{}{
@@ -146,12 +161,17 @@ func TestMetadataAddNil(t *testing.T) {
 		},
 		"nilmap": map[string]interface{}{},
 		"Extra data": {
-			"error":          "errorstr",
-			"errorNilPtr":    "<nil>",
-			"timeUnset":      "0001-01-01T00:00:00Z",
-			"durationUnset":  "0s",
-			"marshalFullPtr": "marshalled text",
-			"marshalNilPtr":  "<nil>",
+			"nilSlice":           []interface{}{},
+			"error":              "errorstr",
+			"errorNilPtr":        "<nil>",
+			"timeUnset":          "0001-01-01T00:00:00Z",
+			"durationUnset":      "0s",
+			"marshalFullPtr":     "marshalled text",
+			"marshalNilPtr":      "<nil>",
+			"nullJsonMarshaller": "null",
+			"fullJsonMarshaller": "",
+			"nilBytes":           "",
+			"emptyBytes":         "",
 		},
 	}) {
 		t.Errorf("metadata.AddStruct didn't work: %#v", md)
