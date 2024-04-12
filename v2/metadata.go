@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"encoding"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -98,7 +99,7 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		}
 	}
 
-	// Handle certain well known interfaces and types
+	// Handle certain well known interfaces and types, in preferred order
 	switch dataT := data.(type) {
 	case error:
 		return dataT.Error()
@@ -114,6 +115,14 @@ func (s sanitizer) Sanitize(data interface{}) interface{} {
 		if b, err := dataT.MarshalText(); err == nil {
 			return string(b)
 		}
+
+	case json.Marshaler:
+		if b, err := dataT.MarshalJSON(); err == nil {
+			return string(b)
+		}
+
+	case []byte:
+		return string(dataT)
 	}
 
 	switch t.Kind() {
