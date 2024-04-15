@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"encoding/json"
 	stderrors "errors"
 	"reflect"
 	"testing"
@@ -112,12 +113,12 @@ func TestMetadataAddPointer(t *testing.T) {
 
 func TestMetadataAddNil(t *testing.T) {
 	md := MetaData{}
-	md.AddStruct("map", map[string]interface{}{
-		"data": _testStruct{Name: nil},
-	})
 
 	var nilMap map[string]interface{}
 	md.AddStruct("nilmap", nilMap)
+
+	var nilSlice []interface{}
+	md.AddStruct("nilSlice", nilSlice)
 
 	var nilError _testError
 	md.AddStruct("error", nilError)
@@ -137,20 +138,77 @@ func TestMetadataAddNil(t *testing.T) {
 	var marshalFullPtr = &_textMarshaller{}
 	md.AddStruct("marshalFullPtr", marshalFullPtr)
 
+	var nullJsonMarshaller json.RawMessage
+	md.AddStruct("nullJsonMarshaller", nullJsonMarshaller)
+
+	var nullJsonMarshallerPtr *json.RawMessage
+	md.AddStruct("nullJsonMarshallerPtr", nullJsonMarshallerPtr)
+
+	var emptyJsonMarshaller = &json.RawMessage{}
+	md.AddStruct("emptyJsonMarshaller", emptyJsonMarshaller)
+
+	var nilBytes []byte
+	md.AddStruct("nilBytes", nilBytes)
+
+	var nilBytesPtr *[]byte
+	md.AddStruct("nilBytesPtr", nilBytesPtr)
+
+	var emptyBytes = []byte{}
+	md.AddStruct("emptyBytes", emptyBytes)
+
+	md.AddStruct("map", map[string]interface{}{
+		"data":                  _testStruct{Name: nil},
+		"nilmap":                nilMap,
+		"nilSlice":              nilSlice,
+		"error":                 nilError,
+		"errorNilPtr":           nilErrorPtr,
+		"timeUnset":             timeVar,
+		"durationUnset":         duration,
+		"marshalNilPtr":         marshalNilPtr,
+		"marshalFullPtr":        marshalFullPtr,
+		"nullJsonMarshaller":    nullJsonMarshaller,
+		"nullJsonMarshallerPtr": nullJsonMarshallerPtr,
+		"emptyJsonMarshaller":   emptyJsonMarshaller,
+		"nilBytes":              nilBytes,
+		"nilBytesPtr":           nilBytesPtr,
+		"emptyBytes":            emptyBytes,
+	})
+
 	if !reflect.DeepEqual(md, MetaData{
 		"map": {
 			"data": map[string]interface{}{
 				"Name": "<nil>",
 			},
+			"nilmap":                map[string]interface{}{},
+			"nilSlice":              []interface{}{},
+			"error":                 "errorstr",
+			"errorNilPtr":           "<nil>",
+			"timeUnset":             "0001-01-01T00:00:00Z",
+			"durationUnset":         "0s",
+			"marshalFullPtr":        "marshalled text",
+			"marshalNilPtr":         "<nil>",
+			"nullJsonMarshaller":    "null",
+			"nullJsonMarshallerPtr": "<nil>",
+			"emptyJsonMarshaller":   "",
+			"nilBytes":              "",
+			"nilBytesPtr":           "<nil>",
+			"emptyBytes":            "",
 		},
 		"nilmap": map[string]interface{}{},
 		"Extra data": {
-			"error":          "errorstr",
-			"errorNilPtr":    "<nil>",
-			"timeUnset":      "0001-01-01T00:00:00Z",
-			"durationUnset":  "0s",
-			"marshalFullPtr": "marshalled text",
-			"marshalNilPtr":  "<nil>",
+			"nilSlice":              []interface{}{},
+			"error":                 "errorstr",
+			"errorNilPtr":           "<nil>",
+			"timeUnset":             "0001-01-01T00:00:00Z",
+			"durationUnset":         "0s",
+			"marshalFullPtr":        "marshalled text",
+			"marshalNilPtr":         "<nil>",
+			"nullJsonMarshaller":    "null",
+			"nullJsonMarshallerPtr": "<nil>",
+			"emptyJsonMarshaller":   "",
+			"nilBytes":              "",
+			"nilBytesPtr":           "<nil>",
+			"emptyBytes":            "",
 		},
 	}) {
 		t.Errorf("metadata.AddStruct didn't work: %#v", md)
@@ -215,6 +273,8 @@ func TestMetaDataSanitize(t *testing.T) {
 			"time":     time.Date(2023, 12, 5, 23, 59, 59, 123456789, time.UTC),
 			"duration": 105567462 * time.Millisecond,
 			"text":     _textMarshaller{},
+			"json":     json.RawMessage(`{"json_property": "json_value"}`),
+			"bytes":    []byte(`lots of bytes`),
 			"array": []hash{{
 				"creditcard": "1234567812345678",
 				"broken":     broken,
@@ -240,6 +300,8 @@ func TestMetaDataSanitize(t *testing.T) {
 			"time":     "2023-12-05T23:59:59.123456789Z",
 			"duration": "29h19m27.462s",
 			"text":     "marshalled text",
+			"json":     `{"json_property": "json_value"}`,
+			"bytes":    "lots of bytes",
 			"array": []interface{}{map[string]interface{}{
 				"creditcard": "[FILTERED]",
 				"broken": map[string]interface{}{

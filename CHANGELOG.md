@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0 (2024-04-15)
+
+### Enhancements
+
+* Sanitize for metadata should also handler json and []byte
+  [#226](https://github.com/bugsnag/bugsnag-go/pull/226)
+  [Chris Duncan](https://github.com/veqryn)
+
 ## 2.3.1 (2024-03-18)
 
 ### Bug fixes
