@@ -3,6 +3,7 @@ module github.com/bugsnag/bugsnag-go/v2
 go 1.15
 
 require (
+	github.com/alitto/pond v1.8.3
 	github.com/bitly/go-simplejson v0.5.1
 	github.com/bugsnag/panicwrap v1.3.4
 	github.com/google/uuid v1.6.0

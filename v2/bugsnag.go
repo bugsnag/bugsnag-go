@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alitto/pond"
 	"github.com/bugsnag/bugsnag-go/v2/device"
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/bugsnag/bugsnag-go/v2/sessions"
@@ -39,6 +40,8 @@ var DefaultSessionPublishInterval = 60 * time.Second
 var defaultNotifier = Notifier{&Config, nil}
 var sessionTracker sessions.SessionTracker
 
+var asyncPool *pond.WorkerPool
+
 // Configure Bugsnag. The only required setting is the APIKey, which can be
 // obtained by clicking on "Settings" in your Bugsnag dashboard. This function
 // is also responsible for installing the global panic handler, so it should be
@@ -51,6 +54,7 @@ func Configure(config Configuration) {
 	// Only do once in case the user overrides the default panichandler, and
 	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
+	setupAsyncPool()
 }
 
 // StartSession creates new context from the context.Context instance with
@@ -253,6 +257,8 @@ func init() {
 		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
 		PanicHandler:        defaultPanicHandler,
 		Transport:           http.DefaultTransport,
+		NumGoroutines:       10,
+		MaxPendingReports:   1000,
 
 		flushSessionsOnRepanic: true,
 	})
@@ -281,4 +287,8 @@ func updateSessionConfig() {
 		NotifyReleaseStages: Config.NotifyReleaseStages,
 		Logger:              Config.Logger,
 	})
+}
+
+func setupAsyncPool() {
+	asyncPool = pond.New(Config.NumGoroutines, Config.MaxPendingReports)
 }

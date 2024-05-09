@@ -17,11 +17,13 @@ func (*defaultReportPublisher) publishReport(p *payload) error {
 		return p.deliver()
 	}
 
-	go func(p *payload) {
+	if !asyncPool.TrySubmit(func() {
 		if err := p.deliver(); err != nil {
 			// Ensure that any errors are logged if they occur in a goroutine.
 			p.logf("bugsnag/defaultReportPublisher.publishReport: %v", err)
 		}
-	}(p)
+	}) {
+		return fmt.Errorf("failed to submit report to async pool")
+	}
 	return nil
 }

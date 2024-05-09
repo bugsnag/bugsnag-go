@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -98,9 +99,19 @@ type Configuration struct {
 	// can be configured if you are in an environment
 	// that has stringent conditions on making http requests.
 	Transport http.RoundTripper
+
 	// Whether bugsnag should notify synchronously. This defaults to false which
 	// causes bugsnag-go to spawn a new goroutine for each notification.
 	Synchronous bool
+
+	// Number of goroutines to use for sending notifications in asynchronous
+	// mode. This defaults to 10.
+	NumGoroutines int
+
+	// The maximum number of reports that can be pending in asynchronous mode.
+	// This defaults to 1000.
+	MaxPendingReports int
+
 	// Whether the notifier should send all sessions recorded so far to Bugsnag
 	// when repanicking to ensure that no session information is lost in a
 	// fatal crash.
@@ -306,6 +317,18 @@ func (config *Configuration) loadEnv() {
 	}
 	if synchronous := os.Getenv("BUGSNAG_SYNCHRONOUS"); synchronous != "" {
 		envConfig.Synchronous = synchronous == "1"
+	}
+	if numGoroutines := os.Getenv("BUGSNAG_NUM_GOROUTINES"); numGoroutines != "" {
+		num, err := strconv.Atoi(numGoroutines)
+		if err != nil {
+			envConfig.NumGoroutines = num
+		}
+	}
+	if maxPendingReports := os.Getenv("BUGSNAG_MAX_PENDING_REPORTS"); maxPendingReports != "" {
+		max, err := strconv.Atoi(maxPendingReports)
+		if err != nil {
+			envConfig.MaxPendingReports = max
+		}
 	}
 	if disablePanics := os.Getenv("BUGSNAG_DISABLE_PANIC_HANDLER"); disablePanics == "1" {
 		envConfig.PanicHandler = func() {}
