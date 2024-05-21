@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alitto/pond"
 	"github.com/bugsnag/bugsnag-go/v2/device"
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/bugsnag/bugsnag-go/v2/sessions"
@@ -27,6 +28,7 @@ var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
 var readEnvConfigOnce sync.Once
 var middleware middlewareStack
+var asyncPool *pond.WorkerPool
 
 // Config is the configuration for the default bugsnag notifier.
 var Config Configuration
@@ -51,6 +53,7 @@ func Configure(config Configuration) {
 	// Only do once in case the user overrides the default panichandler, and
 	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
+	setupAsyncPool()
 }
 
 // StartSession creates new context from the context.Context instance with
@@ -281,4 +284,8 @@ func updateSessionConfig() {
 		NotifyReleaseStages: Config.NotifyReleaseStages,
 		Logger:              Config.Logger,
 	})
+}
+
+func setupAsyncPool() {
+	asyncPool = pond.New(10, 1000)
 }

@@ -81,6 +81,26 @@ func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{
 	return e
 }
 
+func (notifier *Notifier) NotifyAsyncPool(err error, sync bool, rawData ...interface{}) error {
+	if e := checkForEmptyError(err); e != nil {
+		return e
+	}
+	// Stripping one stackframe to not include this function in the stacktrace
+	// for a manual notification.
+	skipFrames := 1
+	event, config := newEvent(append(rawData, errors.New(err, skipFrames), sync), notifier)
+
+	// Never block, start throwing away errors if we have too many.
+	e := middleware.Run(event, config, func() error {
+		return publisher.publishReportPool(&payload{event, config})
+	})
+
+	if e != nil {
+		config.logf("bugsnag.Notify: %v", e)
+	}
+	return e
+}
+
 // AutoNotify notifies Bugsnag of any panics, then repanics.
 // It sends along any rawData that gets passed in.
 // Usage:

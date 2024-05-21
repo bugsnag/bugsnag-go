@@ -144,6 +144,10 @@ func (tp *testPublisher) publishReport(p *payload) error {
 	return nil
 }
 
+func (tp *testPublisher) publishReportPool(p *payload) error {
+	return nil
+}
+
 func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
