@@ -5,8 +5,9 @@ RUN apk update && apk upgrade && apk add git bash
 
 ENV GOPATH /app
 
-COPY testbuild /app/src/github.com/bugsnag/bugsnag-go
-WORKDIR /app/src/github.com/bugsnag/bugsnag-go/v2
+COPY features /app/src/features
+COPY v2 /app/src/v2
+WORKDIR /app/src/v2
 
 # Ensure subsequent steps are re-run if the GO_VERSION variable changes
 ARG GO_VERSION
@@ -20,15 +21,12 @@ RUN if [[ $(echo -e "1.11\n$GO_VERSION\n1.16" | sort -V | head -2 | tail -1) == 
         go install ./...; \
     fi
 
-# Copy test scenarios
-COPY ./app /app/src/test
-WORKDIR /app/src/test
+WORKDIR /app/src/features/fixtures/app
 
 # Create app module - avoid locking bugsnag dep by not checking it in
 # Skip on old versions of Go which pre-date modules
 RUN if [[ $GO_VERSION != '1.11' && $GO_VERSION != '1.12' ]]; then \
         go mod init && go mod tidy; \
+        echo "replace github.com/bugsnag/bugsnag-go/v2 => /app/src/v2" >> go.mod; \
+        go mod tidy; \
     fi
-
-RUN chmod +x run.sh
-CMD ["/app/src/test/run.sh"]

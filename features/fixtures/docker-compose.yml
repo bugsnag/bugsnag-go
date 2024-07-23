@@ -1,12 +1,12 @@
-version: '3.4'
 services:
   app:
     build:
-      context: .
-      dockerfile: app/Dockerfile
+      context: ../../
+      dockerfile: ./features/fixtures/app/Dockerfile
       args:
        - GO_VERSION
     environment:
+      - DEFAULT_MAZE_ADDRESS
       - API_KEY
       - ERROR_CLASS
       - BUGSNAG_ENDPOINT
@@ -22,6 +22,7 @@ services:
       - BUGSNAG_SOURCE_ROOT
       - BUGSNAG_PROJECT_PACKAGES
     restart: "no"
+    command: go run .
 
   autoconfigure:
     build:
