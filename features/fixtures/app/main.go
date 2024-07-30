@@ -14,12 +14,13 @@ import (
 	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 )
 
-func configureBasicBugsnag(testcase string) {
+func configureBasicBugsnag(testcase string, ctx context.Context) {
 	config := bugsnag.Configuration{
-		APIKey:     os.Getenv("API_KEY"),
-		AppVersion: os.Getenv("APP_VERSION"),
-		AppType:    os.Getenv("APP_TYPE"),
-		Hostname:   os.Getenv("HOSTNAME"),
+		APIKey:      os.Getenv("API_KEY"),
+		AppVersion:  os.Getenv("APP_VERSION"),
+		AppType:     os.Getenv("APP_TYPE"),
+		Hostname:    os.Getenv("HOSTNAME"),
+		MainContext: ctx,
 	}
 
 	if notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES"); notifyReleaseStages != "" {
@@ -63,11 +64,13 @@ func configureBasicBugsnag(testcase string) {
 }
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	test := flag.String("test", "handled", "what the app should send, either handled, unhandled, session, autonotify")
 	flag.Parse()
 
-	configureBasicBugsnag(*test)
+	configureBasicBugsnag(*test, ctx)
 	time.Sleep(100 * time.Millisecond) // Ensure tests are less flaky by ensuring the start-up session gets sent
 
 	switch *test {

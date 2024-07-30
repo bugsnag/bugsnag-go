@@ -1,6 +1,7 @@
 package bugsnag
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -101,6 +102,12 @@ type Configuration struct {
 	// Whether bugsnag should notify synchronously. This defaults to false which
 	// causes bugsnag-go to spawn a new goroutine for each notification.
 	Synchronous bool
+
+	// Context created in the main program
+	// Used in event delivery - after this context is marked Done
+	// the event sending goroutine will switch to a graceful shutdown
+	// and will try to send any remaining events.
+	MainContext context.Context
 	// Whether the notifier should send all sessions recorded so far to Bugsnag
 	// when repanicking to ensure that no session information is lost in a
 	// fatal crash.
@@ -159,6 +166,10 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	}
 	if other.Synchronous {
 		config.Synchronous = true
+	}
+	if other.MainContext != nil {
+		config.MainContext = other.MainContext
+		publisher.setMainProgramContext(other.MainContext)
 	}
 
 	if other.AutoCaptureSessions != nil {

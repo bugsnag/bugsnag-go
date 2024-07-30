@@ -4,7 +4,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 )
 
-var publisher reportPublisher = new(defaultReportPublisher)
+var publisher reportPublisher = newPublisher()
 
 // Notifier sends errors to Bugsnag.
 type Notifier struct {
@@ -84,10 +84,11 @@ func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{
 // AutoNotify notifies Bugsnag of any panics, then repanics.
 // It sends along any rawData that gets passed in.
 // Usage:
-//  go func() {
-//		defer AutoNotify()
-//      // (possibly crashy code)
-//  }()
+//
+//	 go func() {
+//			defer AutoNotify()
+//	     // (possibly crashy code)
+//	 }()
 func (notifier *Notifier) AutoNotify(rawData ...interface{}) {
 	if err := recover(); err != nil {
 		severity := notifier.getDefaultSeverity(rawData, SeverityError)
