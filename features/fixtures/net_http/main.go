@@ -14,7 +14,9 @@ import (
 )
 
 func main() {
-	configureBasicBugsnag()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	configureBasicBugsnag(ctx)
 
 	http.HandleFunc("/handled", handledError)
 	http.HandleFunc("/autonotify-then-recover", unhandledCrash)
@@ -40,16 +42,17 @@ func recoverWrap(h http.Handler) http.Handler {
 	})
 }
 
-func configureBasicBugsnag() {
+func configureBasicBugsnag(ctx context.Context) {
 	config := bugsnag.Configuration{
 		APIKey: os.Getenv("API_KEY"),
 		Endpoints: bugsnag.Endpoints{
 			Notify:   os.Getenv("BUGSNAG_ENDPOINT"),
 			Sessions: os.Getenv("BUGSNAG_ENDPOINT"),
 		},
-		AppVersion: os.Getenv("APP_VERSION"),
-		AppType:    os.Getenv("APP_TYPE"),
-		Hostname:   os.Getenv("HOSTNAME"),
+		AppVersion:  os.Getenv("APP_VERSION"),
+		AppType:     os.Getenv("APP_TYPE"),
+		Hostname:    os.Getenv("HOSTNAME"),
+		MainContext: ctx,
 	}
 
 	if notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES"); notifyReleaseStages != "" {

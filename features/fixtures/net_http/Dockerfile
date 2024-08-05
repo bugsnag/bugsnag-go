@@ -3,7 +3,7 @@ FROM golang:${GO_VERSION}-alpine
 
 RUN apk update && \
     apk upgrade && \
-    apk add git
+    apk add git build-base
 
 ENV GOPATH /app
 
@@ -30,4 +30,6 @@ WORKDIR /app/src/test
 # Skip on old versions of Go which pre-date modules
 RUN if [[ $GO_VERSION != '1.11' && $GO_VERSION != '1.12' ]]; then \
         go mod init && go mod tidy; \
+        echo "replace github.com/bugsnag/bugsnag-go/v2 => /app/src/github.com/bugsnag/bugsnag-go/v2" >> go.mod; \
+        go mod tidy; \
     fi
