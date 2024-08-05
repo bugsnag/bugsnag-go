@@ -5,6 +5,7 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4512"
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+  And I have built the service "nethttp"
 
 Scenario: An error report contains custom user data
   Given I set environment variable "USER_ID" to "test-user-id"

@@ -5,6 +5,7 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4512"
   And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+  And I have built the service "nethttp"
 
 Scenario: An error report is sent when request crashes but is recovered
   When I start the service "nethttp"

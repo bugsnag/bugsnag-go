@@ -4,6 +4,7 @@ Background:
   Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
   And I configure the bugsnag endpoint
   And I set environment variable "SERVER_PORT" to "4512"
+  And I have built the service "nethttp"
 
 Scenario: An error report is sent when an AutoNotified crash occurs which later gets recovered
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"

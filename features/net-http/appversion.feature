@@ -5,6 +5,7 @@ Background:
   And I configure the bugsnag endpoint
   And I set environment variable "APP_VERSION" to "3.1.2"
   And I set environment variable "SERVER_PORT" to "4512"
+  And I have built the service "nethttp"
 
 Scenario: A error report contains the configured app type when using a net http app
   Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
