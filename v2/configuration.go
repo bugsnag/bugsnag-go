@@ -108,6 +108,10 @@ type Configuration struct {
 	// the event sending goroutine will switch to a graceful shutdown
 	// and will try to send any remaining events.
 	MainContext context.Context
+
+	// The largets number of breadcrumbs that will be stored. Defaults to 25.
+	MaximumBreadcrumbs int
+
 	// Whether the notifier should send all sessions recorded so far to Bugsnag
 	// when repanicking to ensure that no session information is lost in a
 	// fatal crash.
@@ -170,6 +174,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.MainContext != nil {
 		config.MainContext = other.MainContext
 		publisher.setMainProgramContext(other.MainContext)
+	}
+	if other.MaximumBreadcrumbs != 0 {
+		config.MaximumBreadcrumbs = other.MaximumBreadcrumbs
 	}
 
 	if other.AutoCaptureSessions != nil {

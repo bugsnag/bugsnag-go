@@ -24,6 +24,7 @@ type eventJSON struct {
 	Device         *deviceJSON         `json:"device,omitempty"`
 	Request        *RequestJSON        `json:"request,omitempty"`
 	Exceptions     []exceptionJSON     `json:"exceptions"`
+	Breadcrumbs    []breadcrumbJSON    `json:"breadcrumbs,omitempty"`
 	GroupingHash   string              `json:"groupingHash,omitempty"`
 	Metadata       interface{}         `json:"metaData"`
 	PayloadVersion string              `json:"payloadVersion"`
@@ -44,6 +45,13 @@ type appJSON struct {
 	ReleaseStage string `json:"releaseStage"`
 	Type         string `json:"type,omitempty"`
 	Version      string `json:"version,omitempty"`
+}
+
+type breadcrumbJSON struct {
+	Timestamp string         `json:"timestamp"`
+	Name      string         `json:"name"`
+	Type      BreadcrumbType `json:"type"`
+	MetaData  interface{}    `json:"metaData,omitempty"`
 }
 
 type exceptionJSON struct {

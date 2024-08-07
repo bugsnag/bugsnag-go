@@ -1,6 +1,8 @@
 package bugsnag
 
 import (
+	"time"
+
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 )
 
@@ -8,8 +10,9 @@ var publisher reportPublisher = newPublisher()
 
 // Notifier sends errors to Bugsnag.
 type Notifier struct {
-	Config  *Configuration
-	RawData []interface{}
+	Config          *Configuration
+	RawData         []interface{}
+	BreadcrumbState BreadcrumbState
 }
 
 // New creates a new notifier.
@@ -25,8 +28,9 @@ func New(rawData ...interface{}) *Notifier {
 	}
 
 	return &Notifier{
-		Config:  config,
-		RawData: rawData,
+		Config:          config,
+		RawData:         rawData,
+		BreadcrumbState: BreadcrumbState{},
 	}
 }
 
@@ -114,6 +118,28 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 		rawData = notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(errors.New(err, 2), rawData...)
 	}
+}
+
+// Adds a breadcrumb to the current notifier which is sent with subsequent errors.
+// Optionally accepts bugsnag.BreadcrumbMetaData and bugsnag.BreadcrumbType.
+func (notifier *Notifier) LeaveBreadcrumb(message string, rawData ...interface{}) {
+	breadcrumb := Breadcrumb{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Name:      message,
+		Type:      BreadcrumbTypeManual,
+		MetaData:  BreadcrumbMetaData{},
+	}
+	for _, datum := range rawData {
+		switch datum := datum.(type) {
+		case BreadcrumbMetaData:
+			breadcrumb.MetaData = datum
+		case BreadcrumbType:
+			breadcrumb.Type = datum
+		default:
+			panic("Unexpected type")
+		}
+	}
+	notifier.BreadcrumbState.appendBreadcrumb(breadcrumb, notifier.Config.MaximumBreadcrumbs)
 }
 
 func (notifier *Notifier) dontPanic() {
