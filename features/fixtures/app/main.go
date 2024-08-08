@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -43,6 +44,15 @@ func configureBasicBugsnag(testcase string, ctx context.Context) {
 	acs, err := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS"))
 	if err == nil {
 		config.AutoCaptureSessions = acs
+	}
+
+	if maximumBreadcrumbs, err := strconv.Atoi(os.Getenv("MAXIMUM_BREADCRUMBS")); err == nil {
+		config.MaximumBreadcrumbs = bugsnag.MaximumBreadcrumbs(maximumBreadcrumbs)
+	}
+
+	var enabledBreadcrumbTypes []bugsnag.BreadcrumbType
+	if err := json.Unmarshal([]byte(os.Getenv("ENABLED_BREADCRUMB_TYPES")), &enabledBreadcrumbTypes); err == nil {
+		config.EnabledBreadcrumbTypes = enabledBreadcrumbTypes
 	}
 
 	switch testcase {
@@ -98,7 +108,7 @@ func main() {
 		sendAndExit()
 	case "user":
 		user()
-	case "multiple-handled":
+	case "multiple-handled", "disable-breadcrumbs", "automatic-breadcrumbs":
 		multipleHandled()
 	case "multiple-unhandled":
 		multipleUnhandled()
@@ -106,6 +116,8 @@ func main() {
 		handledToUnhandled()
 	case "nested-error":
 		nestedHandledError()
+	case "maximum-breadcrumbs":
+		maximumBreadcrumbs()
 	default:
 		log.Println("Not a valid test flag: " + *test)
 		os.Exit(1)
@@ -307,6 +319,15 @@ func nestedHandledError() {
 
 		log.Fatalf("This test is broken - no error was generated.")
 	}
+}
+
+func maximumBreadcrumbs() {
+	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
+	ctx := bugsnag.StartSession(context.Background())
+	for i := 0; i < 10; i++ {
+		bugsnag.LeaveBreadcrumb(fmt.Sprintf("Crumb %v", i))
+	}
+	bugsnag.Notify(fmt.Errorf("test error"), ctx)
 }
 
 func login(token string) error {
