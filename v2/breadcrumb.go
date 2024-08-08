@@ -1,5 +1,7 @@
 package bugsnag
 
+import "time"
+
 type BreadcrumbType = string
 
 const (
@@ -44,37 +46,55 @@ type Breadcrumb struct {
 	MetaData BreadcrumbMetaData
 }
 
+type maximumBreadcrumbsValue interface {
+	isValid() bool
+	trimBreadcrumbs(breadcrumbs []Breadcrumb) []Breadcrumb
+}
+
+type MaximumBreadcrumbs int
+
+func (length MaximumBreadcrumbs) isValid() bool {
+	return length >= 0 && length <= 100
+}
+
+func (length MaximumBreadcrumbs) trimBreadcrumbs(breadcrumbs []Breadcrumb) []Breadcrumb {
+	if int(length) >= 0 && len(breadcrumbs) > int(length) {
+		return breadcrumbs[:int(length)]
+	}
+	return breadcrumbs
+}
+
 type (
 	// A breadcrumb callback that returns if the breadcrumb should be added.
-	OnBreadcrumbCallback func(*Breadcrumb) bool
+	onBreadcrumbCallback func(*Breadcrumb) bool
 
-	BreadcrumbState struct {
+	breadcrumbState struct {
 		// These callbacks are run in reverse order and determine if the breadcrumb should be added.
-		OnBreadcrumbCallbacks []OnBreadcrumbCallback
+		onBreadcrumbCallbacks []onBreadcrumbCallback
 		// Currently added breadcrumbs in order from newest to oldest
-		Breadcrumbs []Breadcrumb
+		breadcrumbs []Breadcrumb
 	}
 )
 
-// OnBreadcrumb adds a callback to be run before a breadcrumb is added.
+// onBreadcrumb adds a callback to be run before a breadcrumb is added.
 // If false is returned, the breadcrumb will be discarded.
-func (breadcrumbs *BreadcrumbState) OnBreadcrumb(callback OnBreadcrumbCallback) {
-	if breadcrumbs.OnBreadcrumbCallbacks == nil {
-		breadcrumbs.OnBreadcrumbCallbacks = []OnBreadcrumbCallback{}
+func (breadcrumbs *breadcrumbState) onBreadcrumb(callback onBreadcrumbCallback) {
+	if breadcrumbs.onBreadcrumbCallbacks == nil {
+		breadcrumbs.onBreadcrumbCallbacks = []onBreadcrumbCallback{}
 	}
 
-	breadcrumbs.OnBreadcrumbCallbacks = append(breadcrumbs.OnBreadcrumbCallbacks, callback)
+	breadcrumbs.onBreadcrumbCallbacks = append(breadcrumbs.onBreadcrumbCallbacks, callback)
 }
 
 // Runs all the OnBreadcrumb callbacks, returning true if the breadcrumb should be added.
-func (breadcrumbs *BreadcrumbState) runBreadcrumbCallbacks(breadcrumb *Breadcrumb) bool {
-	if breadcrumbs.OnBreadcrumbCallbacks == nil {
+func (breadcrumbs *breadcrumbState) runBreadcrumbCallbacks(breadcrumb *Breadcrumb) bool {
+	if breadcrumbs.onBreadcrumbCallbacks == nil {
 		return true
 	}
 
 	// run in reverse order
-	for i := range breadcrumbs.OnBreadcrumbCallbacks {
-		callback := breadcrumbs.OnBreadcrumbCallbacks[len(breadcrumbs.OnBreadcrumbCallbacks)-i-1]
+	for i := range breadcrumbs.onBreadcrumbCallbacks {
+		callback := breadcrumbs.onBreadcrumbCallbacks[len(breadcrumbs.onBreadcrumbCallbacks)-i-1]
 		if !callback(breadcrumb) {
 			return false
 		}
@@ -83,15 +103,65 @@ func (breadcrumbs *BreadcrumbState) runBreadcrumbCallbacks(breadcrumb *Breadcrum
 }
 
 // Add the breadcrumb onto the list of breadcrumbs, ensuring that the number of breadcrumbs remains below maximumBreadcrumbs.
-func (breadcrumbs *BreadcrumbState) appendBreadcrumb(breadcrumb Breadcrumb, maximumBreadcrumbs int) error {
-	if breadcrumbs.runBreadcrumbCallbacks(&breadcrumb) {
-		if breadcrumbs.Breadcrumbs == nil {
-			breadcrumbs.Breadcrumbs = []Breadcrumb{}
-		}
-		breadcrumbs.Breadcrumbs = append([]Breadcrumb{breadcrumb}, breadcrumbs.Breadcrumbs...)
-		if len(breadcrumbs.Breadcrumbs) > 0 && len(breadcrumbs.Breadcrumbs) > maximumBreadcrumbs {
-			breadcrumbs.Breadcrumbs = breadcrumbs.Breadcrumbs[:len(breadcrumbs.Breadcrumbs)-1]
+func (breadcrumbs *breadcrumbState) leaveBreadcrumb(message string, configuration *Configuration, rawData ...interface{}) {
+	breadcrumb := Breadcrumb{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Name:      message,
+		Type:      BreadcrumbTypeManual,
+		MetaData:  BreadcrumbMetaData{},
+	}
+	for _, datum := range rawData {
+		switch datum := datum.(type) {
+		case BreadcrumbMetaData:
+			breadcrumb.MetaData = datum
+		case BreadcrumbType:
+			breadcrumb.Type = datum
+		default:
+			panic("Unexpected type")
 		}
 	}
-	return nil
+
+	if breadcrumbs.runBreadcrumbCallbacks(&breadcrumb) {
+		if breadcrumbs.breadcrumbs == nil {
+			breadcrumbs.breadcrumbs = []Breadcrumb{}
+		}
+		breadcrumbs.breadcrumbs = append([]Breadcrumb{breadcrumb}, breadcrumbs.breadcrumbs...)
+		if configuration.MaximumBreadcrumbs != nil {
+			breadcrumbs.breadcrumbs = configuration.MaximumBreadcrumbs.trimBreadcrumbs(breadcrumbs.breadcrumbs)
+		}
+	}
+}
+
+func (configuration *Configuration) breadcrumbEnabled(breadcrumbType BreadcrumbType) bool {
+	if configuration.EnabledBreadcrumbTypes == nil {
+		return true
+	}
+	for _, enabled := range configuration.EnabledBreadcrumbTypes {
+		if enabled == breadcrumbType {
+			return true
+		}
+	}
+	return false
+}
+
+func (breadcrumbs *breadcrumbState) leaveBugsnagStartBreadcrumb(configuration *Configuration) {
+	if configuration.breadcrumbEnabled(BreadcrumbTypeState) {
+		breadcrumbs.leaveBreadcrumb("Bugsnag loaded", configuration, BreadcrumbTypeState)
+	}
+}
+
+func (breadcrumbs *breadcrumbState) leaveEventBreadcrumb(event *Event, configuration *Configuration) {
+	if event == nil {
+		return
+	}
+	if !configuration.breadcrumbEnabled(BreadcrumbTypeError) {
+		return
+	}
+	metadata := BreadcrumbMetaData{
+		"errorClass": event.ErrorClass,
+		"message":    event.Message,
+		"unhandled":  event.Unhandled,
+		"severity":   event.Severity.String,
+	}
+	breadcrumbs.leaveBreadcrumb(event.Error.Error(), configuration, BreadcrumbTypeError, metadata)
 }

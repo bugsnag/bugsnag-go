@@ -182,7 +182,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	}
 
 	event.Stacktrace = generateStacktrace(err, config)
-	event.Breadcrumbs = notifier.BreadcrumbState.Breadcrumbs
+	event.Breadcrumbs = notifier.breadcrumbState.breadcrumbs
 
 	for _, callback := range callbacks {
 		callback(event)

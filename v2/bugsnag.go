@@ -26,6 +26,7 @@ const Version = "2.5.0"
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
 var readEnvConfigOnce sync.Once
+var startBugsnagBreadcrumbOnce sync.Once
 var middleware middlewareStack
 
 // Config is the configuration for the default bugsnag notifier.
@@ -36,7 +37,7 @@ var sessionTrackingConfig sessions.SessionTrackingConfiguration
 // Bugsnag.
 // Deprecated: Exposed for developer sanity in testing. Modify at own risk.
 var DefaultSessionPublishInterval = 60 * time.Second
-var defaultNotifier = Notifier{&Config, nil, BreadcrumbState{}}
+var defaultNotifier = Notifier{&Config, nil, breadcrumbState{}}
 var sessionTracker sessions.SessionTracker
 
 // Configure Bugsnag. The only required setting is the APIKey, which can be
@@ -51,6 +52,10 @@ func Configure(config Configuration) {
 	// Only do once in case the user overrides the default panichandler, and
 	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
+	// Trigger the busnag start breadcrumb
+	startBugsnagBreadcrumbOnce.Do(func() {
+		defaultNotifier.breadcrumbState.leaveBugsnagStartBreadcrumb(defaultNotifier.Config)
+	})
 }
 
 // StartSession creates new context from the context.Context instance with
@@ -155,12 +160,6 @@ func Recover(rawData ...interface{}) {
 	}
 }
 
-// OnBeforeNotify adds a callback to be run before a breadcrumb is added to the default notifier.
-// If false is returned, the breadcrumb will be discarded. These callbacks are run in reverse order.
-func OnBreadcrumb(callback func(breadcrumb *Breadcrumb) bool) {
-	defaultNotifier.BreadcrumbState.OnBreadcrumb(callback)
-}
-
 // OnBeforeNotify adds a callback to be run before a notification is sent to
 // Bugsnag.  It can be used to modify the event or its MetaData. Changes made
 // to the configuration are local to notifying about this event. To prevent the
@@ -224,6 +223,12 @@ func LeaveBreadcrumb(message string, rawData ...interface{}) {
 	defaultNotifier.LeaveBreadcrumb(message, rawData...)
 }
 
+// OnBreadcrumb adds a callback to be run before a breadcrumb is added to the default notifier.
+// If false is returned, the breadcrumb will be discarded. These callbacks are run in reverse order.
+func OnBreadcrumb(callback func(breadcrumb *Breadcrumb) bool) {
+	defaultNotifier.OnBreadcrumb(callback)
+}
+
 // checkForEmptyError checks if the given error (to be reported to Bugsnag) is
 // nil. If it is, then log an error message and return another error wrapping
 // this error message.
@@ -253,19 +258,20 @@ func init() {
 			Notify:   "https://notify.bugsnag.com",
 			Sessions: "https://sessions.bugsnag.com",
 		},
-		Hostname:            device.GetHostname(),
-		AppType:             "",
-		AppVersion:          "",
-		AutoCaptureSessions: true,
-		ReleaseStage:        "",
-		ParamsFilters:       []string{"password", "secret", "authorization", "cookie", "access_token"},
-		SourceRoot:          sourceRoot,
-		ProjectPackages:     []string{"main*"},
-		NotifyReleaseStages: nil,
-		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
-		PanicHandler:        defaultPanicHandler,
-		Transport:           http.DefaultTransport,
-		MaximumBreadcrumbs:  25,
+		Hostname:               device.GetHostname(),
+		AppType:                "",
+		AppVersion:             "",
+		AutoCaptureSessions:    true,
+		ReleaseStage:           "",
+		ParamsFilters:          []string{"password", "secret", "authorization", "cookie", "access_token"},
+		SourceRoot:             sourceRoot,
+		ProjectPackages:        []string{"main*"},
+		NotifyReleaseStages:    nil,
+		Logger:                 log.New(os.Stdout, log.Prefix(), log.Flags()),
+		PanicHandler:           defaultPanicHandler,
+		Transport:              http.DefaultTransport,
+		MaximumBreadcrumbs:     MaximumBreadcrumbs(50),
+		EnabledBreadcrumbTypes: nil,
 
 		flushSessionsOnRepanic: true,
 	})

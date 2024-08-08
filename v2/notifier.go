@@ -1,8 +1,6 @@
 package bugsnag
 
 import (
-	"time"
-
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 )
 
@@ -12,7 +10,7 @@ var publisher reportPublisher = newPublisher()
 type Notifier struct {
 	Config          *Configuration
 	RawData         []interface{}
-	BreadcrumbState BreadcrumbState
+	breadcrumbState breadcrumbState
 }
 
 // New creates a new notifier.
@@ -27,11 +25,13 @@ func New(rawData ...interface{}) *Notifier {
 		}
 	}
 
-	return &Notifier{
+	notifier := Notifier{
 		Config:          config,
 		RawData:         rawData,
-		BreadcrumbState: BreadcrumbState{},
+		breadcrumbState: breadcrumbState{},
 	}
+	notifier.breadcrumbState.leaveBugsnagStartBreadcrumb(notifier.Config)
+	return &notifier
 }
 
 // FlushSessionsOnRepanic takes a boolean that indicates whether sessions
@@ -76,6 +76,7 @@ func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{
 
 	// Never block, start throwing away errors if we have too many.
 	e := middleware.Run(event, config, func() error {
+		notifier.breadcrumbState.leaveEventBreadcrumb(event, notifier.Config)
 		return publisher.publishReport(&payload{event, config})
 	})
 
@@ -123,23 +124,13 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 // Adds a breadcrumb to the current notifier which is sent with subsequent errors.
 // Optionally accepts bugsnag.BreadcrumbMetaData and bugsnag.BreadcrumbType.
 func (notifier *Notifier) LeaveBreadcrumb(message string, rawData ...interface{}) {
-	breadcrumb := Breadcrumb{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Name:      message,
-		Type:      BreadcrumbTypeManual,
-		MetaData:  BreadcrumbMetaData{},
-	}
-	for _, datum := range rawData {
-		switch datum := datum.(type) {
-		case BreadcrumbMetaData:
-			breadcrumb.MetaData = datum
-		case BreadcrumbType:
-			breadcrumb.Type = datum
-		default:
-			panic("Unexpected type")
-		}
-	}
-	notifier.BreadcrumbState.appendBreadcrumb(breadcrumb, notifier.Config.MaximumBreadcrumbs)
+	notifier.breadcrumbState.leaveBreadcrumb(message, notifier.Config, rawData...)
+}
+
+// OnBreadcrumb adds a callback to be run before a breadcrumb is added to this notifier.
+// If false is returned, the breadcrumb will be discarded. These callbacks are run in reverse order.
+func (notifier *Notifier) OnBreadcrumb(callback func(breadcrumb *Breadcrumb) bool) {
+	notifier.breadcrumbState.onBreadcrumb(callback)
 }
 
 func (notifier *Notifier) dontPanic() {
