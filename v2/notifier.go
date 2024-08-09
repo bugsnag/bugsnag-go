@@ -8,8 +8,9 @@ var publisher reportPublisher = newPublisher()
 
 // Notifier sends errors to Bugsnag.
 type Notifier struct {
-	Config  *Configuration
-	RawData []interface{}
+	Config          *Configuration
+	RawData         []interface{}
+	breadcrumbState breadcrumbState
 }
 
 // New creates a new notifier.
@@ -24,10 +25,13 @@ func New(rawData ...interface{}) *Notifier {
 		}
 	}
 
-	return &Notifier{
-		Config:  config,
-		RawData: rawData,
+	notifier := Notifier{
+		Config:          config,
+		RawData:         rawData,
+		breadcrumbState: breadcrumbState{},
 	}
+	notifier.breadcrumbState.leaveBugsnagStartBreadcrumb(notifier.Config)
+	return &notifier
 }
 
 // FlushSessionsOnRepanic takes a boolean that indicates whether sessions
@@ -72,6 +76,7 @@ func (notifier *Notifier) NotifySync(err error, sync bool, rawData ...interface{
 
 	// Never block, start throwing away errors if we have too many.
 	e := middleware.Run(event, config, func() error {
+		notifier.breadcrumbState.leaveEventBreadcrumb(event, notifier.Config)
 		return publisher.publishReport(&payload{event, config})
 	})
 
@@ -114,6 +119,18 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 		rawData = notifier.appendStateIfNeeded(rawData, state)
 		notifier.Notify(errors.New(err, 2), rawData...)
 	}
+}
+
+// Adds a breadcrumb to the current notifier which is sent with subsequent errors.
+// Optionally accepts bugsnag.BreadcrumbMetaData and bugsnag.BreadcrumbType.
+func (notifier *Notifier) LeaveBreadcrumb(message string, rawData ...interface{}) {
+	notifier.breadcrumbState.leaveBreadcrumb(message, notifier.Config, rawData...)
+}
+
+// OnBreadcrumb adds a callback to be run before a breadcrumb is added to this notifier.
+// If false is returned, the breadcrumb will be discarded. These callbacks are run in reverse order.
+func (notifier *Notifier) OnBreadcrumb(callback func(breadcrumb *Breadcrumb) bool) {
+	notifier.breadcrumbState.onBreadcrumb(callback)
 }
 
 func (notifier *Notifier) dontPanic() {

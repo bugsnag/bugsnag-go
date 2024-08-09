@@ -76,8 +76,9 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 					OsName:          runtime.GOOS,
 					RuntimeVersions: device.GetRuntimeVersions(),
 				},
-				Request: p.Request,
+				Request:        p.Request,
 				Exceptions:     p.exceptions(),
+				Breadcrumbs:    p.breadcrumbs(),
 				GroupingHash:   p.GroupingHash,
 				Metadata:       p.MetaData.sanitize(p.ParamsFilters),
 				PayloadVersion: notifyPayloadVersion,
@@ -123,7 +124,7 @@ func (p *payload) makeSession() *sessionJSON {
 func (p *payload) severityReasonPayload() *severityReasonJSON {
 	if reason := p.handledState.SeverityReason; reason != "" {
 		json := &severityReasonJSON{
-			Type: reason,
+			Type:                reason,
 			UnhandledOverridden: p.handledState.Unhandled != p.Unhandled,
 		}
 		if p.handledState.Framework != "" {
@@ -159,4 +160,26 @@ func (p *payload) exceptions() []exceptionJSON {
 	}
 
 	return exceptions
+}
+
+func (p *payload) breadcrumbs() []breadcrumbJSON {
+	if p.Breadcrumbs == nil {
+		return []breadcrumbJSON{}
+	}
+
+	breadcrumbs := []breadcrumbJSON{}
+	for _, sourceBreadcrumb := range p.Breadcrumbs {
+		breadcrumbJson := breadcrumbJSON{
+			Timestamp: sourceBreadcrumb.Timestamp,
+			Name:      sourceBreadcrumb.Name,
+			Type:      sourceBreadcrumb.Type,
+			MetaData:  BreadcrumbMetaData{},
+		}
+		if sourceBreadcrumb.MetaData != nil {
+			breadcrumbJson.MetaData = sourceBreadcrumb.MetaData.sanitize(p.ParamsFilters)
+		}
+		breadcrumbs = append(breadcrumbs, breadcrumbJson)
+	}
+
+	return breadcrumbs
 }

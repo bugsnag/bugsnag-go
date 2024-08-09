@@ -79,6 +79,8 @@ type Event struct {
 	// The rawData affecting this error, not sent to Bugsnag.
 	RawData []interface{}
 
+	// The breadcrumbs to be sent to Bugsnag.
+	Breadcrumbs []Breadcrumb
 	// The error class to be sent to Bugsnag. This defaults to the type name of the Error, for
 	// example *error.String
 	ErrorClass string
@@ -180,6 +182,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	}
 
 	event.Stacktrace = generateStacktrace(err, config)
+	event.Breadcrumbs = notifier.breadcrumbState.breadcrumbs
 
 	for _, callback := range callbacks {
 		callback(event)

@@ -2,6 +2,7 @@ package bugsnag
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -108,6 +109,13 @@ type Configuration struct {
 	// the event sending goroutine will switch to a graceful shutdown
 	// and will try to send any remaining events.
 	MainContext context.Context
+
+	// The largets number of breadcrumbs that will be stored. Defaults to 50.
+	MaximumBreadcrumbs maximumBreadcrumbsValue
+
+	// Breacrumbs that can be automatically added. If nil then all breadcrumbs will be added.
+	EnabledBreadcrumbTypes []BreadcrumbType
+
 	// Whether the notifier should send all sessions recorded so far to Bugsnag
 	// when repanicking to ensure that no session information is lost in a
 	// fatal crash.
@@ -170,6 +178,16 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.MainContext != nil {
 		config.MainContext = other.MainContext
 		publisher.setMainProgramContext(other.MainContext)
+	}
+	if other.MaximumBreadcrumbs != nil {
+		if other.MaximumBreadcrumbs.isValid() {
+			config.MaximumBreadcrumbs = other.MaximumBreadcrumbs
+		} else {
+			fmt.Println("Invalid maximum breadcrumbs of", other.MaximumBreadcrumbs)
+		}
+	}
+	if other.EnabledBreadcrumbTypes != nil {
+		config.EnabledBreadcrumbTypes = other.EnabledBreadcrumbTypes
 	}
 
 	if other.AutoCaptureSessions != nil {

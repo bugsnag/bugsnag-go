@@ -1,6 +1,6 @@
 TEST?=./...
 
-export GO111MODULE=auto
+export GO111MODULE=on
 
 default: alldeps test
 

@@ -13,6 +13,9 @@ WORKDIR /app/src/github.com/bugsnag/bugsnag-go/v2
 # Ensure subsequent steps are re-run if the GO_VERSION variable changes
 ARG GO_VERSION
 
+# Required for go 1.11 as modules are not enabled by default
+ENV GO111MODULE="on"
+
 # Get bugsnag dependencies using a conditional call to run go get or go install based on the go version
 RUN if [[ $(echo -e "1.11\n$GO_VERSION\n1.16" | sort -V | head -2 | tail -1) == "$GO_VERSION" ]]; then \
         echo "Version is between 1.11 and 1.16, running go get"; \
