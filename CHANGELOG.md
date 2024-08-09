@@ -1,12 +1,14 @@
 # Changelog
 
-## 2.5.0 (2024-08-05)
+## TBD
 
 ### Enhancements
 
 * Limit resource usage while sending events asynchronously \
   Added MainContext configuration option for providing context from main app
   [#231](https://github.com/bugsnag/bugsnag-go/pull/231)
+* Add breadcrumb support
+  [#234](https://github.com/bugsnag/bugsnag-go/pull/234)
 
 ## 2.4.0 (2024-04-15)
 
