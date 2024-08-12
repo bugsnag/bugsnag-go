@@ -2,7 +2,7 @@ Feature: Plain handled errors
 
 Background:
   Given I set environment variable "BUGSNAG_SOURCE_ROOT" to "/app/src/features/fixtures/app/"
-  And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
 
 Scenario: A handled error sends a report
   When I start the service "app"
@@ -34,7 +34,7 @@ Scenario: Sending an event using a callback to modify report contents
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "context" equals "nonfatal.go:14"
   And the "file" of stack frame 0 equals "handled_scenario.go"
-  And the "lineNumber" of stack frame 0 equals 78
+  And the "lineNumber" of stack frame 0 equals 66
   And the "file" of stack frame 1 equals ">insertion<"
   And the "lineNumber" of stack frame 1 equals 0
 
@@ -47,7 +47,7 @@ Scenario: Marking an error as unhandled in a callback
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "severityReason.unhandledOverridden" is true
   And the "file" of stack frame 0 equals "handled_scenario.go"
-  And the "lineNumber" of stack frame 0 equals 96
+  And the "lineNumber" of stack frame 0 equals 81
 
 Scenario: Unwrapping the causes of a handled error
   When I start the service "app"
@@ -56,7 +56,7 @@ Scenario: Unwrapping the causes of a handled error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "exceptions.0.message" equals "terminate process"
-  And the "lineNumber" of stack frame 0 equals 54
+  And the "lineNumber" of stack frame 0 equals 45
   And the "file" of stack frame 0 equals "handled_scenario.go"
   And the "method" of stack frame 0 equals "NestedHandledErrorScenario.func1"
   And the event "exceptions.1.message" equals "login failed"

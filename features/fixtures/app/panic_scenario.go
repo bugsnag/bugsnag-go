@@ -5,10 +5,7 @@ import (
 )
 
 func AutonotifyPanicScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		defer bugsnag.AutoNotify()
@@ -19,10 +16,7 @@ func AutonotifyPanicScenario(command Command) (bugsnag.Configuration, func()) {
 }
 
 func RecoverAfterPanicScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		defer bugsnag.Recover()

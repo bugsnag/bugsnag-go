@@ -26,6 +26,9 @@ var scenariosMap = map[string] func(Command)(bugsnag.Configuration, func()){
 	"AutonotifyPanicScenario": AutonotifyPanicScenario,
 	"SessionAndErrorScenario": SessionAndErrorScenario,
 	"OnBeforeNotifyScenario": OnBeforeNotifyScenario,
+	"AutoconfigPanicScenario": AutoconfigPanicScenario,
+	"AutoconfigHandledScenario": AutoconfigHandledScenario,
+	"AutoconfigMetadataScenario": AutoconfigMetadataScenario,
 }
 
 func main() {
@@ -33,6 +36,9 @@ func main() {
 		signalsChan := make(chan os.Signal, 1)
 		signal.Notify(signalsChan, syscall.SIGINT, syscall.SIGTERM)
 		ticker := time.NewTicker(1 * time.Second)
+
+		// Increase publish rate for testing
+		bugsnag.DefaultSessionPublishInterval = time.Millisecond * 50
 
 		addr := os.Getenv("DEFAULT_MAZE_ADDRESS")
 		if (addr == "") {

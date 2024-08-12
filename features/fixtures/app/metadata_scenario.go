@@ -7,10 +7,7 @@ import (
 )
 
 func MetadataScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		customerData := map[string]string{"Name": "Joe Bloggs", "Age": "21"}
@@ -25,10 +22,7 @@ func MetadataScenario(command Command) (bugsnag.Configuration, func()) {
 }
 
 func FilteredMetadataScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("oops"), bugsnag.MetaData{

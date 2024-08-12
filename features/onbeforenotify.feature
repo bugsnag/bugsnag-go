@@ -4,6 +4,6 @@ Scenario: Send three bugsnags and use on before notify to drop one and modify th
   When I start the service "app"
   And I run "OnBeforeNotifyScenario"
   And I wait to receive 2 errors
-  And the exception "message" equals "Don't ignore this error"
+  And the exception "message" equals "don't ignore this error"
   And I discard the oldest error
-  And the exception "message" equals "Error message was changed"
+  And the exception "message" equals "error message was changed"

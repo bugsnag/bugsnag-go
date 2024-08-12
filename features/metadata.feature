@@ -1,7 +1,7 @@
 Feature: Sending meta data
 
 Scenario: An error report contains custom meta data
-  When I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+  When I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
   And I start the service "app"
   And I run "MetadataScenario"
   And I wait to receive an error

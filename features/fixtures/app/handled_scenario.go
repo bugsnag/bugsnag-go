@@ -10,10 +10,7 @@ import (
 )
 
 func HandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		if _, err := os.Open("nonexistent_file.txt"); err != nil {
@@ -29,10 +26,7 @@ func HandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
 
 func MultipleHandledErrorsScenario(command Command) (bugsnag.Configuration, func()) {
 	//Make the order of the below predictable
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 	config.Synchronous = true
 
 	scenarioFunc := func() {
@@ -44,10 +38,7 @@ func MultipleHandledErrorsScenario(command Command) (bugsnag.Configuration, func
 }
 
 func NestedHandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		if err := Login("token " + os.Getenv("API_KEY")); err != nil {
@@ -69,10 +60,7 @@ func NestedHandledErrorScenario(command Command) (bugsnag.Configuration, func())
 }
 
 func HandledCallbackErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("inadequent Prep Error"), func(event *bugsnag.Event) {
@@ -87,10 +75,7 @@ func HandledCallbackErrorScenario(command Command) (bugsnag.Configuration, func(
 }
 
 func HandledToUnhandledScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("unknown event"), func(event *bugsnag.Event) {
@@ -102,10 +87,8 @@ func HandledToUnhandledScenario(command Command) (bugsnag.Configuration, func())
 }
 
 func OnBeforeNotifyScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
+	config.Synchronous = true
 
 	scenarioFunc := func() {
 		bugsnag.OnBeforeNotify(
@@ -115,7 +98,7 @@ func OnBeforeNotifyScenario(command Command) (bugsnag.Configuration, func()) {
 				}
 				// continue notifying as normal
 				if event.Message == "change error message" {
-					event.Message = "Error message was changed"
+					event.Message = "error message was changed"
 				}
 				return nil
 			})

@@ -8,10 +8,7 @@ import (
 )
 
 func SendSessionScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
+	config := ConfigureBugsnag(command)
 
 	scenarioFunc := func() {
 		bugsnag.StartSession(context.Background())
@@ -20,11 +17,7 @@ func SendSessionScenario(command Command) (bugsnag.Configuration, func()) {
 }
 
 func SessionAndErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag()
-	config.APIKey = command.APIKey
-	config.Endpoints.Sessions = command.SessionsEndpoint
-	config.Endpoints.Notify = command.NotifyEndpoint
-
+	config := ConfigureBugsnag(command)
 	scenarioFunc := func() {
 		ctx := bugsnag.StartSession(context.Background())
 		bugsnag.Notify(fmt.Errorf("oops"), ctx)
