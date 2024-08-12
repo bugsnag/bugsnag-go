@@ -7,8 +7,12 @@ import (
 )
 
 //go:noinline
-func UnhandledCrashScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func UnhandledCrashScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		// Invalid type assertion, will panic
 		func(a interface{}) string {
@@ -18,8 +22,12 @@ func UnhandledCrashScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func MultipleUnhandledErrorsScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func MultipleUnhandledErrorsScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		//Make the order of the below predictable
 		notifier := bugsnag.New(bugsnag.Configuration{Synchronous: true})

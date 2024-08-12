@@ -9,8 +9,12 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func HandledErrorScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func HandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		if _, err := os.Open("nonexistent_file.txt"); err != nil {
 			if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
@@ -23,9 +27,13 @@ func HandledErrorScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func MultipleHandledErrorsScenario() (bugsnag.Configuration, func()) {
+func MultipleHandledErrorsScenario(command Command) (bugsnag.Configuration, func()) {
 	//Make the order of the below predictable
-	config := bugsnag.Configuration{Synchronous: true}
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+	config.Synchronous = true
 
 	scenarioFunc := func() {
 		ctx := bugsnag.StartSession(context.Background())
@@ -35,8 +43,12 @@ func MultipleHandledErrorsScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func NestedHandledErrorScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func NestedHandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		if err := Login("token " + os.Getenv("API_KEY")); err != nil {
 			bugsnag.Notify(NewCustomErr("terminate process", err))
@@ -56,8 +68,12 @@ func NestedHandledErrorScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func HandledCallbackErrorScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func HandledCallbackErrorScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("inadequent Prep Error"), func(event *bugsnag.Event) {
 			event.Context = "nonfatal.go:14"
@@ -70,8 +86,12 @@ func HandledCallbackErrorScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func HandledToUnhandledScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func HandledToUnhandledScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("unknown event"), func(event *bugsnag.Event) {
 			event.Unhandled = true
@@ -81,8 +101,12 @@ func HandledToUnhandledScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func OnBeforeNotifyScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func OnBeforeNotifyScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		bugsnag.OnBeforeNotify(
 			func(event *bugsnag.Event, config *bugsnag.Configuration) error {

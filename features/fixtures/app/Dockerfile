@@ -1,13 +1,14 @@
 ARG GO_VERSION
 FROM golang:${GO_VERSION}-alpine
 
-RUN apk update && apk upgrade && apk add git bash
+RUN apk update && apk upgrade && apk add git bash build-base
 
 ENV GOPATH /app
+ENV GO111MODULE="on"
 
 COPY features /app/src/features
-COPY v2 /app/src/v2
-WORKDIR /app/src/v2
+COPY v2 /app/src/github.com/bugsnag/bugsnag-go/v2
+WORKDIR /app/src/github.com/bugsnag/bugsnag-go/v2
 
 # Ensure subsequent steps are re-run if the GO_VERSION variable changes
 ARG GO_VERSION
@@ -25,8 +26,6 @@ WORKDIR /app/src/features/fixtures/app
 
 # Create app module - avoid locking bugsnag dep by not checking it in
 # Skip on old versions of Go which pre-date modules
-RUN if [[ $GO_VERSION != '1.11' && $GO_VERSION != '1.12' ]]; then \
-        go mod init && go mod tidy; \
-        echo "replace github.com/bugsnag/bugsnag-go/v2 => /app/src/v2" >> go.mod; \
-        go mod tidy; \
-    fi
+RUN     go mod init && go mod tidy && \
+        echo "replace github.com/bugsnag/bugsnag-go/v2 => /app/src/github.com/bugsnag/bugsnag-go/v2" >> go.mod && \
+        go mod tidy

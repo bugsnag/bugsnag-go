@@ -6,8 +6,12 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func MetadataScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func MetadataScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		customerData := map[string]string{"Name": "Joe Bloggs", "Age": "21"}
 		bugsnag.Notify(fmt.Errorf("oops"), bugsnag.MetaData{
@@ -20,8 +24,12 @@ func MetadataScenario() (bugsnag.Configuration, func()) {
 	return config, scenarioFunc
 }
 
-func FilteredMetadataScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func FilteredMetadataScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("oops"), bugsnag.MetaData{
 			"Account": {

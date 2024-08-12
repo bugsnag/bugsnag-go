@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,7 +10,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-var scenariosMap = map[string] func()(bugsnag.Configuration, func()){
+var scenariosMap = map[string] func(Command)(bugsnag.Configuration, func()){
 	"UnhandledScenario": UnhandledCrashScenario,
 	"HandledScenario": HandledErrorScenario,
 	"MultipleUnhandledScenario": MultipleUnhandledErrorsScenario,
@@ -31,7 +30,8 @@ var scenariosMap = map[string] func()(bugsnag.Configuration, func()){
 
 func main() {
 		// Listening to the OS Signals
-		ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		signalsChan := make(chan os.Signal, 1)
+		signal.Notify(signalsChan, syscall.SIGINT, syscall.SIGTERM)
 		ticker := time.NewTicker(1 * time.Second)
 
 		addr := os.Getenv("DEFAULT_MAZE_ADDRESS")
@@ -42,19 +42,20 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("[Bugsnag] Get command")
-				command := GetCommand(DEFAULT_MAZE_ADDRESS)
+				command := GetCommand(addr)
 				fmt.Printf("[Bugsnag] Received command: %+v\n", command)
 
 				if command.Action == "run-scenario" {
 					prepareScenarioFunc, ok := scenariosMap[command.ScenarioName]
 					if ok {
-						config, scenarioFunc := prepareScenarioFunc()
+						config, scenarioFunc := prepareScenarioFunc(command)
 						bugsnag.Configure(config)
+						time.Sleep(200 * time.Millisecond)
 						scenarioFunc()
+						time.Sleep(200 * time.Millisecond)
 					}
 				}
-			case <-ctx.Done():
+			case <-signalsChan:
 					fmt.Println("[Bugsnag] Context is done, closing")
 					ticker.Stop()
 					return

@@ -2,6 +2,8 @@ package sessions
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -55,11 +57,18 @@ func (p *publisher) publish(sessions []*Session) error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to marshal json: %v", err)
 	}
+	hasher := sha1.New()
+	_, err = hasher.Write(buf)
+	if err != nil {
+		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
+	}
+	sha1_hash := hex.EncodeToString(hasher.Sum(nil))
+
 	req, err := http.NewRequest("POST", p.config.Endpoint, bytes.NewBuffer(buf))
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to create request: %v", err)
 	}
-	for k, v := range headers.PrefixedHeaders(p.config.APIKey, sessionPayloadVersion) {
+	for k, v := range headers.PrefixedHeaders(p.config.APIKey, sessionPayloadVersion, sha1_hash) {
 		req.Header.Add(k, v)
 	}
 	res, err := p.client.Do(req)

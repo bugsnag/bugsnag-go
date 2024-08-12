@@ -6,8 +6,12 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func SetUserScenario() (bugsnag.Configuration, func()) {
-	config := bugsnag.Configuration{}
+func SetUserScenario(command Command) (bugsnag.Configuration, func()) {
+	config := ConfigureBugsnag()
+	config.APIKey = command.APIKey
+	config.Endpoints.Sessions = command.SessionsEndpoint
+	config.Endpoints.Notify = command.NotifyEndpoint
+
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("oops"), bugsnag.User{
 			Id:    "test-user-id",
