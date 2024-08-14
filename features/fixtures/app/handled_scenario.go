@@ -9,9 +9,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func HandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func HandledErrorScenario(command Command) func() {
 	scenarioFunc := func() {
 		if _, err := os.Open("nonexistent_file.txt"); err != nil {
 			if errClass := os.Getenv("ERROR_CLASS"); errClass != "" {
@@ -21,25 +19,22 @@ func HandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
 			}
 		}
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func MultipleHandledErrorsScenario(command Command) (bugsnag.Configuration, func()) {
+func MultipleHandledErrorsScenario(command Command) func() {
 	//Make the order of the below predictable
-	config := ConfigureBugsnag(command)
-	config.Synchronous = true
+	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
 
 	scenarioFunc := func() {
 		ctx := bugsnag.StartSession(context.Background())
 		bugsnag.Notify(fmt.Errorf("oops"), ctx)
 		bugsnag.Notify(fmt.Errorf("oops"), ctx)
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func NestedHandledErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func NestedHandledErrorScenario(command Command) func() {
 	scenarioFunc := func() {
 		if err := Login("token " + os.Getenv("API_KEY")); err != nil {
 			bugsnag.Notify(NewCustomErr("terminate process", err))
@@ -47,21 +42,19 @@ func NestedHandledErrorScenario(command Command) (bugsnag.Configuration, func())
 			i := len(os.Getenv("API_KEY"))
 			// Some nonsense to avoid inlining checkValue
 			if val, err := CheckValue(i); err != nil {
-				fmt.Printf("err: %v, val: %d", err, val)
+				fmt.Printf("err: %v, val: %d\n", err, val)
 			}
 			if val, err := CheckValue(i - 46); err != nil {
-				fmt.Printf("err: %v, val: %d", err, val)
+				fmt.Printf("err: %v, val: %d\n", err, val)
 			}
 
 			log.Fatalf("This test is broken - no error was generated.")
 		}
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func HandledCallbackErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func HandledCallbackErrorScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("inadequent Prep Error"), func(event *bugsnag.Event) {
 			event.Context = "nonfatal.go:14"
@@ -71,24 +64,21 @@ func HandledCallbackErrorScenario(command Command) (bugsnag.Configuration, func(
 			event.Stacktrace[1].LineNumber = 0
 		})
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func HandledToUnhandledScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func HandledToUnhandledScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("unknown event"), func(event *bugsnag.Event) {
 			event.Unhandled = true
 			event.Severity = bugsnag.SeverityError
 		})
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func OnBeforeNotifyScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-	config.Synchronous = true
+func OnBeforeNotifyScenario(command Command) func() {
+	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
 
 	scenarioFunc := func() {
 		bugsnag.OnBeforeNotify(
@@ -106,5 +96,5 @@ func OnBeforeNotifyScenario(command Command) (bugsnag.Configuration, func()) {
 		bugsnag.Notify(fmt.Errorf("don't ignore this error"))
 		bugsnag.Notify(fmt.Errorf("change error message"))
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }

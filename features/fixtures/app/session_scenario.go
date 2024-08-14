@@ -7,20 +7,17 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func SendSessionScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func SendSessionScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.StartSession(context.Background())
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func SessionAndErrorScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
+func SessionAndErrorScenario(command Command) func() {
 	scenarioFunc := func() {
 		ctx := bugsnag.StartSession(context.Background())
 		bugsnag.Notify(fmt.Errorf("oops"), ctx)
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }

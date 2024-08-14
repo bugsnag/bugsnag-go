@@ -29,3 +29,6 @@ WORKDIR /app/src/features/fixtures/app
 RUN     go mod init && go mod tidy && \
         echo "replace github.com/bugsnag/bugsnag-go/v2 => /app/src/github.com/bugsnag/bugsnag-go/v2" >> go.mod && \
         go mod tidy
+
+RUN chmod +x run.sh
+CMD ["/app/src/features/fixtures/app/run.sh"]

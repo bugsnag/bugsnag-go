@@ -11,7 +11,7 @@ Scenario: A handled error sends a report
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
-  And the exception "errorClass" equals "*os.PathError"
+  And the exception "errorClass" equals "*fs.PathError"
   And the "file" of stack frame 0 equals "handled_scenario.go"
 
 Scenario: A handled error sends a report with a custom name
@@ -34,7 +34,7 @@ Scenario: Sending an event using a callback to modify report contents
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "context" equals "nonfatal.go:14"
   And the "file" of stack frame 0 equals "handled_scenario.go"
-  And the "lineNumber" of stack frame 0 equals 66
+  And the "lineNumber" of stack frame 0 equals 59
   And the "file" of stack frame 1 equals ">insertion<"
   And the "lineNumber" of stack frame 1 equals 0
 
@@ -47,7 +47,7 @@ Scenario: Marking an error as unhandled in a callback
   And the event "severityReason.type" equals "userCallbackSetSeverity"
   And the event "severityReason.unhandledOverridden" is true
   And the "file" of stack frame 0 equals "handled_scenario.go"
-  And the "lineNumber" of stack frame 0 equals 81
+  And the "lineNumber" of stack frame 0 equals 72
 
 Scenario: Unwrapping the causes of a handled error
   When I start the service "app"
@@ -56,7 +56,7 @@ Scenario: Unwrapping the causes of a handled error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "exceptions.0.message" equals "terminate process"
-  And the "lineNumber" of stack frame 0 equals 45
+  And the "lineNumber" of stack frame 0 equals 40
   And the "file" of stack frame 0 equals "handled_scenario.go"
   And the "method" of stack frame 0 equals "NestedHandledErrorScenario.func1"
   And the event "exceptions.1.message" equals "login failed"

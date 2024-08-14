@@ -38,7 +38,7 @@ func Login(token string) error {
 	if err != nil {
 		return NewCustomErr("login failed", err)
 	}
-	fmt.Printf("val: %d", val)
+	fmt.Printf("val: %d\n", val)
 	return nil
 }
 

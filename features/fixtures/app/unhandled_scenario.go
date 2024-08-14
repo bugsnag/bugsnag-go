@@ -8,9 +8,7 @@ import (
 )
 
 //go:noinline
-func UnhandledCrashScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func UnhandledCrashScenario(command Command) func() {
 	scenarioFunc := func() {
 		fmt.Printf("Calling panic\n")
 		// Invalid type assertion, will panic
@@ -18,12 +16,10 @@ func UnhandledCrashScenario(command Command) (bugsnag.Configuration, func()) {
 			return a.(string)
 		}(struct{}{})
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func MultipleUnhandledErrorsScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func MultipleUnhandledErrorsScenario(command Command) func() {
 	scenarioFunc := func() {
 		//Make the order of the below predictable
 		notifier := bugsnag.New(bugsnag.Configuration{Synchronous: true})
@@ -35,5 +31,5 @@ func MultipleUnhandledErrorsScenario(command Command) (bugsnag.Configuration, fu
 		defer notifier.AutoNotify(ctx)
 		panic("oops")
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }

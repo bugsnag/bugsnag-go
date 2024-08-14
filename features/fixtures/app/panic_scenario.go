@@ -4,23 +4,19 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func AutonotifyPanicScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func AutonotifyPanicScenario(command Command) func() {
 	scenarioFunc := func() {
 		defer bugsnag.AutoNotify()
 		panic("Go routine killed with auto notify")
 	}
 
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func RecoverAfterPanicScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func RecoverAfterPanicScenario(command Command) func() {
 	scenarioFunc := func() {
 		defer bugsnag.Recover()
 		panic("Go routine killed but recovered")
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }

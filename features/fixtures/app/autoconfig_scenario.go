@@ -6,27 +6,21 @@ import (
 	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 )
 
-func AutoconfigPanicScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func AutoconfigPanicScenario(command Command) func() {
 	scenarioFunc := func() {
 		panic("PANIQ!")
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func AutoconfigHandledScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func AutoconfigHandledScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("gone awry!"))
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }
 
-func AutoconfigMetadataScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func AutoconfigMetadataScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
 			event.MetaData.Add("fruit", "Tomato", "beefsteak")
@@ -35,5 +29,5 @@ func AutoconfigMetadataScenario(command Command) (bugsnag.Configuration, func())
 		})
 		bugsnag.Notify(fmt.Errorf("gone awry!"))
 	}
-	return config, scenarioFunc
+	return scenarioFunc
 }

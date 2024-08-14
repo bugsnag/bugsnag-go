@@ -6,25 +6,25 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
-	bugsnag "github.com/bugsnag/bugsnag-go/v2"
+	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func main() {
-	configureBasicBugsnag()
+func HttpServerScenario(Command) func() {
+	scenarioFunc := func() {
+		http.HandleFunc("/handled", handledError)
+		http.HandleFunc("/autonotify-then-recover", unhandledCrash)
+		http.HandleFunc("/session", session)
+		http.HandleFunc("/autonotify", autonotify)
+		http.HandleFunc("/onbeforenotify", onBeforeNotify)
+		http.HandleFunc("/recover", dontdie)
+		http.HandleFunc("/user", user)
 
-	http.HandleFunc("/handled", handledError)
-	http.HandleFunc("/autonotify-then-recover", unhandledCrash)
-	http.HandleFunc("/session", session)
-	http.HandleFunc("/autonotify", autonotify)
-	http.HandleFunc("/onbeforenotify", onBeforeNotify)
-	http.HandleFunc("/recover", dontdie)
-	http.HandleFunc("/user", user)
+		http.ListenAndServe(":4512", recoverWrap(bugsnag.Handler(nil)))
+	}
 
-	http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), recoverWrap(bugsnag.Handler(nil)))
+	return scenarioFunc
 }
 
 // Simple wrapper to send internal server error on panics
@@ -38,40 +38,6 @@ func recoverWrap(h http.Handler) http.Handler {
 		}()
 		h.ServeHTTP(w, r)
 	})
-}
-
-func configureBasicBugsnag() {
-	config := bugsnag.Configuration{
-		APIKey: os.Getenv("API_KEY"),
-		Endpoints: bugsnag.Endpoints{
-			Notify:   os.Getenv("BUGSNAG_ENDPOINT"),
-			Sessions: os.Getenv("BUGSNAG_ENDPOINT"),
-		},
-		AppVersion: os.Getenv("APP_VERSION"),
-		AppType:    os.Getenv("APP_TYPE"),
-		Hostname:   os.Getenv("HOSTNAME"),
-	}
-
-	if notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES"); notifyReleaseStages != "" {
-		config.NotifyReleaseStages = strings.Split(notifyReleaseStages, ",")
-	}
-
-	if releaseStage := os.Getenv("RELEASE_STAGE"); releaseStage != "" {
-		config.ReleaseStage = releaseStage
-	}
-
-	if filters := os.Getenv("PARAMS_FILTERS"); filters != "" {
-		config.ParamsFilters = []string{filters}
-	}
-
-	acs, err := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS"))
-	if err == nil {
-		config.AutoCaptureSessions = acs
-	}
-	bugsnag.Configure(config)
-
-	// Increase publish rate for testing
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 300
 }
 
 func handledError(w http.ResponseWriter, r *http.Request) {

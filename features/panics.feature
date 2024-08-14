@@ -12,10 +12,8 @@ Feature: Panic handling
       And the event "severity" equals "error"
       And the event "severityReason.type" equals "unhandledPanic"
       And the exception "errorClass" equals "panic"
-      #And the exception "message" is one of:
-      #  | interface conversion: interface is struct {}, not string      |
-      #  | interface conversion: interface {} is struct {}, not string   |
-      #And the in-project frames of the stacktrace are:
-      #  | file    | method               |
-      #  | main.go | unhandledCrash.func1 |
-      #  | main.go | unhandledCrash       |
+      And the exception "message" matches "^interface conversion: interface.*?is struct {}, not string"
+      And the "file" of stack frame 0 equals "unhandled_scenario.go"
+      And the "method" of stack frame 0 equals "UnhandledCrashScenario.func1.1"
+      And the "file" of stack frame 1 equals "unhandled_scenario.go"
+      And the "method" of stack frame 1 equals "UnhandledCrashScenario.func1"

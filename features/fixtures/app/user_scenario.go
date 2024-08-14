@@ -6,9 +6,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 )
 
-func SetUserScenario(command Command) (bugsnag.Configuration, func()) {
-	config := ConfigureBugsnag(command)
-
+func SetUserScenario(command Command) func() {
 	scenarioFunc := func() {
 		bugsnag.Notify(fmt.Errorf("oops"), bugsnag.User{
 			Id:    "test-user-id",
@@ -17,5 +15,5 @@ func SetUserScenario(command Command) (bugsnag.Configuration, func()) {
 		})
 	}
 
-	return config, scenarioFunc
+	return scenarioFunc
 }
