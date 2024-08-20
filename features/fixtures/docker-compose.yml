@@ -1,12 +1,12 @@
-version: '3.4'
 services:
   app:
     build:
-      context: .
-      dockerfile: app/Dockerfile
+      context: ../../
+      dockerfile: ./features/fixtures/app/Dockerfile
       args:
        - GO_VERSION
     environment:
+      - DEFAULT_MAZE_ADDRESS
       - API_KEY
       - ERROR_CLASS
       - BUGSNAG_ENDPOINT

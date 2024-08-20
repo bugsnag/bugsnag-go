@@ -2,115 +2,54 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 
 	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 )
 
-func configureBasicBugsnag(testcase string, ctx context.Context) {
-	config := bugsnag.Configuration{
-		APIKey:      os.Getenv("API_KEY"),
-		AppVersion:  os.Getenv("APP_VERSION"),
-		AppType:     os.Getenv("APP_TYPE"),
-		Hostname:    os.Getenv("HOSTNAME"),
-		MainContext: ctx,
-	}
-
-	if notifyReleaseStages := os.Getenv("NOTIFY_RELEASE_STAGES"); notifyReleaseStages != "" {
-		config.NotifyReleaseStages = strings.Split(notifyReleaseStages, ",")
-	}
-
-	if releaseStage := os.Getenv("RELEASE_STAGE"); releaseStage != "" {
-		config.ReleaseStage = releaseStage
-	}
-
-	if filters := os.Getenv("PARAMS_FILTERS"); filters != "" {
-		config.ParamsFilters = []string{filters}
-	}
-
-	sync, err := strconv.ParseBool(os.Getenv("SYNCHRONOUS"))
-	if err == nil {
-		config.Synchronous = sync
-	}
-
-	acs, err := strconv.ParseBool(os.Getenv("AUTO_CAPTURE_SESSIONS"))
-	if err == nil {
-		config.AutoCaptureSessions = acs
-	}
-
-	switch testcase {
-	case "endpoint-notify":
-		config.Endpoints = bugsnag.Endpoints{Notify: os.Getenv("BUGSNAG_ENDPOINT")}
-	case "endpoint-session":
-		config.Endpoints = bugsnag.Endpoints{Sessions: os.Getenv("BUGSNAG_ENDPOINT")}
-	default:
-		config.Endpoints = bugsnag.Endpoints{
-			Notify:   os.Getenv("BUGSNAG_ENDPOINT"),
-			Sessions: os.Getenv("BUGSNAG_ENDPOINT"),
-		}
-	}
-	bugsnag.Configure(config)
-
-	time.Sleep(200 * time.Millisecond)
-	// Increase publish rate for testing
-	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 100
-}
+var scenariosMap = map[string]func(Command) func(){}
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	test := flag.String("test", "handled", "what the app should send, either handled, unhandled, session, autonotify")
-	flag.Parse()
-
-	configureBasicBugsnag(*test, ctx)
-	time.Sleep(100 * time.Millisecond) // Ensure tests are less flaky by ensuring the start-up session gets sent
-
-	switch *test {
-	case "unhandled":
-		unhandledCrash()
-	case "handled", "endpoint-legacy", "endpoint-notify", "endpoint-session":
-		handledError()
-	case "handled-with-callback":
-		handledCallbackError()
-	case "session":
-		session()
-	case "autonotify":
-		autonotify()
-	case "metadata":
-		metadata()
-	case "onbeforenotify":
-		onBeforeNotify()
-	case "filtered":
-		filtered()
-	case "recover":
-		dontDie()
-	case "session-and-error":
-		sessionAndError()
-	case "send-and-exit":
-		sendAndExit()
-	case "user":
-		user()
-	case "multiple-handled":
-		multipleHandled()
-	case "multiple-unhandled":
-		multipleUnhandled()
-	case "make-unhandled-with-callback":
-		handledToUnhandled()
-	case "nested-error":
-		nestedHandledError()
-	default:
-		log.Println("Not a valid test flag: " + *test)
-		os.Exit(1)
+	addr := os.Getenv("DEFAULT_MAZE_ADDRESS")
+	if addr == "" {
+		addr = DEFAULT_MAZE_ADDRESS
 	}
 
+	endpoints := bugsnag.Endpoints{
+		Notify:   fmt.Sprintf("%+v/notify", addr),
+		Sessions: fmt.Sprintf("%+v/sessions", addr),
+	}
+	// HAS TO RUN FIRST BECAUSE OF PANIC WRAP
+	// https://github.com/bugsnag/panicwrap/blob/master/panicwrap.go#L177-L203
+	bugsnag.Configure(bugsnag.Configuration{
+		APIKey:    "166f5ad3590596f9aa8d601ea89af845",
+		Endpoints: endpoints,
+	})
+	// Increase publish rate for testing
+	bugsnag.DefaultSessionPublishInterval = time.Millisecond * 50
+
+	// Listening to the OS Signals
+	ticker := time.NewTicker(1 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			command := GetCommand(addr)
+			fmt.Printf("[Bugsnag] Received command: %+v\n", command)
+			if command.Action != "run-scenario" {
+				continue
+			}
+			prepareScenarioFunc, ok := scenariosMap[command.ScenarioName]
+			if ok {
+				scenarioFunc := prepareScenarioFunc(command)
+				scenarioFunc()
+				time.Sleep(200 * time.Millisecond)
+			}
+		}
+	}
 }
 
 func multipleHandled() {
