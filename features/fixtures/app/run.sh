@@ -23,3 +23,5 @@ $PROC &
 # signal
 APP_PID=$!
 wait $APP_PID
+
+go run .
