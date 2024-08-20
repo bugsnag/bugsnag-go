@@ -4,15 +4,14 @@ on: [ push, pull_request ]
 
 jobs:
   test:
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     defaults:
       run:
         working-directory: 'go/src/github.com/bugsnag/bugsnag-go/v2' # relative to $GITHUB_WORKSPACE
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-latest]
+        os: [ubuntu, windows]
         go-version: ['1.11', '1.12', '1.13', '1.14', '1.15', '1.16', '1.17', '1.18', '1.19', '1.20', '1.21', '1.22']
 
     steps:
@@ -27,31 +26,36 @@ jobs:
       if: matrix.os == 'windows'
       run: |
         bash -c 'echo "GOPATH=$GITHUB_WORKSPACE\\\\go" >> $GITHUB_ENV'
+    - name: set GO111MODULE
+      run: |
+        bash -c 'echo "GO111MODULE=on" >> $GITHUB_ENV'
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
     - name: install dependencies
       run: go get -v -d ./...
     - name: run tests
-      run: go test ./...
+      run: go test $(go list ./... | grep -v /features/)
     - name: vet package
       # go1.12 vet shows spurious 'unknown identifier' issues
       if: matrix.go-version != '1.12'
-      run: go vet ./...
+      run: go vet $(go list ./... | grep -v /features/)
 
+    - name: install integration dependencies
+      if: matrix.os == 'ubuntu'
+      run: |
+        sudo apt-get update
+        sudo apt-get install libcurl4-openssl-dev
     - name: install Ruby
       if: matrix.os == 'ubuntu'
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7
+        ruby-version: '3.2'
         bundler-cache: true
         working-directory: go/src/github.com/bugsnag/bugsnag-go # relative to $GITHUB_WORKSPACE
-    - name: install integration dependencies
-      if: matrix.os == 'ubuntu'
-      run: sudo apt-get install docker-compose
     - name: maze tests
       working-directory: go/src/github.com/bugsnag/bugsnag-go
       if: matrix.os == 'ubuntu'
       env:
         GO_VERSION: ${{ matrix.go-version }}
-      run: bundle exec bugsnag-maze-runner --color --format progress
+      run: bundle exec maze-runner --color --format progress
