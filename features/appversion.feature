@@ -6,7 +6,7 @@ Background:
 Scenario: An error report contains the configured app type when running a go app
   Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
   When I start the service "app"
-  And I run "HandledScenario"
+  And I run "HandledErrorScenario"
   And I wait to receive an error
   And the event "app.version" equals "3.1.2"
 

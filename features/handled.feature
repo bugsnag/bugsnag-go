@@ -6,7 +6,7 @@ Background:
 
 Scenario: A handled error sends a report
   When I start the service "app"
-  And I run "HandledScenario"
+  And I run "HandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
@@ -17,7 +17,7 @@ Scenario: A handled error sends a report
 Scenario: A handled error sends a report with a custom name
   Given I set environment variable "ERROR_CLASS" to "MyCustomErrorClass"
   When I start the service "app"
-  And I run "HandledScenario"
+  And I run "HandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
@@ -51,7 +51,7 @@ Scenario: Marking an error as unhandled in a callback
 
 Scenario: Unwrapping the causes of a handled error
   When I start the service "app"
-  And I run "NestedErrorScenario"
+  And I run "NestedHandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"

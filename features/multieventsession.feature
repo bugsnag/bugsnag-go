@@ -5,7 +5,7 @@ Background:
 
 Scenario: Handled errors know about previous reported handled errors
   When I start the service "app"
-  And I run "MultipleHandledScenario"
+  And I run "MultipleHandledErrorsScenario"
   And I wait to receive 2 errors
   And the event handled sessions count equals 1
   And I discard the oldest error
@@ -13,7 +13,7 @@ Scenario: Handled errors know about previous reported handled errors
 
 Scenario: Unhandled errors know about previous reported handled errors
   When I start the service "app"
-  And I run "MultipleUnhandledScenario"
+  And I run "MultipleUnhandledErrorsScenario"
   And I wait to receive 2 errors
   And the event unhandled sessions count equals 1
   And I discard the oldest error

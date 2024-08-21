@@ -6,7 +6,7 @@ Feature: Panic handling
 
     Scenario: Capturing a panic
       When I start the service "app"
-      And I run "UnhandledScenario"
+      And I run "UnhandledCrashScenario"
       And I wait to receive an error
       And the event "unhandled" is true
       And the event "severity" equals "error"
