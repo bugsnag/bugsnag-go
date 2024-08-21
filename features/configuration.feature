@@ -81,7 +81,6 @@ Feature: Configure integration with environment variables
         And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
         When I start the service "app"
         And I run "AutoconfigPanicScenario"
-        And I wait for 2 seconds
         Then I should receive no errors
 
     Scenario: Enabling synchronous event delivery

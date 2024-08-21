@@ -1,7 +1,7 @@
 Feature: Reporting multiple handled and unhandled errors in the same session
 
 Background:
-  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
 
 Scenario: Handled errors know about previous reported handled errors
   When I start the service "app"

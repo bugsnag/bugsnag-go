@@ -2,7 +2,7 @@ Feature: Configuring hostname
 
 Scenario: An error report contains the configured hostname
   Given I set environment variable "BUGSNAG_HOSTNAME" to "server-1a"
-  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
   When I start the service "app"
   And I run "HandledScenario"
   And I wait to receive an error
@@ -10,7 +10,7 @@ Scenario: An error report contains the configured hostname
 
 Scenario: An session report contains the configured hostname
   Given I set environment variable "BUGSNAG_HOSTNAME" to "server-1a"
-  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "true"
+  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "1"
   When I start the service "app"
   And I run "SendSessionScenario"
   And I wait to receive a session

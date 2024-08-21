@@ -2,7 +2,7 @@ Feature: Plain handled errors
 
 Background:
   Given I set environment variable "BUGSNAG_SOURCE_ROOT" to "/app/src/features/fixtures/app/"
-  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
 
 Scenario: A handled error sends a report
   When I start the service "app"
@@ -11,7 +11,7 @@ Scenario: A handled error sends a report
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
-  And the exception "errorClass" equals "*fs.PathError"
+  And the exception "errorClass" equals "*os.PathError"
   And the "file" of stack frame 0 equals "handled_scenario.go"
 
 Scenario: A handled error sends a report with a custom name
