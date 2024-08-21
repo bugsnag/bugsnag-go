@@ -1,11 +1,10 @@
 Feature: Using auto notify
 
 Scenario: An error report is sent when an AutoNotified crash occurs which later gets recovered
-  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/autonotify-then-recover"
   Then I wait to receive an error
   And the event "unhandled" is true
@@ -13,11 +12,10 @@ Scenario: An error report is sent when an AutoNotified crash occurs which later 
   And the exception "message" matches "interface conversion: interface ({} )?is struct {}, not string"
 
 Scenario: An error report is sent when a go routine crashes which is reported through auto notify
-  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/autonotify"
   Then I wait to receive an error
   And the event "unhandled" is true

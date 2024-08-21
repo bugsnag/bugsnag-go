@@ -4,11 +4,10 @@ Background:
   And I set environment variable "BUGSNAG_APP_VERSION" to "3.1.2"
 
 Scenario: A error report contains the configured app type when using a net http app
-  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   And I wait to receive an error
   And I should receive no sessions
@@ -16,12 +15,11 @@ Scenario: A error report contains the configured app type when using a net http 
   And the event "app.version" equals "3.1.2"
 
 Scenario: A session report contains the configured app type when using a net http app
-  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "true"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "1"
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/session"
   And I wait to receive a session
   And the session is valid for the session reporting API version "1.0" for the "Bugsnag Go" notifier
-  And the session payload field "sessions.0.app.version" equals "3.1.2"
+  And the session payload field "app.version" equals "3.1.2"

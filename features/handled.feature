@@ -2,22 +2,22 @@ Feature: Plain handled errors
 
 Background:
   Given I set environment variable "BUGSNAG_SOURCE_ROOT" to "/app/src/features/fixtures/app/"
-  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "false"
+  And I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
 
 Scenario: A handled error sends a report
   When I start the service "app"
-  And I run "HandledScenario"
+  And I run "HandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
-  And the exception "errorClass" equals "*fs.PathError"
+  And the exception "errorClass" matches "\*os.PathError|\*fs.PathError"
   And the "file" of stack frame 0 equals "handled_scenario.go"
 
 Scenario: A handled error sends a report with a custom name
   Given I set environment variable "ERROR_CLASS" to "MyCustomErrorClass"
   When I start the service "app"
-  And I run "HandledScenario"
+  And I run "HandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
@@ -51,7 +51,7 @@ Scenario: Marking an error as unhandled in a callback
 
 Scenario: Unwrapping the causes of a handled error
   When I start the service "app"
-  And I run "NestedErrorScenario"
+  And I run "NestedHandledErrorScenario"
   And I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"

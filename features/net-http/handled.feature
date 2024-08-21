@@ -7,13 +7,12 @@ Scenario: A handled error sends a report
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   Then I wait to receive an error
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
-  And the exception "errorClass" equals "*os.PathError"
+  And the exception "errorClass" matches "\*os.PathError|\*fs.PathError"
   And the "file" of stack frame 0 equals "nethttp_scenario.go"
 
 Scenario: A handled error sends a report with a custom name
@@ -21,7 +20,6 @@ Scenario: A handled error sends a report with a custom name
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   Then I wait to receive an error
   And the event "unhandled" is false

@@ -4,7 +4,6 @@ Scenario: An error report will automatically contain request information
   When I start the service "app"
   And I run "HttpServerScenario"
   And I wait for the host "localhost" to open port "4512"
-  And I wait for 2 seconds
   And I open the URL "http://localhost:4512/handled"
   Then I wait to receive an error
   And the event "request.clientIp" is not null

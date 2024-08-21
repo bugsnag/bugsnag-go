@@ -11,6 +11,15 @@ When('I configure the base endpoint') do
   )
 end
 
+Then('the event unhandled sessions count equals {int}') do |count|
+  step "the error payload field \"events.0.session.events.unhandled\" equals #{count}"
+end
+
+Then('the event handled sessions count equals {int}') do |count|
+  step "the error payload field \"events.0.session.events.handled\" equals #{count}"
+end
+
+
 def execute_command(action, scenario_name = '')
     address = $address ? $address : "#{local_ip}:9339"
 
