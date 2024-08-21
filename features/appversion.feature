@@ -14,5 +14,5 @@ Scenario: A session report contains the configured app type when running a go ap
   Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "1"
   When I start the service "app"
   And I run "SendSessionScenario"
-  And I wait to receive a session
+  And I wait to receive 2 sessions
   And the session payload field "app.version" equals "3.1.2"

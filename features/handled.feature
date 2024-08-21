@@ -11,7 +11,7 @@ Scenario: A handled error sends a report
   And the event "unhandled" is false
   And the event "severity" equals "warning"
   And the event "severityReason.type" equals "handledError"
-  And the exception "errorClass" equals "*os.PathError"
+  And the exception "errorClass" matches "\*os.PathError|\*fs.PathError"
   And the "file" of stack frame 0 equals "handled_scenario.go"
 
 Scenario: A handled error sends a report with a custom name
