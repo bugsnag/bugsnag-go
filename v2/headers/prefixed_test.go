@@ -1,7 +1,6 @@
 package headers
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -9,10 +8,9 @@ import (
 
 const APIKey = "abcd1234abcd1234"
 const testPayloadVersion = "3"
-const testSHA = "5e13ae4640ae4ae0e09c05b7bb060f544dabd042"
 
 func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
-	headers := PrefixedHeaders(APIKey, testPayloadVersion, testSHA)
+	headers := PrefixedHeaders(APIKey, testPayloadVersion)
 	testCases := []struct {
 		header   string
 		expected string
@@ -20,7 +18,6 @@ func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
 		{header: "Content-Type", expected: "application/json"},
 		{header: "Bugsnag-Api-Key", expected: APIKey},
 		{header: "Bugsnag-Payload-Version", expected: testPayloadVersion},
-		{header: "Bugsnag-Integrity", expected: fmt.Sprintf("sha1 %v", testSHA)},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.header, func(st *testing.T) {
@@ -32,7 +29,7 @@ func TestConstantBugsnagPrefixedHeaders(t *testing.T) {
 }
 
 func TestTimeDependentBugsnagPrefixedHeaders(t *testing.T) {
-	headers := PrefixedHeaders(APIKey, testPayloadVersion, testSHA)
+	headers := PrefixedHeaders(APIKey, testPayloadVersion)
 	sentAtString := headers["Bugsnag-Sent-At"]
 	if !strings.HasSuffix(sentAtString, "Z") {
 		t.Errorf("Error when setting Bugsnag-Sent-At header: %s, doesn't end with a Z", sentAtString)
