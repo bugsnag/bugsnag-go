@@ -2,8 +2,6 @@ package bugsnag
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -38,13 +36,6 @@ func (p *payload) deliver() error {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
 	}
 
-	hasher := sha1.New()
-	_, err = hasher.Write(buf)
-	if err != nil {
-		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
-	}
-	sha1_hash := hex.EncodeToString(hasher.Sum(nil))
-
 	client := http.Client{
 		Transport: p.Transport,
 	}
@@ -52,7 +43,7 @@ func (p *payload) deliver() error {
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver unable to create request: %v", err)
 	}
-	for k, v := range headers.PrefixedHeaders(p.APIKey, notifyPayloadVersion, sha1_hash) {
+	for k, v := range headers.PrefixedHeaders(p.APIKey, notifyPayloadVersion) {
 		req.Header.Add(k, v)
 	}
 	resp, err := client.Do(req)
