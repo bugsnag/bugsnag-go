@@ -32,7 +32,6 @@ func (p *payload) deliver() error {
 	}
 
 	buf, err := p.MarshalJSON()
-
 	if err != nil {
 		return fmt.Errorf("bugsnag/payload.deliver: %v", err)
 	}
@@ -76,7 +75,7 @@ func (p *payload) MarshalJSON() ([]byte, error) {
 					OsName:          runtime.GOOS,
 					RuntimeVersions: device.GetRuntimeVersions(),
 				},
-				Request: p.Request,
+				Request:        p.Request,
 				Exceptions:     p.exceptions(),
 				GroupingHash:   p.GroupingHash,
 				Metadata:       p.MetaData.sanitize(p.ParamsFilters),
@@ -123,7 +122,7 @@ func (p *payload) makeSession() *sessionJSON {
 func (p *payload) severityReasonPayload() *severityReasonJSON {
 	if reason := p.handledState.SeverityReason; reason != "" {
 		json := &severityReasonJSON{
-			Type: reason,
+			Type:                reason,
 			UnhandledOverridden: p.handledState.Unhandled != p.Unhandled,
 		}
 		if p.handledState.Framework != "" {

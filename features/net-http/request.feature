@@ -1,18 +1,11 @@
 Feature: Capturing request information automatically
 
-Background:
-  Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
-  And I set environment variable "SERVER_PORT" to "4512"
-
 Scenario: An error report will automatically contain request information
-  Given I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
-  When I start the service "nethttp"
-  And I wait for the app to open port "4512"
-  And I wait for 2 seconds
+  When I start the service "app"
+  And I run "HttpServerScenario"
+  And I wait for the host "localhost" to open port "4512"
   And I open the URL "http://localhost:4512/handled"
-  Then I wait to receive a request
-  And the request is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
+  Then I wait to receive an error
   And the event "request.clientIp" is not null
   And the event "request.headers.User-Agent" equals "Ruby"
   And the event "request.httpMethod" equals "GET"

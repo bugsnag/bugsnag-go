@@ -2,4 +2,5 @@
 maze_output
 vendor
 
-features/fixtures/testbuild
+# ignore the gemfile to prevent testing against stale versions
+Gemfile.lock

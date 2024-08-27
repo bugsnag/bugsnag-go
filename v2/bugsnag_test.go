@@ -16,6 +16,10 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2/sessions"
 )
 
+// ATTENTION - tests in this file are changing global state variables
+// like default config or default report publisher
+// TAKE CARE to reset them to default after testcase!
+
 // The line numbers of this method are used in tests.
 // If you move this function you'll have to change tests
 func crashyHandler(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +136,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 98, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 102, InProject: true})
 }
 
 type testPublisher struct {
@@ -144,6 +148,9 @@ func (tp *testPublisher) publishReport(p *payload) error {
 	return nil
 }
 
+func (tp *testPublisher) setMainProgramContext(context.Context) {
+}
+
 func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
@@ -152,7 +159,7 @@ func TestNotifySyncThenAsync(t *testing.T) {
 
 	pub := new(testPublisher)
 	publisher = pub
-	defer func() { publisher = new(defaultReportPublisher) }()
+	defer func() { publisher = newPublisher() }()
 
 	Notify(fmt.Errorf("oopsie"))
 	if pub.sync {
@@ -175,6 +182,7 @@ func TestHandlerFunc(t *testing.T) {
 	defer eventserver.Close()
 	Configure(generateSampleConfig(eventserver.URL))
 
+	// NOTE - this testcase will print a panic in verbose mode
 	t.Run("unhandled", func(st *testing.T) {
 		sessionTracker = nil
 		startSessionTracking()
@@ -315,7 +323,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 24})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 28})
 }
 
 func TestAutoNotify(t *testing.T) {

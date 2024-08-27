@@ -1,35 +1,15 @@
-version: '3.4'
 services:
   app:
     build:
-      context: .
-      dockerfile: app/Dockerfile
+      context: ../../
+      dockerfile: ./features/fixtures/app/Dockerfile
       args:
        - GO_VERSION
+    ports:
+      - "4512:4512"
     environment:
-      - API_KEY
+      - DEFAULT_MAZE_ADDRESS
       - ERROR_CLASS
-      - BUGSNAG_ENDPOINT
-      - APP_VERSION
-      - APP_TYPE
-      - AUTO_CAPTURE_SESSIONS
-      - HOSTNAME
-      - NOTIFY_RELEASE_STAGES
-      - RELEASE_STAGE
-      - PARAMS_FILTERS
-      - SYNCHRONOUS
-      - SERVER_PORT
-      - BUGSNAG_SOURCE_ROOT
-      - BUGSNAG_PROJECT_PACKAGES
-    restart: "no"
-
-  autoconfigure:
-    build:
-      context: .
-      dockerfile: autoconfigure/Dockerfile
-      args:
-       - GO_VERSION
-    environment:
       - BUGSNAG_API_KEY
       - BUGSNAG_APP_TYPE
       - BUGSNAG_APP_VERSION
@@ -51,33 +31,6 @@ services:
       - BUGSNAG_METADATA_fruit_Tomato
       - BUGSNAG_METADATA_snacks_Carrot
     restart: "no"
-    command: go run .
-
-  nethttp:
-    build:
-      context: .
-      dockerfile: net_http/Dockerfile
-      args:
-       - GO_VERSION
-    ports:
-      - "4512:4512"
-    environment:
-      - API_KEY
-      - ERROR_CLASS
-      - BUGSNAG_ENDPOINT
-      - APP_VERSION
-      - APP_TYPE
-      - HOSTNAME
-      - NOTIFY_RELEASE_STAGES
-      - RELEASE_STAGE
-      - PARAMS_FILTERS
-      - AUTO_CAPTURE_SESSIONS
-      - SYNCHRONOUS
-      - SERVER_PORT
-      - BUGSNAG_SOURCE_ROOT
-      - BUGSNAG_PROJECT_PACKAGES
-    restart: "no"
-    command: go run main.go
 
   gin:
     build:
