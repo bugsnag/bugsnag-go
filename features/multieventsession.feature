@@ -1,23 +1,20 @@
 Feature: Reporting multiple handled and unhandled errors in the same session
 
 Background:
-  Given I set environment variable "API_KEY" to "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And I configure the bugsnag endpoint
-  And I have built the service "app"
-  And I set environment variable "AUTO_CAPTURE_SESSIONS" to "false"
+  Given I set environment variable "BUGSNAG_AUTO_CAPTURE_SESSIONS" to "0"
 
 Scenario: Handled errors know about previous reported handled errors
-  When I run the go service "app" with the test case "multiple-handled"
-  And I wait to receive 2 requests
-  And the request 0 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And the request 1 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And the event handled sessions count equals 1 for request 0
-  And the event handled sessions count equals 2 for request 1
+  When I start the service "app"
+  And I run "MultipleHandledErrorsScenario"
+  And I wait to receive 2 errors
+  And the event handled sessions count equals 1
+  And I discard the oldest error
+  And the event handled sessions count equals 2
 
 Scenario: Unhandled errors know about previous reported handled errors
-  When I run the go service "app" with the test case "multiple-unhandled"
-  And I wait to receive 2 requests
-  And the request 0 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And the request 1 is a valid error report with api key "a35a2a72bd230ac0aa0f52715bbdc6aa"
-  And the event unhandled sessions count equals 1 for request 0
-  And the event unhandled sessions count equals 2 for request 1
+  When I start the service "app"
+  And I run "MultipleUnhandledErrorsScenario"
+  And I wait to receive 2 errors
+  And the event unhandled sessions count equals 1
+  And I discard the oldest error
+  And the event unhandled sessions count equals 2

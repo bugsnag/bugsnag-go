@@ -36,41 +36,51 @@ func (p *publisher) publish(sessions []*Session) error {
 		// log every minute
 		return nil
 	}
+
 	if apiKey := p.config.APIKey; len(apiKey) != 32 {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish invalid API key: '%s'", apiKey)
 	}
+
 	nrs, rs := p.config.NotifyReleaseStages, p.config.ReleaseStage
 	if rs != "" && (nrs != nil && !contains(nrs, rs)) {
 		// Always send sessions if the release stage is not set, but don't send any
 		// sessions when notify release stages don't match the current release stage
 		return nil
 	}
+
 	if len(sessions) == 0 {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish requested publication of 0")
 	}
+
 	p.config.mutex.Lock()
 	defer p.config.mutex.Unlock()
+
 	payload := makeSessionPayload(sessions, p.config)
 	buf, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to marshal json: %v", err)
 	}
+
 	req, err := http.NewRequest("POST", p.config.Endpoint, bytes.NewBuffer(buf))
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to create request: %v", err)
 	}
+
 	for k, v := range headers.PrefixedHeaders(p.config.APIKey, sessionPayloadVersion) {
 		req.Header.Add(k, v)
 	}
+
 	res, err := p.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish unable to deliver session: %v", err)
 	}
+
 	defer func(res *http.Response) {
 		if err := res.Body.Close(); err != nil {
 			p.config.logf("%v", err)
 		}
 	}(res)
+
 	if res.StatusCode != 202 {
 		return fmt.Errorf("bugsnag/session.publish expected 202 response status, got HTTP %s", res.Status)
 	}
