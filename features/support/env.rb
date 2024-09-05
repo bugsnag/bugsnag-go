@@ -8,6 +8,7 @@ Before do
 end
 
 Maze.config.add_validator('error') do |validator|
+  pp "Running error validation"
   validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
   validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
   validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('4') }
@@ -15,15 +16,15 @@ Maze.config.add_validator('error') do |validator|
     begin
       Date.iso8601(date)
     rescue Date::Error
-      @success = false
-      @errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
+      validator.success = false
+      validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
     end
   end
 
   notifier_name = Maze::Helper.read_key_path(validator.body, 'notifier.name')
   if notifier_name.nil? || !notifier_name.eql?('Bugsnag Go')
-    @success = false
-    @errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
+    validator.success = false
+    validator.errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
   end
 
   error_elements = ['notifier.url', 'notifier.version', 'events']
@@ -33,8 +34,8 @@ Maze.config.add_validator('error') do |validator|
   end
 
   unless error_elements_present
-    @success = false
-    @errors << "Not all of the error payload elements were present"
+    validator.success = false
+    validator.errors << "Not all of the error payload elements were present"
   end
 
   event_elements = ['severity', 'severityReason.type', 'unhandled', 'exceptions']
@@ -47,12 +48,16 @@ Maze.config.add_validator('error') do |validator|
   end
 
   unless event_elements_present
-    @success = false
-    @errors << "Not all of the event elements were present"
+    validator.success = false
+    validator.errors << "Not all of the event elements were present"
   end
+  pp "Error validation complete"
+  pp validator.success
+  pp validator.errors
 end
 
 Maze.config.add_validator('session') do |validator|
+  pp "Running session validation"
   validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
   validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
   validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('1.0') }
@@ -60,15 +65,15 @@ Maze.config.add_validator('session') do |validator|
     begin
       Date.iso8601(date)
     rescue Date::Error
-      @success = false
-      @errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
+      validator.success = false
+      validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
     end
   end
 
   notifier_name = Maze::Helper.read_key_path(validator.body, 'notifier.name')
   if notifier_name.nil? || !notifier_name.eql?('Bugsnag Go')
-    @success = false
-    @errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
+    validator.success = false
+    validator.errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
   end
 
   session_elements = ['notifier.url', 'notifier.version', 'events']
@@ -78,7 +83,11 @@ Maze.config.add_validator('session') do |validator|
   end
 
   unless session_elements_present
-    @success = false
-    @errors << "Not all of the session payload elements were present"
+    validator.success = false
+    validator.errors << "Not all of the session payload elements were present"
   end
+
+  pp "Session validation complete"
+  pp validator.success
+  pp validator.errors
 end
