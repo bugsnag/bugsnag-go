@@ -8,7 +8,6 @@ Before do
 end
 
 Maze.config.add_validator('error') do |validator|
-  pp validator.headers
   validator.validate_header('bugsnag-api-key') { |value| value.eql?($api_key) }
   validator.validate_header('content-type') { |value| value.eql?('application/json') }
   validator.validate_header('bugsnag-payload-version') { |value| value.eql?('4') }
