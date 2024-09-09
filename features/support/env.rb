@@ -8,6 +8,7 @@ Before do
 end
 
 Maze.config.add_validator('error') do |validator|
+  pp validator.headers
   validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
   validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
   validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('4') }
@@ -16,7 +17,7 @@ Maze.config.add_validator('error') do |validator|
       Date.iso8601(value)
     rescue Date::Error
       validator.success = false
-      validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
+      validator.errors << "bugsnag-sent-at header was expected to be an ISO 8601 date, but was '#{value}'"
     end
   end
 
@@ -61,7 +62,7 @@ Maze.config.add_validator('session') do |validator|
       Date.iso8601(value)
     rescue Date::Error
       validator.success = false
-      validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
+      validator.errors << "bugsnag-sent-at header was expected to be an ISO 8601 date, but was '#{value}'"
     end
   end
 
