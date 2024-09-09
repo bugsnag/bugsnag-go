@@ -8,13 +8,12 @@ Before do
 end
 
 Maze.config.add_validator('error') do |validator|
-  pp "Running error validation"
   validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
   validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
   validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('4') }
-  validator.validate_header('Bugsnag-Sent-At') do |date|
+  validator.validate_header('Bugsnag-Sent-At') do |value|
     begin
-      Date.iso8601(date)
+      Date.iso8601(value)
     rescue Date::Error
       validator.success = false
       validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
@@ -29,7 +28,7 @@ Maze.config.add_validator('error') do |validator|
 
   error_elements = ['notifier.url', 'notifier.version', 'events']
   error_elements_present = error_elements.all? do |element_key|
-    element = Maze::Helper.read_key_path(validator.body, element)
+    element = Maze::Helper.read_key_path(validator.body, element_key)
     !element.nil? && (!element.is_a?(Array) || !element.empty?)
   end
 
@@ -51,19 +50,15 @@ Maze.config.add_validator('error') do |validator|
     validator.success = false
     validator.errors << "Not all of the event elements were present"
   end
-  pp "Error validation complete"
-  pp validator.success
-  pp validator.errors
 end
 
 Maze.config.add_validator('session') do |validator|
-  pp "Running session validation"
   validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
   validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
   validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('1.0') }
   validator.validate_header('Bugsnag-Sent-At') do |value|
     begin
-      Date.iso8601(date)
+      Date.iso8601(value)
     rescue Date::Error
       validator.success = false
       validator.errors << "bugsnag-sent-at header was expected to be an IOS 8601 date, but was '#{date}'"
@@ -78,7 +73,7 @@ Maze.config.add_validator('session') do |validator|
 
   session_elements = ['notifier.url', 'notifier.version', 'events']
   session_elements_present = session_elements.all? do |element_key|
-    element = Maze::Helper.read_key_path(validator.body, element)
+    element = Maze::Helper.read_key_path(validator.body, element_key)
     !element.nil? && (!element.is_a?(Array) || !element.empty?)
   end
 
@@ -86,8 +81,4 @@ Maze.config.add_validator('session') do |validator|
     validator.success = false
     validator.errors << "Not all of the session payload elements were present"
   end
-
-  pp "Session validation complete"
-  pp validator.success
-  pp validator.errors
 end
