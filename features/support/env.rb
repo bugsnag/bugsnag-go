@@ -9,10 +9,10 @@ end
 
 Maze.config.add_validator('error') do |validator|
   pp validator.headers
-  validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
-  validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
-  validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('4') }
-  validator.validate_header('Bugsnag-Sent-At') do |value|
+  validator.validate_header('bugsnag-api-key') { |value| value.eql?($api_key) }
+  validator.validate_header('content-type') { |value| value.eql?('application/json') }
+  validator.validate_header('bugsnag-payload-version') { |value| value.eql?('4') }
+  validator.validate_header('bugsnag-sent-at') do |value|
     begin
       Date.iso8601(value)
     rescue Date::Error
@@ -54,10 +54,10 @@ Maze.config.add_validator('error') do |validator|
 end
 
 Maze.config.add_validator('session') do |validator|
-  validator.validate_header('Bugsnag-Api-Key') { |value| value.eql?($api_key) }
-  validator.validate_header('Content-Type') { |value| value.eql?('application/json') }
-  validator.validate_header('Bugsnag-Payload-Version') { |value| value.eql?('1.0') }
-  validator.validate_header('Bugsnag-Sent-At') do |value|
+  validator.validate_header('bugsnag-api-key') { |value| value.eql?($api_key) }
+  validator.validate_header('content-type') { |value| value.eql?('application/json') }
+  validator.validate_header('bugsnag-payload-version') { |value| value.eql?('1.0') }
+  validator.validate_header('bugsnag-sent-at') do |value|
     begin
       Date.iso8601(value)
     rescue Date::Error
