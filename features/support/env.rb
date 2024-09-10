@@ -65,7 +65,7 @@ Maze.config.add_validator('session') do |validator|
     validator.errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
   end
 
-  ['notifier.url', 'notifier.version', 'events'].each do |element_key|
+  ['notifier.url', 'notifier.version', 'app', 'device'].each do |element_key|
     element = Maze::Helper.read_key_path(validator.body, element_key)
     if element.nil? || (element.is_a?(Array) && element.empty?)
       validator.success = false
