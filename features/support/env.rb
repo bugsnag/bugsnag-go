@@ -26,29 +26,23 @@ Maze.config.add_validator('error') do |validator|
     validator.errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
   end
 
-  error_elements = ['notifier.url', 'notifier.version', 'events']
-  error_elements_present = error_elements.all? do |element_key|
+  ['notifier.url', 'notifier.version', 'events'].each? do |element_key|
     element = Maze::Helper.read_key_path(validator.body, element_key)
-    !element.nil? && (!element.is_a?(Array) || !element.empty?)
-  end
-
-  unless error_elements_present
-    validator.success = false
-    validator.errors << "Not all of the error payload elements were present"
-  end
-
-  event_elements = ['severity', 'severityReason.type', 'unhandled', 'exceptions']
-  events = Maze::Helper.read_key_path(validator.body, 'events')
-  event_elements_present = events.all? do |event|
-    event_elements.all? do |element_key|
-      element = Maze::Helper.read_key_path(event, element_key)
-      !element.nil?
+    if element.nil? || (element.is_a?(Array) && element.empty?)
+      validator.success = false
+      validator.errors << "Required error element #{element_key} was not present"
     end
   end
 
-  unless event_elements_present
-    validator.success = false
-    validator.errors << "Not all of the event elements were present"
+  events = Maze::Helper.read_key_path(validator.body, 'events')
+  events.each_with_index do |event, index|
+    ['severity', 'severityReason.type', 'unhandled', 'exceptions'].each do |element_key|
+      element = Maze::Helper.read_key_path(event, element_key)
+      if element.nil? || (element.is_a?(Array) && element.empty?)
+        validator.success = false
+        validator.errors << "Required event element #{element_key} was not present in event #{index}"
+      end
+    end
   end
 end
 
@@ -71,14 +65,11 @@ Maze.config.add_validator('session') do |validator|
     validator.errors << "Notifier name in body was expected to be 'Bugsnag Go', but was '#{notifier_name}'"
   end
 
-  session_elements = ['notifier.url', 'notifier.version', 'events']
-  session_elements_present = session_elements.all? do |element_key|
+  ['notifier.url', 'notifier.version', 'events'].each? do |element_key|
     element = Maze::Helper.read_key_path(validator.body, element_key)
-    !element.nil? && (!element.is_a?(Array) || !element.empty?)
-  end
-
-  unless session_elements_present
-    validator.success = false
-    validator.errors << "Not all of the session payload elements were present"
+    if element.nil? || (element.is_a?(Array) && element.empty?)
+      validator.success = false
+      validator.errors << "Required session element #{element_key} was not present"
+    end
   end
 end
