@@ -1,3 +1,3 @@
 source 'https://rubygems.org'
 
-gem "bugsnag-maze-runner", git: 'https://github.com/bugsnag/maze-runner', branch: 'validation/extra-capabilities'
+gem "bugsnag-maze-runner", "~> 9.14"
