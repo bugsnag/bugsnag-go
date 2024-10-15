@@ -151,6 +151,9 @@ func (tp *testPublisher) publishReport(p *payload) error {
 func (tp *testPublisher) setMainProgramContext(context.Context) {
 }
 
+func (tp *testPublisher) delivery() {
+}
+
 func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
