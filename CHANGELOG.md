@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.1 (2024-10-21)
+
+### Bug fixes
+
+* Move start of delivery goroutine to configure, don't wait on signals in delivery
+  [#250](https://github.com/bugsnag/bugsnag-go/pull/250)
+
 ## 2.5.0 (2024-08-27)
 
 ### Enhancements
