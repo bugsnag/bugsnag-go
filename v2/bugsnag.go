@@ -48,6 +48,9 @@ func Configure(config Configuration) {
 	readEnvConfigOnce.Do(Config.loadEnv)
 	Config.update(&config)
 	updateSessionConfig()
+
+	// start delivery goroutine later than the module import time
+	go publisher.delivery()
 	// Only do once in case the user overrides the default panichandler, and
 	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
