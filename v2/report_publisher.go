@@ -3,26 +3,18 @@ package bugsnag
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 type reportPublisher interface {
 	publishReport(*payload) error
 	setMainProgramContext(context.Context)
+	delivery()
 }
 
 func (defPub *defaultReportPublisher) delivery() {
-	signalsCh := make(chan os.Signal, 1)
-	signal.Notify(signalsCh, syscall.SIGINT, syscall.SIGTERM)
-
 waitForEnd:
 	for {
 		select {
-		case <-signalsCh:
-			defPub.isClosing = true
-			break waitForEnd
 		case <-defPub.mainProgramCtx.Done():
 			defPub.isClosing = true
 			break waitForEnd
@@ -42,10 +34,10 @@ waitForEnd:
 	// Send remaining elements from the queue
 	close(defPub.eventsChan)
 	for p := range defPub.eventsChan {
-			if err := p.deliver(); err != nil {
-				// Ensure that any errors are logged if they occur in a goroutine.
-				p.logf("bugsnag/defaultReportPublisher.publishReport: %v", err)
-			}
+		if err := p.deliver(); err != nil {
+			// Ensure that any errors are logged if they occur in a goroutine.
+			p.logf("bugsnag/defaultReportPublisher.publishReport: %v", err)
+		}
 	}
 }
 
@@ -58,8 +50,6 @@ type defaultReportPublisher struct {
 func newPublisher() reportPublisher {
 	defPub := defaultReportPublisher{isClosing: false, mainProgramCtx: context.TODO()}
 	defPub.eventsChan = make(chan *payload, 100)
-
-	go defPub.delivery()
 
 	return &defPub
 }

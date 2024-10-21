@@ -21,7 +21,7 @@ import (
 )
 
 // Version defines the version of this Bugsnag notifier
-const Version = "2.5.0"
+const Version = "2.5.1"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
@@ -48,6 +48,9 @@ func Configure(config Configuration) {
 	readEnvConfigOnce.Do(Config.loadEnv)
 	Config.update(&config)
 	updateSessionConfig()
+
+	// start delivery goroutine later than the module import time
+	go publisher.delivery()
 	// Only do once in case the user overrides the default panichandler, and
 	// configures multiple times.
 	panicHandlerOnce.Do(Config.PanicHandler)
