@@ -39,7 +39,7 @@ func TestNotifyReleaseStages(t *testing.T) {
 
 	for _, tc := range tt {
 		rs, nrs, exp := tc.releaseStage, tc.notifyReleaseStages, tc.expected
-		config := &Configuration{ReleaseStage: rs, NotifyReleaseStages: nrs}
+		config := &Configuration{ReleaseStage: rs, EnabledReleaseStages: nrs}
 		if config.notifyInReleaseStage() != exp {
 			if !exp {
 				notify = " not "
@@ -249,10 +249,10 @@ func TestConfiguringCustomLogger(t *testing.T) {
 		msg    string
 	}{
 		{
-			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l1},
+			config: Configuration{ReleaseStage: "production", EnabledReleaseStages: []string{"development", "production"}, Logger: l1},
 		},
 		{
-			config: Configuration{ReleaseStage: "production", NotifyReleaseStages: []string{"development", "production"}, Logger: l2},
+			config: Configuration{ReleaseStage: "production", EnabledReleaseStages: []string{"development", "production"}, Logger: l2},
 		},
 	}
 

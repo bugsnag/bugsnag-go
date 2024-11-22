@@ -25,7 +25,7 @@ func TestConfigDoesNotChangeGivenBlankValues(t *testing.T) {
 		{"AppType", exp.AppType, c.AppType},
 		{"AppVersion", exp.AppVersion, c.AppVersion},
 		{"Transport", exp.Transport, c.Transport},
-		{"NotifyReleaseStages", exp.NotifyReleaseStages, c.NotifyReleaseStages},
+		{"EnabledReleaseStages", exp.EnabledReleaseStages, c.EnabledReleaseStages},
 	}
 	for _, tc := range tt {
 		if !reflect.DeepEqual(tc.got, tc.expected) {
@@ -37,15 +37,15 @@ func TestConfigDoesNotChangeGivenBlankValues(t *testing.T) {
 func TestConfigUpdatesGivenNonDefaultValues(t *testing.T) {
 	c := testConfig()
 	exp := SessionTrackingConfiguration{
-		PublishInterval:     40 * time.Second,
-		APIKey:              "api234",
-		Endpoint:            "https://docs.bugsnag.com/platforms/go/",
-		Version:             "2.7.3",
-		ReleaseStage:        "Production",
-		Hostname:            "Brian's Surface",
-		AppType:             "Revel API",
-		AppVersion:          "6.3.9",
-		NotifyReleaseStages: []string{"staging", "production"},
+		PublishInterval:      40 * time.Second,
+		APIKey:               "api234",
+		Endpoint:             "https://docs.bugsnag.com/platforms/go/",
+		Version:              "2.7.3",
+		ReleaseStage:         "Production",
+		Hostname:             "Brian's Surface",
+		AppType:              "Revel API",
+		AppVersion:           "6.3.9",
+		EnabledReleaseStages: []string{"staging", "production"},
 	}
 	c.Update(&exp)
 	tt := []struct {
@@ -61,7 +61,7 @@ func TestConfigUpdatesGivenNonDefaultValues(t *testing.T) {
 		{"Hostname", exp.Hostname, c.Hostname},
 		{"AppType", exp.AppType, c.AppType},
 		{"AppVersion", exp.AppVersion, c.AppVersion},
-		{"NotifyReleaseStages", exp.NotifyReleaseStages, c.NotifyReleaseStages},
+		{"EnabledReleaseStages", exp.EnabledReleaseStages, c.EnabledReleaseStages},
 	}
 	for _, tc := range tt {
 		if !reflect.DeepEqual(tc.got, tc.expected) {
@@ -72,15 +72,15 @@ func TestConfigUpdatesGivenNonDefaultValues(t *testing.T) {
 
 func testConfig() SessionTrackingConfiguration {
 	return SessionTrackingConfiguration{
-		PublishInterval:     20 * time.Second,
-		APIKey:              "api123",
-		Endpoint:            "https://bugsnag.com/jobs", //If you like what you see... ;)
-		Version:             "1.6.2",
-		ReleaseStage:        "Staging",
-		Hostname:            "Russ's MacbookPro",
-		AppType:             "Gin API",
-		AppVersion:          "5.2.8",
-		NotifyReleaseStages: []string{"staging", "production"},
-		Transport:           http.DefaultTransport,
+		PublishInterval:      20 * time.Second,
+		APIKey:               "api123",
+		Endpoint:             "https://bugsnag.com/jobs", //If you like what you see... ;)
+		Version:              "1.6.2",
+		ReleaseStage:         "Staging",
+		Hostname:             "Russ's MacbookPro",
+		AppType:              "Gin API",
+		AppVersion:           "5.2.8",
+		EnabledReleaseStages: []string{"staging", "production"},
+		Transport:            http.DefaultTransport,
 	}
 }
