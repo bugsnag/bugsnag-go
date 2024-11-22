@@ -59,6 +59,11 @@ type Configuration struct {
 
 	// The Release stages to notify in. If you set this then bugsnag-go will
 	// only send notifications to Bugsnag if the ReleaseStage is listed here.
+	EnabledReleaseStages []string
+
+	// DEPRECATED - use EnabledReleaseStages instead.
+	// The Release stages to notify in. If you set this then bugsnag-go will
+	// only send notifications to Bugsnag if the ReleaseStage is listed here.
 	NotifyReleaseStages []string
 
 	// packages that are part of your app. Bugsnag uses this to determine how
@@ -155,6 +160,9 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.Logger != nil {
 		config.Logger = other.Logger
 	}
+	if other.EnabledReleaseStages != nil {
+		config.EnabledReleaseStages = other.EnabledReleaseStages
+	}
 	if other.NotifyReleaseStages != nil {
 		config.NotifyReleaseStages = other.NotifyReleaseStages
 	}
@@ -175,6 +183,12 @@ func (config *Configuration) update(other *Configuration) *Configuration {
 	if other.AutoCaptureSessions != nil {
 		config.AutoCaptureSessions = other.AutoCaptureSessions
 	}
+
+	// Prefer to use new EnabledReleaseStages over deprecated NotifyReleaseStages
+	if config.EnabledReleaseStages == nil {
+		config.EnabledReleaseStages = config.NotifyReleaseStages
+	}
+
 	config.updateEndpoints(&other.Endpoints)
 	return config
 }
@@ -269,13 +283,13 @@ func (config *Configuration) logf(fmt string, args ...interface{}) {
 }
 
 func (config *Configuration) notifyInReleaseStage() bool {
-	if config.NotifyReleaseStages == nil {
+	if config.EnabledReleaseStages == nil {
 		return true
 	}
 	if config.ReleaseStage == "" {
 		return true
 	}
-	for _, r := range config.NotifyReleaseStages {
+	for _, r := range config.EnabledReleaseStages {
 		if r == config.ReleaseStage {
 			return true
 		}
@@ -308,6 +322,9 @@ func (config *Configuration) loadEnv() {
 	}
 	if appType := os.Getenv("BUGSNAG_APP_TYPE"); appType != "" {
 		envConfig.AppType = appType
+	}
+	if enabledStages := os.Getenv("BUGSNAG_ENABLED_RELEASE_STAGES"); enabledStages != "" {
+		envConfig.EnabledReleaseStages = strings.Split(enabledStages, ",")
 	}
 	if stages := os.Getenv("BUGSNAG_NOTIFY_RELEASE_STAGES"); stages != "" {
 		envConfig.NotifyReleaseStages = strings.Split(stages, ",")

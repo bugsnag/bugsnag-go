@@ -48,6 +48,12 @@ type SessionTrackingConfiguration struct {
 	// The release stages to notify about sessions in. If you set this then
 	// bugsnag-go will only send sessions to Bugsnag if the release stage
 	// is listed here.
+	EnabledReleaseStages []string
+
+	// DEPRECATED - use EnabledReleaseStages instead.
+	// The release stages to notify about sessions in. If you set this then
+	// bugsnag-go will only send sessions to Bugsnag if the release stage
+	// is listed here.
 	NotifyReleaseStages []string
 
 	// Logger is the logger that Bugsnag should log to. Uses the same defaults
@@ -95,11 +101,19 @@ func (c *SessionTrackingConfiguration) Update(config *SessionTrackingConfigurati
 	if config.Logger != nil {
 		c.Logger = config.Logger
 	}
+	if config.EnabledReleaseStages != nil {
+		c.EnabledReleaseStages = config.EnabledReleaseStages
+	}
 	if config.NotifyReleaseStages != nil {
 		c.NotifyReleaseStages = config.NotifyReleaseStages
 	}
 	if config.AutoCaptureSessions != nil {
 		c.AutoCaptureSessions = config.AutoCaptureSessions
+	}
+
+	// Prefer to use new EnabledReleaseStages over deprecated NotifyReleaseStages
+	if c.EnabledReleaseStages == nil {
+		c.EnabledReleaseStages = c.NotifyReleaseStages
 	}
 }
 
