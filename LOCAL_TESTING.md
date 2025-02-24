@@ -24,6 +24,6 @@ malformed DWARF TagVariable entry
 
 ```
 	bundle install
-	bundle exec bugsnag-maze-runner
-  bundle exec bugsnag-maze-runner -c features/<chosen_feature>
+	bundle exec maze-runner
+  bundle exec maze-runner -c features/<chosen_feature>
 ```
