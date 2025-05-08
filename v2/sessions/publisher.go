@@ -81,8 +81,8 @@ func (p *publisher) publish(sessions []*Session) error {
 		}
 	}(res)
 
-	if res.StatusCode != 202 {
-		return fmt.Errorf("bugsnag/session.publish expected 202 response status, got HTTP %s", res.Status)
+	if res.StatusCode != http.StatusAccepted && res.StatusCode != http.StatusOK {
+		return fmt.Errorf("bugsnag/session.publish expected 200 or 202 response status, got HTTP %s", res.Status)
 	}
 	return nil
 }

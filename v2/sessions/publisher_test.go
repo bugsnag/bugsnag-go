@@ -20,7 +20,9 @@ const (
 )
 
 type testHTTPClient struct {
-	reqs []*http.Request
+	reqs               []*http.Request
+	statusCodeToReturn int
+	errToReturn        error
 }
 
 // A simple io.ReadCloser that we can inject as a body of a http.Request.
@@ -32,7 +34,14 @@ func (nopCloser) Close() error { return nil }
 
 func (c *testHTTPClient) Do(r *http.Request) (*http.Response, error) {
 	c.reqs = append(c.reqs, r)
-	return &http.Response{Body: nopCloser{}, StatusCode: 202}, nil
+	if c.errToReturn != nil {
+		return nil, c.errToReturn
+	}
+	statusCode := c.statusCodeToReturn
+	if statusCode == 0 {
+		statusCode = 202
+	}
+	return &http.Response{Body: nopCloser{}, StatusCode: statusCode}, nil
 }
 
 func get(j *simplejson.Json, path string) *simplejson.Json {
@@ -145,6 +154,38 @@ func TestSendsCorrectPayloadForBigConfig(t *testing.T) {
 	}
 	if got, exp := getInt(sessionCounts, "sessionsStarted"), len(sessions); got != exp {
 		t.Errorf("Expected sessionCounts[0].sessionsStarted to be %d but was %d", exp, got)
+	}
+}
+
+func TestPublishSuccessStatusCodes(t *testing.T) {
+	sessions, _ := makeSessions()
+	config := makeHeavyConfig()
+	config.NotifyReleaseStages = []string{config.ReleaseStage}
+
+	testCases := []struct {
+		name       string
+		statusCode int
+	}{
+		{"StatusOK", http.StatusOK},
+		{"StatusAccepted", http.StatusAccepted},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(st *testing.T) {
+			testClient := &testHTTPClient{statusCodeToReturn: tc.statusCode}
+			publisher := publisher{
+				config: config,
+				client: testClient,
+			}
+
+			err := publisher.publish(sessions)
+			if err != nil {
+				st.Errorf("publish() returned error for status code %d: %v", tc.statusCode, err)
+			}
+			if len(testClient.reqs) != 1 {
+				st.Errorf("Expected 1 request to be made, got %d", len(testClient.reqs))
+			}
+		})
 	}
 }
 
