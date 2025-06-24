@@ -378,3 +378,55 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 		t.Errorf("Expected automatic session tracking to be disabled when so configured, but enabled")
 	}
 }
+
+func TestInsightHubEndpoints(t *testing.T) {
+	defaultNotify := "https://notify.bugsnag.com/"
+	defaultSessions := "https://sessions.bugsnag.com/"
+	hubNotify := "https://notify.insighthub.smartbear.com"
+	hubSession := "https://sessions.insighthub.smartbear.com"
+	hubApiKey := "00000abcdef0123456789abcdef012345"
+
+	testConfig := Configuration{
+		Endpoints: Endpoints{
+			Notify:   defaultNotify,
+			Sessions: defaultSessions,
+		},
+	}
+
+	testConfig.update(&Configuration{
+			APIKey: hubApiKey,
+	})
+
+	if testConfig.Endpoints.Notify != hubNotify {
+		t.Errorf("Expected Notify endpoint to be '%s' but was '%s'", hubNotify, testConfig.Endpoints.Notify)
+	}
+	if testConfig.Endpoints.Sessions != hubSession {
+		t.Errorf("Expected Sessions endpoint to be '%s' but was '%s'", hubSession, testConfig.Endpoints.Sessions)
+	}
+}
+
+func TestInsightHubEndpointsWithCustomEndpoints(t *testing.T) {
+	defaultNotify := "https://notify.bugsnag.com/"
+	defaultSessions := "https://sessions.bugsnag.com/"
+	hubApiKey := "00000abcdef0123456789abcdef012345"
+
+	testConfig := Configuration{
+		Endpoints: Endpoints{
+			Notify:   defaultNotify,
+			Sessions: defaultSessions,
+		},
+	}
+	testConfig.update(&Configuration{
+		APIKey: hubApiKey,
+		Endpoints: Endpoints{
+			Notify:   "https://custom.notify.com/",
+			Sessions: "https://custom.sessions.com/",
+		},
+	})
+	if testConfig.Endpoints.Notify != "https://custom.notify.com/" {
+		t.Errorf("Expected Notify endpoint to be '%s' but was '%s'", "https://custom.notify.com/", testConfig.Endpoints.Notify)
+	}
+	if testConfig.Endpoints.Sessions != "https://custom.sessions.com/" {
+		t.Errorf("Expected Sessions endpoint to be '%s' but was '%s'", "https://custom.sessions.com/", testConfig.Endpoints.Sessions)
+	}
+}

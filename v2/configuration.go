@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+const (
+	HUB_PREFIX = "00000"
+	HUB_NOTIFY = "https://notify.insighthub.smartbear.com"
+	HUB_SESSION = "https://sessions.insighthub.smartbear.com"
+)
+
 // Endpoints hold the HTTP endpoints of the notifier.
 type Endpoints struct {
 	Sessions string
@@ -221,6 +227,11 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 			panic("FATAL: Bugsnag sessions endpoint configured without also changing the notify endpoint. Bugsnag cannot identify where to report errors")
 		}
 		config.Endpoints.Sessions = endpoints.Sessions
+	}
+
+	if strings.HasPrefix(config.APIKey, HUB_PREFIX) && endpoints.Notify == "" && endpoints.Sessions == "" {
+		config.Endpoints.Notify = HUB_NOTIFY
+		config.Endpoints.Sessions = HUB_SESSION
 	}
 }
 
