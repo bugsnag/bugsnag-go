@@ -380,53 +380,92 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 }
 
 func TestInsightHubEndpoints(t *testing.T) {
-	defaultNotify := "https://notify.bugsnag.com/"
-	defaultSessions := "https://sessions.bugsnag.com/"
+	defaultNotify := "https://notify.bugsnag.com"
+	defaultSessions := "https://sessions.bugsnag.com"
 	hubNotify := "https://notify.insighthub.smartbear.com"
 	hubSession := "https://sessions.insighthub.smartbear.com"
+	customNofify := "https://custom.notify.com/"
+	customSessions := "https://custom.sessions.com/"
 	hubApiKey := "00000abcdef0123456789abcdef012345"
 
-	testConfig := Configuration{
-		Endpoints: Endpoints{
-			Notify:   defaultNotify,
-			Sessions: defaultSessions,
-		},
+	setUp := func() (*Configuration, *CustomTestLogger) {
+		logger := &CustomTestLogger{}
+		return &Configuration{
+			Endpoints: Endpoints{
+				Notify:   defaultNotify,
+				Sessions: defaultSessions,
+			},
+			Logger: logger,
+		}, logger
 	}
 
-	testConfig.update(&Configuration{
+	t.Run("Should use InsightHub endpoints if API key has prefix", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
 			APIKey: hubApiKey,
+		})
+
+		if got, exp := c.Endpoints.Notify, hubNotify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, hubSession; got != exp {
+			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
+		}
 	})
 
-	if testConfig.Endpoints.Notify != hubNotify {
-		t.Errorf("Expected Notify endpoint to be '%s' but was '%s'", hubNotify, testConfig.Endpoints.Notify)
-	}
-	if testConfig.Endpoints.Sessions != hubSession {
-		t.Errorf("Expected Sessions endpoint to be '%s' but was '%s'", hubSession, testConfig.Endpoints.Sessions)
-	}
-}
-
-func TestInsightHubEndpointsWithCustomEndpoints(t *testing.T) {
-	defaultNotify := "https://notify.bugsnag.com/"
-	defaultSessions := "https://sessions.bugsnag.com/"
-	hubApiKey := "00000abcdef0123456789abcdef012345"
-
-	testConfig := Configuration{
-		Endpoints: Endpoints{
-			Notify:   defaultNotify,
-			Sessions: defaultSessions,
-		},
-	}
-	testConfig.update(&Configuration{
-		APIKey: hubApiKey,
-		Endpoints: Endpoints{
-			Notify:   "https://custom.notify.com/",
-			Sessions: "https://custom.sessions.com/",
-		},
+	t.Run("Should prefer custom endpoints over InsightHub endpoints", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Notify:   customNofify,
+				Sessions: customSessions,
+			},
+		})
+		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, customSessions; got != exp {
+			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
+		}
 	})
-	if testConfig.Endpoints.Notify != "https://custom.notify.com/" {
-		t.Errorf("Expected Notify endpoint to be '%s' but was '%s'", "https://custom.notify.com/", testConfig.Endpoints.Notify)
-	}
-	if testConfig.Endpoints.Sessions != "https://custom.sessions.com/" {
-		t.Errorf("Expected Sessions endpoint to be '%s' but was '%s'", "https://custom.sessions.com/", testConfig.Endpoints.Sessions)
-	}
+
+	t.Run("With InsightHub API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Notify: customNofify,
+			},
+		})
+		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, ""; got != exp {
+			st.Errorf("Expected sessions endpoint to be empty but was '%s'", got)
+		}
+	})
+
+	t.Run("With InsightHub API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
+		c, _ := setUp()
+		defer func() {
+			if err := recover(); err != nil {
+				got := err.(string)
+				for _, exp := range []string{"FATAL", "Bugsnag", "notify", "sessions"} {
+					if !strings.Contains(got, exp) {
+						st.Errorf("Expected panic error containing '%s' when configuring but got %s.", exp, got)
+					}
+				}
+			} else {
+				st.Errorf("Expected a panic to happen but didn't")
+			}
+		}()
+
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Sessions: customSessions,
+			},
+		})
+	})
 }

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	HUB_PREFIX = "00000"
-	HUB_NOTIFY = "https://notify.insighthub.smartbear.com"
+	HUB_PREFIX  = "00000"
+	HUB_NOTIFY  = "https://notify.insighthub.smartbear.com"
 	HUB_SESSION = "https://sessions.insighthub.smartbear.com"
 )
 
@@ -215,23 +215,29 @@ func (config *Configuration) IsAutoCaptureSessions() bool {
 }
 
 func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
+	sessionsDisabled := false
 	if endpoints.Notify != "" {
 		config.Endpoints.Notify = endpoints.Notify
 		if endpoints.Sessions == "" {
 			config.Logger.Printf("WARNING: Bugsnag notify endpoint configured without also configuring the sessions endpoint. No sessions will be recorded")
 			config.Endpoints.Sessions = ""
+			sessionsDisabled = true
+		}
+	} else {
+		if strings.HasPrefix(config.APIKey, HUB_PREFIX) {
+			config.Endpoints.Notify = HUB_NOTIFY
 		}
 	}
+
 	if endpoints.Sessions != "" {
 		if endpoints.Notify == "" {
 			panic("FATAL: Bugsnag sessions endpoint configured without also changing the notify endpoint. Bugsnag cannot identify where to report errors")
 		}
 		config.Endpoints.Sessions = endpoints.Sessions
-	}
-
-	if strings.HasPrefix(config.APIKey, HUB_PREFIX) && endpoints.Notify == "" && endpoints.Sessions == "" {
-		config.Endpoints.Notify = HUB_NOTIFY
-		config.Endpoints.Sessions = HUB_SESSION
+	} else {
+		if !sessionsDisabled && strings.HasPrefix(config.APIKey, HUB_PREFIX) {
+			config.Endpoints.Sessions = HUB_SESSION
+		}
 	}
 }
 
