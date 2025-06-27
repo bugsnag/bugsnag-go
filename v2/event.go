@@ -142,7 +142,8 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
 
 		case bool:
-			config = config.merge(&Configuration{Synchronous: bool(datum)})
+			config = config.clone()
+			config.Synchronous = bool(datum)
 
 		case severity:
 			event.Severity = datum
