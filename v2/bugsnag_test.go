@@ -98,7 +98,14 @@ func TestNotify(t *testing.T) {
 
 	md := MetaData{"test": {"password": "sneaky", "value": "able", "broken": complex(1, 2), "recurse": recurse}}
 	user := User{Id: "123", Name: "Conrad", Email: "me@cirw.in"}
-	config := generateSampleConfig(ts.URL)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
+
 	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, ErrorClass{Name: "ExpectedErrorClass"}, Context{"testing"}, md)
 
 	json, err := simplejson.NewJson(<-reports)
@@ -136,7 +143,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 102, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 109, InProject: true})
 }
 
 type testPublisher struct {
@@ -158,7 +165,9 @@ func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
 
-	Configure(generateSampleConfig(ts.URL)) //async by default
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	Configure(generateSampleConfig(ts.URL, ctx)) //async by default
 
 	pub := new(testPublisher)
 	publisher = pub
@@ -183,7 +192,9 @@ func TestNotifySyncThenAsync(t *testing.T) {
 func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()
-	Configure(generateSampleConfig(eventserver.URL))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	Configure(generateSampleConfig(eventserver.URL, ctx))
 
 	// NOTE - this testcase will print a panic in verbose mode
 	t.Run("unhandled", func(st *testing.T) {
@@ -226,6 +237,8 @@ func TestHandlerFunc(t *testing.T) {
 	})
 
 	t.Run("handled", func(st *testing.T) {
+		sessionTracker = nil
+		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Notify(fmt.Errorf("oopsie"), r.Context())
 		}))
@@ -277,9 +290,12 @@ func TestHandler(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", crashyHandler)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go (&http.Server{
 		Addr:     l.Addr().String(),
-		Handler:  Handler(mux, generateSampleConfig(ts.URL), SeverityInfo),
+		Handler:  Handler(mux, generateSampleConfig(ts.URL, ctx), SeverityInfo),
 		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
 	}).Serve(l)
 
@@ -334,6 +350,10 @@ func TestAutoNotify(t *testing.T) {
 	defer ts.Close()
 
 	var panicked error
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
 	func() {
 		defer func() {
@@ -345,7 +365,7 @@ func TestAutoNotify(t *testing.T) {
 				t.Fatalf("Unexpected panic happened. Expected 'eggs' Error but was a(n) <%T> with value <%+v>", p, p)
 			}
 		}()
-		defer AutoNotify(StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer AutoNotify(StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic(fmt.Errorf("eggs"))
 	}()
@@ -377,6 +397,10 @@ func TestAutoNotify(t *testing.T) {
 func TestRecover(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
 	var panicked interface{}
 
@@ -384,7 +408,7 @@ func TestRecover(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer Recover(StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer Recover(StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic("ham")
 	}()
@@ -416,6 +440,10 @@ func TestRecover(t *testing.T) {
 func TestRecoverCustomHandledState(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
 	var panicked interface{}
 
@@ -428,7 +456,7 @@ func TestRecoverCustomHandledState(t *testing.T) {
 			OriginalSeverity: SeverityError,
 			Unhandled:        true,
 		}
-		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic("at the disco?")
 	}()
@@ -459,13 +487,17 @@ func TestRecoverCustomHandledState(t *testing.T) {
 func TestSeverityReasonNotifyCallback(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
 	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		event.Severity = SeverityInfo
 		return nil
 	})
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL), StartSession(context.Background()))
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL, ctx), StartSession(context.Background()))
 
 	json, _ := simplejson.NewJson(<-reports)
 	assertPayload(t, json, eventJSON{
@@ -486,8 +518,10 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 func TestNotifyWithoutError(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	config := generateSampleConfig(ts.URL)
+	config := generateSampleConfig(ts.URL, ctx)
 	config.Synchronous = true
 	l := logger{}
 	config.Logger = &l
@@ -522,7 +556,7 @@ func TestConfigureTwice(t *testing.T) {
 	}
 }
 
-func generateSampleConfig(endpoint string) Configuration {
+func generateSampleConfig(endpoint string, ctx context.Context) Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
 		Endpoints:       Endpoints{Notify: endpoint},
@@ -532,6 +566,7 @@ func generateSampleConfig(endpoint string) Configuration {
 		AppType:         "foo",
 		AppVersion:      "1.2.3",
 		Hostname:        "web1",
+		MainContext:     ctx,
 	}
 }
 

@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	HUB_PREFIX  = "00000"
-	HUB_NOTIFY  = "https://notify.insighthub.smartbear.com"
-	HUB_SESSION = "https://sessions.insighthub.smartbear.com"
+	HUB_PREFIX       = "00000"
+	HUB_NOTIFY       = "https://notify.insighthub.smartbear.com"
+	HUB_SESSION      = "https://sessions.insighthub.smartbear.com"
+	DEFAULT_NOTIFY   = "https://notify.bugsnag.com"
+	DEFAULT_SESSIONS = "https://sessions.bugsnag.com"
 )
 
 // Endpoints hold the HTTP endpoints of the notifier.
@@ -226,6 +228,8 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 	} else {
 		if strings.HasPrefix(config.APIKey, HUB_PREFIX) {
 			config.Endpoints.Notify = HUB_NOTIFY
+		} else {
+			config.Endpoints.Notify = DEFAULT_NOTIFY
 		}
 	}
 
@@ -235,8 +239,12 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 		}
 		config.Endpoints.Sessions = endpoints.Sessions
 	} else {
-		if !sessionsDisabled && strings.HasPrefix(config.APIKey, HUB_PREFIX) {
-			config.Endpoints.Sessions = HUB_SESSION
+		if !sessionsDisabled {
+			if strings.HasPrefix(config.APIKey, HUB_PREFIX) {
+				config.Endpoints.Sessions = HUB_SESSION
+			} else {
+				config.Endpoints.Sessions = DEFAULT_SESSIONS
+			}
 		}
 	}
 }

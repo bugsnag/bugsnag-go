@@ -266,8 +266,8 @@ func TestConfiguringCustomLogger(t *testing.T) {
 }
 
 func TestEndpointDeprecationWarning(t *testing.T) {
-	defaultNotify := "https://notify.bugsnag.com/"
-	defaultSessions := "https://sessions.bugsnag.com/"
+	defaultNotify := "https://notify.bugsnag.com"
+	defaultSessions := "https://sessions.bugsnag.com"
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
 		return &Configuration{
