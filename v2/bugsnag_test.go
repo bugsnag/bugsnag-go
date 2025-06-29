@@ -66,20 +66,6 @@ func (t *testSessionTracker) IncrementEventCountAndGetSession(context.Context, b
 
 func (t *testSessionTracker) FlushSessions() {}
 
-func TestConfigure(t *testing.T) {
-	Configure(Configuration{
-		APIKey: testAPIKey,
-	})
-
-	if Config.APIKey != testAPIKey {
-		t.Errorf("Setting APIKey didn't work")
-	}
-
-	if New().Config.APIKey != testAPIKey {
-		t.Errorf("Setting APIKey didn't work for new notifiers")
-	}
-}
-
 func TestNotify(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
@@ -103,6 +89,8 @@ func TestNotify(t *testing.T) {
 	defer cancel()
 	config := generateSampleConfig(ts.URL, ctx)
 
+	// Independent of the default one
+	publisher = newPublisher()
 	go publisher.delivery()
 	publisher.setMainProgramContext(ctx)
 
@@ -143,7 +131,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 109, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 97, InProject: true})
 }
 
 type testPublisher struct {
@@ -167,7 +155,10 @@ func TestNotifySyncThenAsync(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	Configure(generateSampleConfig(ts.URL, ctx)) //async by default
+	// Independent of the default one
+	publisher = newPublisher()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
 	pub := new(testPublisher)
 	publisher = pub
@@ -192,12 +183,20 @@ func TestNotifySyncThenAsync(t *testing.T) {
 func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	Configure(generateSampleConfig(eventserver.URL, ctx))
+
+	oldConfig := Config.clone()
+	config := generateSampleConfig(eventserver.URL, context.Background())
+	Config.update(&config)
 
 	// NOTE - this testcase will print a panic in verbose mode
 	t.Run("unhandled", func(st *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		// Independent of the default one
+		publisher = newPublisher()
+		go publisher.delivery()
+		publisher.setMainProgramContext(ctx)
+
 		sessionTracker = nil
 		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(crashyHandler))
@@ -237,6 +236,13 @@ func TestHandlerFunc(t *testing.T) {
 	})
 
 	t.Run("handled", func(st *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		// Independent of the default one
+		publisher = newPublisher()
+		go publisher.delivery()
+		publisher.setMainProgramContext(ctx)
+
 		sessionTracker = nil
 		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -276,6 +282,8 @@ func TestHandlerFunc(t *testing.T) {
 		}
 		assertValidSession(st, event, handled)
 	})
+
+	Config = *oldConfig
 }
 
 func TestHandler(t *testing.T) {
@@ -352,6 +360,7 @@ func TestAutoNotify(t *testing.T) {
 	var panicked error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	publisher = newPublisher()
 	go publisher.delivery()
 	publisher.setMainProgramContext(ctx)
 
@@ -399,6 +408,7 @@ func TestRecover(t *testing.T) {
 	defer ts.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	publisher = newPublisher()
 	go publisher.delivery()
 	publisher.setMainProgramContext(ctx)
 
@@ -442,6 +452,7 @@ func TestRecoverCustomHandledState(t *testing.T) {
 	defer ts.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	publisher = newPublisher()
 	go publisher.delivery()
 	publisher.setMainProgramContext(ctx)
 
@@ -489,6 +500,7 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 	defer ts.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	publisher = newPublisher()
 	go publisher.delivery()
 	publisher.setMainProgramContext(ctx)
 
@@ -520,14 +532,18 @@ func TestNotifyWithoutError(t *testing.T) {
 	defer ts.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	publisher = newPublisher()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
 
+	oldConfig := Config.clone()
 	config := generateSampleConfig(ts.URL, ctx)
 	config.Synchronous = true
 	l := logger{}
 	config.Logger = &l
-	Configure(config)
+	Config.update(&config)
 
-	Notify(nil, StartSession(context.Background()))
+	Notify(nil, StartSession(context.Background()), config)
 
 	select {
 	case r := <-reports:
@@ -539,9 +555,11 @@ func TestNotifyWithoutError(t *testing.T) {
 			}
 		}
 	}
+	Config = *oldConfig
 }
 
 func TestConfigureTwice(t *testing.T) {
+	publisher = newPublisher()
 	Configure(Configuration{})
 	if !Config.IsAutoCaptureSessions() {
 		t.Errorf("Expected auto capture sessions to be enabled by default")
