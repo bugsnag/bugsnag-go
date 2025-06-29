@@ -22,7 +22,13 @@ func UnhandledCrashScenario(command Command) func() {
 func MultipleUnhandledErrorsScenario(command Command) func() {
 	scenarioFunc := func() {
 		//Make the order of the below predictable
-		notifier := bugsnag.New(bugsnag.Configuration{Synchronous: true})
+		notifier := bugsnag.New(bugsnag.Configuration{
+			Synchronous: true,
+			Endpoints: bugsnag.Endpoints{
+				Notify:   command.NotifyEndpoint,
+				Sessions: command.SessionsEndpoint,
+			},
+		})
 		notifier.FlushSessionsOnRepanic(false)
 
 		ctx := bugsnag.StartSession(context.Background())
