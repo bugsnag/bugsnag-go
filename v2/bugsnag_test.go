@@ -54,6 +54,19 @@ func setup() (*httptest.Server, chan []byte) {
 	})), reports
 }
 
+// setupState resets global state so that we can run tests independently
+// Using this is replacing the call to "Configure"
+// Context needed to stop the publisher's delivery goroutine
+func setupState() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.Background())
+	// Independent of the default one
+	publisher = newPublisher()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
+
+	return ctx, cancel
+}
+
 type testSessionTracker struct{}
 
 func (t *testSessionTracker) StartSession(context.Context) context.Context {
@@ -85,14 +98,9 @@ func TestNotify(t *testing.T) {
 	md := MetaData{"test": {"password": "sneaky", "value": "able", "broken": complex(1, 2), "recurse": recurse}}
 	user := User{Id: "123", Name: "Conrad", Email: "me@cirw.in"}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
 	config := generateSampleConfig(ts.URL, ctx)
-
-	// Independent of the default one
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, ErrorClass{Name: "ExpectedErrorClass"}, Context{"testing"}, md)
 
@@ -131,7 +139,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 97, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 105, InProject: true})
 }
 
 type testPublisher struct {
@@ -153,12 +161,8 @@ func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := setupState()
 	defer cancel()
-	// Independent of the default one
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	pub := new(testPublisher)
 	publisher = pub
@@ -184,18 +188,15 @@ func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()
 
+	// Save old config to restore later after the tests
 	oldConfig := Config.clone()
 	config := generateSampleConfig(eventserver.URL, context.Background())
 	Config.update(&config)
 
 	// NOTE - this testcase will print a panic in verbose mode
 	t.Run("unhandled", func(st *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		_, cancel := setupState()
 		defer cancel()
-		// Independent of the default one
-		publisher = newPublisher()
-		go publisher.delivery()
-		publisher.setMainProgramContext(ctx)
 
 		sessionTracker = nil
 		startSessionTracking()
@@ -236,12 +237,8 @@ func TestHandlerFunc(t *testing.T) {
 	})
 
 	t.Run("handled", func(st *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		_, cancel := setupState()
 		defer cancel()
-		// Independent of the default one
-		publisher = newPublisher()
-		go publisher.delivery()
-		publisher.setMainProgramContext(ctx)
 
 		sessionTracker = nil
 		startSessionTracking()
@@ -358,11 +355,8 @@ func TestAutoNotify(t *testing.T) {
 	defer ts.Close()
 
 	var panicked error
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	func() {
 		defer func() {
@@ -406,11 +400,8 @@ func TestAutoNotify(t *testing.T) {
 func TestRecover(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	var panicked interface{}
 
@@ -450,11 +441,8 @@ func TestRecover(t *testing.T) {
 func TestRecoverCustomHandledState(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	var panicked interface{}
 
@@ -498,11 +486,8 @@ func TestRecoverCustomHandledState(t *testing.T) {
 func TestSeverityReasonNotifyCallback(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		event.Severity = SeverityInfo
@@ -530,11 +515,8 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 func TestNotifyWithoutError(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := setupState()
 	defer cancel()
-	publisher = newPublisher()
-	go publisher.delivery()
-	publisher.setMainProgramContext(ctx)
 
 	oldConfig := Config.clone()
 	config := generateSampleConfig(ts.URL, ctx)
