@@ -142,6 +142,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
 
 		case bool:
+			// clone without merging to avoid double-call to Configuration.update
 			config = config.clone()
 			config.Synchronous = bool(datum)
 
