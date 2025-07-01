@@ -266,8 +266,8 @@ func TestConfiguringCustomLogger(t *testing.T) {
 }
 
 func TestEndpointDeprecationWarning(t *testing.T) {
-	defaultNotify := "https://notify.bugsnag.com/"
-	defaultSessions := "https://sessions.bugsnag.com/"
+	defaultNotify := "https://notify.bugsnag.com"
+	defaultSessions := "https://sessions.bugsnag.com"
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
 		return &Configuration{
@@ -377,4 +377,95 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 	if disabledConfig.IsAutoCaptureSessions() {
 		t.Errorf("Expected automatic session tracking to be disabled when so configured, but enabled")
 	}
+}
+
+func TestInsightHubEndpoints(t *testing.T) {
+	defaultNotify := "https://notify.bugsnag.com"
+	defaultSessions := "https://sessions.bugsnag.com"
+	hubNotify := "https://notify.insighthub.smartbear.com"
+	hubSession := "https://sessions.insighthub.smartbear.com"
+	customNofify := "https://custom.notify.com/"
+	customSessions := "https://custom.sessions.com/"
+	hubApiKey := "00000abcdef0123456789abcdef012345"
+
+	setUp := func() (*Configuration, *CustomTestLogger) {
+		logger := &CustomTestLogger{}
+		return &Configuration{
+			Endpoints: Endpoints{
+				Notify:   defaultNotify,
+				Sessions: defaultSessions,
+			},
+			Logger: logger,
+		}, logger
+	}
+
+	t.Run("Should use InsightHub endpoints if API key has prefix", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+		})
+
+		if got, exp := c.Endpoints.Notify, hubNotify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, hubSession; got != exp {
+			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
+		}
+	})
+
+	t.Run("Should prefer custom endpoints over InsightHub endpoints", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Notify:   customNofify,
+				Sessions: customSessions,
+			},
+		})
+		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, customSessions; got != exp {
+			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
+		}
+	})
+
+	t.Run("With InsightHub API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
+		c, _ := setUp()
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Notify: customNofify,
+			},
+		})
+		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, ""; got != exp {
+			st.Errorf("Expected sessions endpoint to be empty but was '%s'", got)
+		}
+	})
+
+	t.Run("With InsightHub API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
+		c, _ := setUp()
+		defer func() {
+			if err := recover(); err != nil {
+				got := err.(string)
+				for _, exp := range []string{"FATAL", "Bugsnag", "notify", "sessions"} {
+					if !strings.Contains(got, exp) {
+						st.Errorf("Expected panic error containing '%s' when configuring but got %s.", exp, got)
+					}
+				}
+			} else {
+				st.Errorf("Expected a panic to happen but didn't")
+			}
+		}()
+
+		c.update(&Configuration{
+			APIKey: hubApiKey,
+			Endpoints: Endpoints{
+				Sessions: customSessions,
+			},
+		})
+	})
 }

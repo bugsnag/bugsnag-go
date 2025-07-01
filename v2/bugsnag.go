@@ -241,8 +241,8 @@ func init() {
 	Config.update(&Configuration{
 		APIKey: "",
 		Endpoints: Endpoints{
-			Notify:   "https://notify.bugsnag.com",
-			Sessions: "https://sessions.bugsnag.com",
+			Notify:   "",
+			Sessions: "",
 		},
 		Hostname:             device.GetHostname(),
 		AppType:              "",
