@@ -54,6 +54,19 @@ func setup() (*httptest.Server, chan []byte) {
 	})), reports
 }
 
+// setupState resets global state so that we can run tests independently
+// Using this is replacing the call to "Configure"
+// Context needed to stop the publisher's delivery goroutine
+func setupState() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.Background())
+	// Independent of the default one
+	publisher = newPublisher()
+	go publisher.delivery()
+	publisher.setMainProgramContext(ctx)
+
+	return ctx, cancel
+}
+
 type testSessionTracker struct{}
 
 func (t *testSessionTracker) StartSession(context.Context) context.Context {
@@ -65,20 +78,6 @@ func (t *testSessionTracker) IncrementEventCountAndGetSession(context.Context, b
 }
 
 func (t *testSessionTracker) FlushSessions() {}
-
-func TestConfigure(t *testing.T) {
-	Configure(Configuration{
-		APIKey: testAPIKey,
-	})
-
-	if Config.APIKey != testAPIKey {
-		t.Errorf("Setting APIKey didn't work")
-	}
-
-	if New().Config.APIKey != testAPIKey {
-		t.Errorf("Setting APIKey didn't work for new notifiers")
-	}
-}
 
 func TestNotify(t *testing.T) {
 	ts, reports := setup()
@@ -98,7 +97,11 @@ func TestNotify(t *testing.T) {
 
 	md := MetaData{"test": {"password": "sneaky", "value": "able", "broken": complex(1, 2), "recurse": recurse}}
 	user := User{Id: "123", Name: "Conrad", Email: "me@cirw.in"}
-	config := generateSampleConfig(ts.URL)
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
 	Notify(fmt.Errorf("hello world"), StartSession(context.Background()), config, user, ErrorClass{Name: "ExpectedErrorClass"}, Context{"testing"}, md)
 
 	json, err := simplejson.NewJson(<-reports)
@@ -136,7 +139,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 102, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 105, InProject: true})
 }
 
 type testPublisher struct {
@@ -158,7 +161,8 @@ func TestNotifySyncThenAsync(t *testing.T) {
 	ts, _ := setup()
 	defer ts.Close()
 
-	Configure(generateSampleConfig(ts.URL)) //async by default
+	_, cancel := setupState()
+	defer cancel()
 
 	pub := new(testPublisher)
 	publisher = pub
@@ -183,10 +187,17 @@ func TestNotifySyncThenAsync(t *testing.T) {
 func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()
-	Configure(generateSampleConfig(eventserver.URL))
+
+	// Save old config to restore later after the tests
+	oldConfig := Config.clone()
+	config := generateSampleConfig(eventserver.URL, context.Background())
+	Config.update(&config)
 
 	// NOTE - this testcase will print a panic in verbose mode
 	t.Run("unhandled", func(st *testing.T) {
+		_, cancel := setupState()
+		defer cancel()
+
 		sessionTracker = nil
 		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(crashyHandler))
@@ -226,6 +237,11 @@ func TestHandlerFunc(t *testing.T) {
 	})
 
 	t.Run("handled", func(st *testing.T) {
+		_, cancel := setupState()
+		defer cancel()
+
+		sessionTracker = nil
+		startSessionTracking()
 		ts := httptest.NewServer(HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			Notify(fmt.Errorf("oopsie"), r.Context())
 		}))
@@ -263,6 +279,8 @@ func TestHandlerFunc(t *testing.T) {
 		}
 		assertValidSession(st, event, handled)
 	})
+
+	Config = *oldConfig
 }
 
 func TestHandler(t *testing.T) {
@@ -277,9 +295,12 @@ func TestHandler(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", crashyHandler)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go (&http.Server{
 		Addr:     l.Addr().String(),
-		Handler:  Handler(mux, generateSampleConfig(ts.URL), SeverityInfo),
+		Handler:  Handler(mux, generateSampleConfig(ts.URL, ctx), SeverityInfo),
 		ErrorLog: log.New(ioutil.Discard, log.Prefix(), 0),
 	}).Serve(l)
 
@@ -334,6 +355,8 @@ func TestAutoNotify(t *testing.T) {
 	defer ts.Close()
 
 	var panicked error
+	ctx, cancel := setupState()
+	defer cancel()
 
 	func() {
 		defer func() {
@@ -345,7 +368,7 @@ func TestAutoNotify(t *testing.T) {
 				t.Fatalf("Unexpected panic happened. Expected 'eggs' Error but was a(n) <%T> with value <%+v>", p, p)
 			}
 		}()
-		defer AutoNotify(StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer AutoNotify(StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic(fmt.Errorf("eggs"))
 	}()
@@ -377,6 +400,8 @@ func TestAutoNotify(t *testing.T) {
 func TestRecover(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := setupState()
+	defer cancel()
 
 	var panicked interface{}
 
@@ -384,7 +409,7 @@ func TestRecover(t *testing.T) {
 		defer func() {
 			panicked = recover()
 		}()
-		defer Recover(StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer Recover(StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic("ham")
 	}()
@@ -416,6 +441,8 @@ func TestRecover(t *testing.T) {
 func TestRecoverCustomHandledState(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := setupState()
+	defer cancel()
 
 	var panicked interface{}
 
@@ -428,7 +455,7 @@ func TestRecoverCustomHandledState(t *testing.T) {
 			OriginalSeverity: SeverityError,
 			Unhandled:        true,
 		}
-		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL))
+		defer Recover(handledState, StartSession(context.Background()), generateSampleConfig(ts.URL, ctx))
 
 		panic("at the disco?")
 	}()
@@ -459,13 +486,15 @@ func TestRecoverCustomHandledState(t *testing.T) {
 func TestSeverityReasonNotifyCallback(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := setupState()
+	defer cancel()
 
 	OnBeforeNotify(func(event *Event, config *Configuration) error {
 		event.Severity = SeverityInfo
 		return nil
 	})
 
-	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL), StartSession(context.Background()))
+	Notify(fmt.Errorf("hello world"), generateSampleConfig(ts.URL, ctx), StartSession(context.Background()))
 
 	json, _ := simplejson.NewJson(<-reports)
 	assertPayload(t, json, eventJSON{
@@ -486,14 +515,17 @@ func TestSeverityReasonNotifyCallback(t *testing.T) {
 func TestNotifyWithoutError(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
+	ctx, cancel := setupState()
+	defer cancel()
 
-	config := generateSampleConfig(ts.URL)
+	oldConfig := Config.clone()
+	config := generateSampleConfig(ts.URL, ctx)
 	config.Synchronous = true
 	l := logger{}
 	config.Logger = &l
-	Configure(config)
+	Config.update(&config)
 
-	Notify(nil, StartSession(context.Background()))
+	Notify(nil, StartSession(context.Background()), config)
 
 	select {
 	case r := <-reports:
@@ -505,9 +537,11 @@ func TestNotifyWithoutError(t *testing.T) {
 			}
 		}
 	}
+	Config = *oldConfig
 }
 
 func TestConfigureTwice(t *testing.T) {
+	publisher = newPublisher()
 	Configure(Configuration{})
 	if !Config.IsAutoCaptureSessions() {
 		t.Errorf("Expected auto capture sessions to be enabled by default")
@@ -522,7 +556,7 @@ func TestConfigureTwice(t *testing.T) {
 	}
 }
 
-func generateSampleConfig(endpoint string) Configuration {
+func generateSampleConfig(endpoint string, ctx context.Context) Configuration {
 	return Configuration{
 		APIKey:          testAPIKey,
 		Endpoints:       Endpoints{Notify: endpoint},
@@ -532,6 +566,7 @@ func generateSampleConfig(endpoint string) Configuration {
 		AppType:         "foo",
 		AppVersion:      "1.2.3",
 		Hostname:        "web1",
+		MainContext:     ctx,
 	}
 }
 

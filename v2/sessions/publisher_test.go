@@ -167,7 +167,7 @@ func TestNoSessionsOutsideNotifyReleaseStages(t *testing.T) {
 
 	testClient := testHTTPClient{}
 	config := makeHeavyConfig()
-	config.NotifyReleaseStages = []string{"staging", "production"}
+	config.EnabledReleaseStages = []string{"staging", "production"}
 	publisher := publisher{
 		config: config,
 		client: &testClient,
@@ -187,7 +187,7 @@ func TestReleaseStageNotSetSendsSessionsRegardlessOfNotifyReleaseStages(t *testi
 
 	testClient := testHTTPClient{}
 	config := makeHeavyConfig()
-	config.NotifyReleaseStages = []string{"staging", "production"}
+	config.EnabledReleaseStages = []string{"staging", "production"}
 	config.ReleaseStage = ""
 	publisher := publisher{
 		config: config,
@@ -205,15 +205,15 @@ func TestReleaseStageNotSetSendsSessionsRegardlessOfNotifyReleaseStages(t *testi
 
 func makeHeavyConfig() *SessionTrackingConfiguration {
 	return &SessionTrackingConfiguration{
-		AppType:             "gin",
-		APIKey:              testAPIKey,
-		AppVersion:          "1.2.3-beta",
-		Version:             "2.3.4-alpha",
-		Endpoint:            sessionEndpoint,
-		Transport:           http.DefaultTransport,
-		ReleaseStage:        "development",
-		Hostname:            "gce-1234-us-west-1",
-		NotifyReleaseStages: []string{"development"},
+		AppType:              "gin",
+		APIKey:               testAPIKey,
+		AppVersion:           "1.2.3-beta",
+		Version:              "2.3.4-alpha",
+		Endpoint:             sessionEndpoint,
+		Transport:            http.DefaultTransport,
+		ReleaseStage:         "development",
+		Hostname:             "gce-1234-us-west-1",
+		EnabledReleaseStages: []string{"development"},
 	}
 }
 

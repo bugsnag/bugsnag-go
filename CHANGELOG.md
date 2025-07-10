@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.0 (2025-07-10)
+
+### Enhancements
+
+* Set default endpoints based on API key [#259](https://github.com/bugsnag/bugsnag-go/pull/259)
+
 ## 2.5.1 (2024-10-21)
 
 ### Bug fixes

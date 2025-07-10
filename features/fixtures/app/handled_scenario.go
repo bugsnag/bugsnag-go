@@ -24,7 +24,13 @@ func HandledErrorScenario(command Command) func() {
 
 func MultipleHandledErrorsScenario(command Command) func() {
 	//Make the order of the below predictable
-	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
+	bugsnag.Configure(bugsnag.Configuration{
+		Synchronous: true,
+		Endpoints: bugsnag.Endpoints{
+			Notify:   command.NotifyEndpoint,
+			Sessions: command.SessionsEndpoint,
+		},
+	})
 
 	scenarioFunc := func() {
 		ctx := bugsnag.StartSession(context.Background())
@@ -78,7 +84,13 @@ func HandledToUnhandledScenario(command Command) func() {
 }
 
 func OnBeforeNotifyScenario(command Command) func() {
-	bugsnag.Configure(bugsnag.Configuration{Synchronous: true})
+	bugsnag.Configure(bugsnag.Configuration{
+		Synchronous: true,
+		Endpoints: bugsnag.Endpoints{
+			Notify:   command.NotifyEndpoint,
+			Sessions: command.SessionsEndpoint,
+		},
+	})
 
 	scenarioFunc := func() {
 		bugsnag.OnBeforeNotify(

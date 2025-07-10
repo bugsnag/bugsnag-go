@@ -21,7 +21,7 @@ import (
 )
 
 // Version defines the version of this Bugsnag notifier
-const Version = "2.5.1"
+const Version = "2.6.0"
 
 var panicHandlerOnce sync.Once
 var sessionTrackerOnce sync.Once
@@ -241,21 +241,22 @@ func init() {
 	Config.update(&Configuration{
 		APIKey: "",
 		Endpoints: Endpoints{
-			Notify:   "https://notify.bugsnag.com",
-			Sessions: "https://sessions.bugsnag.com",
+			Notify:   "",
+			Sessions: "",
 		},
-		Hostname:            device.GetHostname(),
-		AppType:             "",
-		AppVersion:          "",
-		AutoCaptureSessions: true,
-		ReleaseStage:        "",
-		ParamsFilters:       []string{"password", "secret", "authorization", "cookie", "access_token"},
-		SourceRoot:          sourceRoot,
-		ProjectPackages:     []string{"main*"},
-		NotifyReleaseStages: nil,
-		Logger:              log.New(os.Stdout, log.Prefix(), log.Flags()),
-		PanicHandler:        defaultPanicHandler,
-		Transport:           http.DefaultTransport,
+		Hostname:             device.GetHostname(),
+		AppType:              "",
+		AppVersion:           "",
+		AutoCaptureSessions:  true,
+		ReleaseStage:         "",
+		ParamsFilters:        []string{"password", "secret", "authorization", "cookie", "access_token"},
+		SourceRoot:           sourceRoot,
+		ProjectPackages:      []string{"main*"},
+		EnabledReleaseStages: nil,
+		NotifyReleaseStages:  nil,
+		Logger:               log.New(os.Stdout, log.Prefix(), log.Flags()),
+		PanicHandler:         defaultPanicHandler,
+		Transport:            http.DefaultTransport,
 
 		flushSessionsOnRepanic: true,
 	})
@@ -271,17 +272,18 @@ func startSessionTracking() {
 
 func updateSessionConfig() {
 	sessionTrackingConfig.Update(&sessions.SessionTrackingConfiguration{
-		APIKey:              Config.APIKey,
-		AutoCaptureSessions: Config.AutoCaptureSessions,
-		Endpoint:            Config.Endpoints.Sessions,
-		Version:             Version,
-		PublishInterval:     DefaultSessionPublishInterval,
-		Transport:           Config.Transport,
-		ReleaseStage:        Config.ReleaseStage,
-		Hostname:            Config.Hostname,
-		AppType:             Config.AppType,
-		AppVersion:          Config.AppVersion,
-		NotifyReleaseStages: Config.NotifyReleaseStages,
-		Logger:              Config.Logger,
+		APIKey:               Config.APIKey,
+		AutoCaptureSessions:  Config.AutoCaptureSessions,
+		Endpoint:             Config.Endpoints.Sessions,
+		Version:              Version,
+		PublishInterval:      DefaultSessionPublishInterval,
+		Transport:            Config.Transport,
+		ReleaseStage:         Config.ReleaseStage,
+		Hostname:             Config.Hostname,
+		AppType:              Config.AppType,
+		AppVersion:           Config.AppVersion,
+		NotifyReleaseStages:  Config.NotifyReleaseStages,
+		EnabledReleaseStages: Config.EnabledReleaseStages,
+		Logger:               Config.Logger,
 	})
 }

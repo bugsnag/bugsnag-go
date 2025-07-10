@@ -41,7 +41,7 @@ func (p *publisher) publish(sessions []*Session) error {
 		return fmt.Errorf("bugsnag/sessions/publisher.publish invalid API key: '%s'", apiKey)
 	}
 
-	nrs, rs := p.config.NotifyReleaseStages, p.config.ReleaseStage
+	nrs, rs := p.config.EnabledReleaseStages, p.config.ReleaseStage
 	if rs != "" && (nrs != nil && !contains(nrs, rs)) {
 		// Always send sessions if the release stage is not set, but don't send any
 		// sessions when notify release stages don't match the current release stage

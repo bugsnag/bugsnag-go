@@ -26,6 +26,9 @@ type payload struct {
 type hash map[string]interface{}
 
 func (p *payload) deliver() error {
+	if p.Endpoints.Notify == "" {
+		return fmt.Errorf("bugsnag/payload.deliver: notify endpoint is not set")
+	}
 
 	if len(p.APIKey) != 32 {
 		return fmt.Errorf("bugsnag/payload.deliver: invalid api key: '%s'", p.APIKey)
