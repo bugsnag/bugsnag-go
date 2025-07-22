@@ -1,5 +1,11 @@
 # Changelog
 
+## TBD
+
+### Bug fixes
+
+* Handle endpoints being set only in env vars [#262](https://github.com/bugsnag/bugsnag-go/pull/262)
+
 ## 2.6.0 (2025-07-10)
 
 ### Enhancements
