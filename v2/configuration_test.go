@@ -271,10 +271,6 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
 		return &Configuration{
-			Endpoints: Endpoints{
-				Notify:   defaultNotify,
-				Sessions: defaultSessions,
-			},
 			Logger: logger,
 		}, logger
 	}
@@ -360,6 +356,74 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
 		}
 	})
+
+}
+func TestEndpointFromEnvironment(t *testing.T) {
+	notifyEndpoint, sessionsEndpoint := "https://notify.custom.com", "https://sessions.custom.com"
+	setUp := func() {
+		os.Setenv("BUGSNAG_NOTIFY_ENDPOINT", notifyEndpoint)
+		os.Setenv("BUGSNAG_SESSIONS_ENDPOINT", sessionsEndpoint)
+		os.Setenv("BUGSNAG_API_KEY", "00000abcdef0123456789abcdef012345")
+	}
+	cleanup := func() {
+		defer os.Unsetenv("BUGSNAG_NOTIFY_ENDPOINT")
+		defer os.Unsetenv("BUGSNAG_SESSIONS_ENDPOINT")
+		defer os.Unsetenv("BUGSNAG_API_KEY")
+	}
+
+	t.Run("Should not override endpoints set by environment variables", func(st *testing.T) {
+		setUp()
+		defer cleanup()
+		c := &Configuration{}
+		c.loadEnv()
+
+		if got, exp := c.Endpoints.Notify, notifyEndpoint; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, sessionsEndpoint; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+
+		c.update(&Configuration{
+			ProjectPackages: []string{"main"},
+		})
+		if got, exp := c.Endpoints.Notify, notifyEndpoint; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, sessionsEndpoint; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+	})
+
+	t.Run("Should override endpoints set by environment variables with custom endpoints in code", func(st *testing.T) {
+		setUp()
+		defer cleanup()
+		c := &Configuration{}
+		c.loadEnv()
+
+		if got, exp := c.Endpoints.Notify, notifyEndpoint; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, sessionsEndpoint; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+
+		notifyOverride := "https://notify.override.com"
+		sessionsOverride := "https://sessions.override.com"
+		c.update(&Configuration{
+			Endpoints: Endpoints{
+				Notify:   notifyOverride,
+				Sessions: sessionsOverride,
+			},
+		})
+		if got, exp := c.Endpoints.Notify, notifyOverride; got != exp {
+			st.Errorf("Expected Notify endpoint: '%s', but was: '%s'", exp, got)
+		}
+		if got, exp := c.Endpoints.Sessions, sessionsOverride; got != exp {
+			st.Errorf("Expected Sessions endpoint: '%s', but was: '%s'", exp, got)
+		}
+	})
+
 }
 
 func TestIsAutoCaptureSessions(t *testing.T) {
@@ -380,8 +444,6 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 }
 
 func TestInsightHubEndpoints(t *testing.T) {
-	defaultNotify := "https://notify.bugsnag.com"
-	defaultSessions := "https://sessions.bugsnag.com"
 	hubNotify := "https://notify.insighthub.smartbear.com"
 	hubSession := "https://sessions.insighthub.smartbear.com"
 	customNofify := "https://custom.notify.com/"
@@ -391,10 +453,6 @@ func TestInsightHubEndpoints(t *testing.T) {
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
 		return &Configuration{
-			Endpoints: Endpoints{
-				Notify:   defaultNotify,
-				Sessions: defaultSessions,
-			},
 			Logger: logger,
 		}, logger
 	}
