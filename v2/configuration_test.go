@@ -443,12 +443,12 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 	}
 }
 
-func TestInsightHubEndpoints(t *testing.T) {
-	hubNotify := "https://notify.insighthub.smartbear.com"
-	hubSession := "https://sessions.insighthub.smartbear.com"
-	customNofify := "https://custom.notify.com/"
+func TestSecondaryEndpoints(t *testing.T) {
+	secondaryNotify := "https://notify.bugsnag.smartbear.com"
+	secondarySession := "https://sessions.bugsnag.smartbear.com"
+	customNotify := "https://custom.notify.com/"
 	customSessions := "https://custom.sessions.com/"
-	hubApiKey := "00000abcdef0123456789abcdef012345"
+	secondaryApiKey := "00000abcdef0123456789abcdef012345"
 
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
@@ -457,30 +457,30 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}, logger
 	}
 
-	t.Run("Should use InsightHub endpoints if API key has prefix", func(st *testing.T) {
+	t.Run("Should use secondary endpoints if API key has prefix", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 		})
 
-		if got, exp := c.Endpoints.Notify, hubNotify; got != exp {
+		if got, exp := c.Endpoints.Notify, secondaryNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
-		if got, exp := c.Endpoints.Sessions, hubSession; got != exp {
+		if got, exp := c.Endpoints.Sessions, secondarySession; got != exp {
 			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
 		}
 	})
 
-	t.Run("Should prefer custom endpoints over InsightHub endpoints", func(st *testing.T) {
+	t.Run("Should prefer custom endpoints over secondary endpoints", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
-				Notify:   customNofify,
+				Notify:   customNotify,
 				Sessions: customSessions,
 			},
 		})
-		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+		if got, exp := c.Endpoints.Notify, customNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
 		if got, exp := c.Endpoints.Sessions, customSessions; got != exp {
@@ -488,15 +488,15 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
+	t.Run("With secondary endpoint API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
-				Notify: customNofify,
+				Notify: customNotify,
 			},
 		})
-		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+		if got, exp := c.Endpoints.Notify, customNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
 		if got, exp := c.Endpoints.Sessions, ""; got != exp {
@@ -504,7 +504,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
+	t.Run("With secondary API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
 		c, _ := setUp()
 		defer func() {
 			if err := recover(); err != nil {
@@ -520,7 +520,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}()
 
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
 				Sessions: customSessions,
 			},

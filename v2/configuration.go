@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	HUB_PREFIX       = "00000"
-	HUB_NOTIFY       = "https://notify.insighthub.smartbear.com"
-	HUB_SESSION      = "https://sessions.insighthub.smartbear.com"
-	DEFAULT_NOTIFY   = "https://notify.bugsnag.com"
-	DEFAULT_SESSIONS = "https://sessions.bugsnag.com"
+	SECONDARY_ENDPOINT_PREFIX = "00000"
+	SECONDARY_NOTIFY          = "https://notify.bugsnag.smartbear.com"
+	SECONDARY_SESSION         = "https://sessions.bugsnag.smartbear.com"
+	DEFAULT_NOTIFY            = "https://notify.bugsnag.com"
+	DEFAULT_SESSIONS          = "https://sessions.bugsnag.com"
 )
 
 // Endpoints hold the HTTP endpoints of the notifier.
@@ -231,8 +231,8 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 		// no custom endpoint provided, use defaults
 		if config.Endpoints.Notify == "" {
 			// notify endpoint not set, calculate default based on API key
-			if strings.HasPrefix(config.APIKey, HUB_PREFIX) {
-				config.Endpoints.Notify = HUB_NOTIFY
+			if strings.HasPrefix(config.APIKey, SECONDARY_ENDPOINT_PREFIX) {
+				config.Endpoints.Notify = SECONDARY_NOTIFY
 			} else {
 				config.Endpoints.Notify = DEFAULT_NOTIFY
 			}
@@ -251,8 +251,8 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 		if !sessionsDisabled {
 			if config.Endpoints.Sessions == "" {
 				// sessions endpoint not set, calculate default based on API key
-				if strings.HasPrefix(config.APIKey, HUB_PREFIX) {
-					config.Endpoints.Sessions = HUB_SESSION
+				if strings.HasPrefix(config.APIKey, SECONDARY_ENDPOINT_PREFIX) {
+					config.Endpoints.Sessions = SECONDARY_SESSION
 				} else {
 					config.Endpoints.Sessions = DEFAULT_SESSIONS
 				}
