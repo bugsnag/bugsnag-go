@@ -443,9 +443,9 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 	}
 }
 
-func TestInsightHubEndpoints(t *testing.T) {
-	hubNotify := "https://notify.insighthub.smartbear.com"
-	hubSession := "https://sessions.insighthub.smartbear.com"
+func TestAWSEndpoints(t *testing.T) {
+	hubNotify := "https://notify.bugsnag.smartbear.com"
+	hubSession := "https://sessions.bugsnag.smartbear.com"
 	customNofify := "https://custom.notify.com/"
 	customSessions := "https://custom.sessions.com/"
 	hubApiKey := "00000abcdef0123456789abcdef012345"
@@ -457,7 +457,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}, logger
 	}
 
-	t.Run("Should use InsightHub endpoints if API key has prefix", func(st *testing.T) {
+	t.Run("Should use AWS endpoints if API key has prefix", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
 			APIKey: hubApiKey,
@@ -471,7 +471,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("Should prefer custom endpoints over InsightHub endpoints", func(st *testing.T) {
+	t.Run("Should prefer custom endpoints over AWS endpoints", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
 			APIKey: hubApiKey,
@@ -488,7 +488,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
+	t.Run("With AWS API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
 			APIKey: hubApiKey,
@@ -504,7 +504,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
+	t.Run("With AWS API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
 		c, _ := setUp()
 		defer func() {
 			if err := recover(); err != nil {

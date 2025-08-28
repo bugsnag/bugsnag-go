@@ -12,8 +12,8 @@ import (
 
 const (
 	HUB_PREFIX       = "00000"
-	HUB_NOTIFY       = "https://notify.insighthub.smartbear.com"
-	HUB_SESSION      = "https://sessions.insighthub.smartbear.com"
+	HUB_NOTIFY       = "https://notify.bugsnag.smartbear.com"
+	HUB_SESSION      = "https://sessions.bugsnag.smartbear.com"
 	DEFAULT_NOTIFY   = "https://notify.bugsnag.com"
 	DEFAULT_SESSIONS = "https://sessions.bugsnag.com"
 )
