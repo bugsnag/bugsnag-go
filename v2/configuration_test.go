@@ -8,6 +8,69 @@ import (
 	"testing"
 )
 
+func TestEmulateRealInternalFirstConfig(t *testing.T) {
+	// emulate initial configuration state from `init` func
+	config := Configuration{}
+	config.update(&Configuration{
+		APIKey: "",
+		Endpoints: Endpoints{
+			Notify:   "",
+			Sessions: "",
+		},
+	})
+
+	if config.Endpoints.Notify != "" {
+		t.Errorf("expected Notify endpoint to still be empty")
+	}
+	if config.Endpoints.Sessions != "" {
+		t.Errorf("expected Sessions endpoint to still be empty")
+	}
+
+	// then configure with real values
+	config.update(&Configuration{
+		APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+	})
+
+	// verify that the endpoints were updated
+	if config.Endpoints.Notify != DEFAULT_NOTIFY {
+		t.Errorf("expected Notify endpoint to be %q, was: %q", DEFAULT_NOTIFY, config.Endpoints.Notify)
+	}
+	if config.Endpoints.Sessions != DEFAULT_SESSIONS {
+		t.Errorf("expected Sessions endpoint to be %q, was: %q", DEFAULT_SESSIONS, config.Endpoints.Sessions)
+	}
+}
+
+func TestEmulateRealInternalFirstConfigSecondary(t *testing.T) {
+	// emulate initial configuration state from `init` func
+	config := Configuration{}
+	config.update(&Configuration{
+		APIKey: "",
+		Endpoints: Endpoints{
+			Notify:   "",
+			Sessions: "",
+		},
+	})
+
+	if config.Endpoints.Notify != "" {
+		t.Errorf("expected Notify endpoint to still be empty")
+	}
+	if config.Endpoints.Sessions != "" {
+		t.Errorf("expected Sessions endpoint to still be empty")
+	}
+
+	config.update(&Configuration{
+		APIKey: "00000c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+	})
+
+	// verify that the endpoints were updated
+	if config.Endpoints.Notify != SECONDARY_NOTIFY {
+		t.Errorf("expected Notify endpoint to be %q, was: %q", SECONDARY_NOTIFY, config.Endpoints.Notify)
+	}
+	if config.Endpoints.Sessions != SECONDARY_SESSION {
+		t.Errorf("expected Sessions endpoint to be %q, was: %q", SECONDARY_SESSION, config.Endpoints.Sessions)
+	}
+}
+
 func TestNotifyReleaseStages(t *testing.T) {
 
 	notify := " "
@@ -278,6 +341,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 	t.Run("Setting Endpoints.Notify without setting Endpoints.Sessions gives session disabled warning", func(st *testing.T) {
 		c, logger := setUp()
 		config := Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Notify: "https://notify.whatever.com/",
 			},
@@ -316,6 +380,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 			}
 		}()
 		c.update(&Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Sessions: "https://sessions.whatever.com/",
 			},
@@ -325,6 +390,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 	t.Run("Should not complain if both Endpoints.Notify and Endpoints.Sessions are configured", func(st *testing.T) {
 		notifyEndpoint, sessionsEndpoint := "https://notify.whatever.com", "https://sessions.whatever.com"
 		config := Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Notify:   notifyEndpoint,
 				Sessions: sessionsEndpoint,
@@ -345,7 +411,9 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 
 	t.Run("Should not complain if Endpoints are not configured", func(st *testing.T) {
 		c, logger := setUp()
-		c.update(&Configuration{})
+		c.update(&Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+		})
 		if len(logger.loggedMessages) != 0 {
 			st.Errorf("Did not expect any messages to be logged but logged: %v", logger.loggedMessages)
 		}
