@@ -229,7 +229,7 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 		}
 	} else {
 		// no custom endpoint provided, use defaults
-		if config.Endpoints.Notify == "" {
+		if config.Endpoints.Notify == "" && config.APIKey != "" {
 			// notify endpoint not set, calculate default based on API key
 			if strings.HasPrefix(config.APIKey, SECONDARY_ENDPOINT_PREFIX) {
 				config.Endpoints.Notify = SECONDARY_NOTIFY
@@ -249,7 +249,7 @@ func (config *Configuration) updateEndpoints(endpoints *Endpoints) {
 	} else {
 		// no custom sessions endpoint provided, use defaults
 		if !sessionsDisabled {
-			if config.Endpoints.Sessions == "" {
+			if config.Endpoints.Sessions == "" && config.APIKey != "" {
 				// sessions endpoint not set, calculate default based on API key
 				if strings.HasPrefix(config.APIKey, SECONDARY_ENDPOINT_PREFIX) {
 					config.Endpoints.Sessions = SECONDARY_SESSION
