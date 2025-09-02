@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.2 (2025-09-02)
+
+### Bug fixes
+
+* Set endpoint with default value only if API key is not nil [#267](https://github.com/bugsnag/bugsnag-go/pull/267)
+
 ## 2.6.1 (2025-07-22)
 
 ### Bug fixes

@@ -194,8 +194,9 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 }
 
 func generateStacktrace(err *errors.Error, config *Configuration) []StackFrame {
-	stack := make([]StackFrame, len(err.StackFrames()))
-	for i, frame := range err.StackFrames() {
+	frames := err.StackFrames()
+	stack := make([]StackFrame, len(frames))
+	for i, frame := range frames {
 		file := frame.File
 		inProject := config.isProjectPackage(frame.Package)
 

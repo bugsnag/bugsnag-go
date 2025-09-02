@@ -8,6 +8,69 @@ import (
 	"testing"
 )
 
+func TestEmulateRealInternalFirstConfig(t *testing.T) {
+	// emulate initial configuration state from `init` func
+	config := Configuration{}
+	config.update(&Configuration{
+		APIKey: "",
+		Endpoints: Endpoints{
+			Notify:   "",
+			Sessions: "",
+		},
+	})
+
+	if config.Endpoints.Notify != "" {
+		t.Errorf("expected Notify endpoint to still be empty")
+	}
+	if config.Endpoints.Sessions != "" {
+		t.Errorf("expected Sessions endpoint to still be empty")
+	}
+
+	// then configure with real values
+	config.update(&Configuration{
+		APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+	})
+
+	// verify that the endpoints were updated
+	if config.Endpoints.Notify != DEFAULT_NOTIFY {
+		t.Errorf("expected Notify endpoint to be %q, was: %q", DEFAULT_NOTIFY, config.Endpoints.Notify)
+	}
+	if config.Endpoints.Sessions != DEFAULT_SESSIONS {
+		t.Errorf("expected Sessions endpoint to be %q, was: %q", DEFAULT_SESSIONS, config.Endpoints.Sessions)
+	}
+}
+
+func TestEmulateRealInternalFirstConfigSecondary(t *testing.T) {
+	// emulate initial configuration state from `init` func
+	config := Configuration{}
+	config.update(&Configuration{
+		APIKey: "",
+		Endpoints: Endpoints{
+			Notify:   "",
+			Sessions: "",
+		},
+	})
+
+	if config.Endpoints.Notify != "" {
+		t.Errorf("expected Notify endpoint to still be empty")
+	}
+	if config.Endpoints.Sessions != "" {
+		t.Errorf("expected Sessions endpoint to still be empty")
+	}
+
+	config.update(&Configuration{
+		APIKey: "00000c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+	})
+
+	// verify that the endpoints were updated
+	if config.Endpoints.Notify != SECONDARY_NOTIFY {
+		t.Errorf("expected Notify endpoint to be %q, was: %q", SECONDARY_NOTIFY, config.Endpoints.Notify)
+	}
+	if config.Endpoints.Sessions != SECONDARY_SESSION {
+		t.Errorf("expected Sessions endpoint to be %q, was: %q", SECONDARY_SESSION, config.Endpoints.Sessions)
+	}
+}
+
 func TestNotifyReleaseStages(t *testing.T) {
 
 	notify := " "
@@ -278,6 +341,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 	t.Run("Setting Endpoints.Notify without setting Endpoints.Sessions gives session disabled warning", func(st *testing.T) {
 		c, logger := setUp()
 		config := Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Notify: "https://notify.whatever.com/",
 			},
@@ -316,6 +380,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 			}
 		}()
 		c.update(&Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Sessions: "https://sessions.whatever.com/",
 			},
@@ -325,6 +390,7 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 	t.Run("Should not complain if both Endpoints.Notify and Endpoints.Sessions are configured", func(st *testing.T) {
 		notifyEndpoint, sessionsEndpoint := "https://notify.whatever.com", "https://sessions.whatever.com"
 		config := Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
 			Endpoints: Endpoints{
 				Notify:   notifyEndpoint,
 				Sessions: sessionsEndpoint,
@@ -345,7 +411,9 @@ func TestEndpointDeprecationWarning(t *testing.T) {
 
 	t.Run("Should not complain if Endpoints are not configured", func(st *testing.T) {
 		c, logger := setUp()
-		c.update(&Configuration{})
+		c.update(&Configuration{
+			APIKey: "c9d60ae4c7e70c4b6c4ebd3e8056d2b8",
+		})
 		if len(logger.loggedMessages) != 0 {
 			st.Errorf("Did not expect any messages to be logged but logged: %v", logger.loggedMessages)
 		}
@@ -443,12 +511,12 @@ func TestIsAutoCaptureSessions(t *testing.T) {
 	}
 }
 
-func TestInsightHubEndpoints(t *testing.T) {
-	hubNotify := "https://notify.insighthub.smartbear.com"
-	hubSession := "https://sessions.insighthub.smartbear.com"
-	customNofify := "https://custom.notify.com/"
+func TestSecondaryEndpoints(t *testing.T) {
+	secondaryNotify := "https://notify.bugsnag.smartbear.com"
+	secondarySession := "https://sessions.bugsnag.smartbear.com"
+	customNotify := "https://custom.notify.com/"
 	customSessions := "https://custom.sessions.com/"
-	hubApiKey := "00000abcdef0123456789abcdef012345"
+	secondaryApiKey := "00000abcdef0123456789abcdef012345"
 
 	setUp := func() (*Configuration, *CustomTestLogger) {
 		logger := &CustomTestLogger{}
@@ -457,30 +525,30 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}, logger
 	}
 
-	t.Run("Should use InsightHub endpoints if API key has prefix", func(st *testing.T) {
+	t.Run("Should use secondary endpoints if API key has prefix", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 		})
 
-		if got, exp := c.Endpoints.Notify, hubNotify; got != exp {
+		if got, exp := c.Endpoints.Notify, secondaryNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
-		if got, exp := c.Endpoints.Sessions, hubSession; got != exp {
+		if got, exp := c.Endpoints.Sessions, secondarySession; got != exp {
 			st.Errorf("Expected sessions endpoint to be '%s' but was '%s'", exp, got)
 		}
 	})
 
-	t.Run("Should prefer custom endpoints over InsightHub endpoints", func(st *testing.T) {
+	t.Run("Should prefer custom endpoints over secondary endpoints", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
-				Notify:   customNofify,
+				Notify:   customNotify,
 				Sessions: customSessions,
 			},
 		})
-		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+		if got, exp := c.Endpoints.Notify, customNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
 		if got, exp := c.Endpoints.Sessions, customSessions; got != exp {
@@ -488,15 +556,15 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
+	t.Run("With secondary endpoint API key and only custom notify endpoint, sessions should be empty", func(st *testing.T) {
 		c, _ := setUp()
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
-				Notify: customNofify,
+				Notify: customNotify,
 			},
 		})
-		if got, exp := c.Endpoints.Notify, customNofify; got != exp {
+		if got, exp := c.Endpoints.Notify, customNotify; got != exp {
 			st.Errorf("Expected notify endpoint to be '%s' but was '%s'", exp, got)
 		}
 		if got, exp := c.Endpoints.Sessions, ""; got != exp {
@@ -504,7 +572,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("With InsightHub API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
+	t.Run("With secondary API key and only custom session endpoint, panic should be thrown", func(st *testing.T) {
 		c, _ := setUp()
 		defer func() {
 			if err := recover(); err != nil {
@@ -520,7 +588,7 @@ func TestInsightHubEndpoints(t *testing.T) {
 		}()
 
 		c.update(&Configuration{
-			APIKey: hubApiKey,
+			APIKey: secondaryApiKey,
 			Endpoints: Endpoints{
 				Sessions: customSessions,
 			},
