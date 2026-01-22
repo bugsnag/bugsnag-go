@@ -1,5 +1,11 @@
 # Changelog
 
+## TBD ()
+
+### Bug fixes
+
+* Fix issue where setting Synchronous config per notify did not work [#272](https://github.com/bugsnag/bugsnag-go/pull/272)
+
 ## 2.6.2 (2025-09-02)
 
 ### Bug fixes
