@@ -184,6 +184,50 @@ func TestNotifySyncThenAsync(t *testing.T) {
 	}
 }
 
+func TestNotifySyncJustForOne(t *testing.T) {
+	ts, _ := setup()
+	defer ts.Close()
+
+	eventserver, _ := setup()
+	defer eventserver.Close()
+
+	// Save old config to restore later after the tests
+	oldConfig := Config.clone()
+
+	_, cancel := setupState()
+	defer cancel()
+
+	pub := new(testPublisher)
+	publisher = pub
+	defer func() { publisher = newPublisher() }()
+
+	t.Run("global async but individual sync", func(st *testing.T) {
+		config := generateSampleConfig(eventserver.URL, context.Background())
+		Config.update(&config)
+		Config.Synchronous = false
+
+		Notify(fmt.Errorf("oopsie"), Configuration{Synchronous: true})
+
+		if pub.sync != true {
+			t.Error("Expected per event configuration to be set to Synchronous")
+		}
+	})
+
+	t.Run("global sync but individual async", func(st *testing.T) {
+		config := generateSampleConfig(eventserver.URL, context.Background())
+		Config.update(&config)
+		Config.Synchronous = true
+
+		Notify(fmt.Errorf("oopsie"), Configuration{Synchronous: false})
+
+		if pub.sync != false {
+			t.Error("Expected per event configuration to be set to Asynchronous")
+		}
+	})
+
+	Config = *oldConfig
+}
+
 func TestHandlerFunc(t *testing.T) {
 	eventserver, reports := setup()
 	defer eventserver.Close()

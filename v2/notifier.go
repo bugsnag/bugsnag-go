@@ -53,7 +53,19 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 	// Stripping one stackframe to not include this function in the stacktrace
 	// for a manual notification.
 	skipFrames := 1
-	return notifier.NotifySync(errors.New(err, skipFrames), notifier.Config.Synchronous, rawData...)
+
+	// in case user passed a Synchronous Configuration value in rawData
+	// write it to sync parameter as it's processed as the last object in newEvent
+	// that way it's a preferred value over global configuration
+	sync := notifier.Config.Synchronous
+	for _, datum := range rawData {
+		switch datum := datum.(type) {
+		case Configuration:
+			sync = datum.Synchronous
+		}
+	}
+
+	return notifier.NotifySync(errors.New(err, skipFrames), sync, rawData...)
 }
 
 // NotifySync sends an error to Bugsnag. A boolean parameter specifies whether
