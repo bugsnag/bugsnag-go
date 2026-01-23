@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD ()
+## 2.6.3 (2025-01-26)
 
 ### Bug fixes
 
