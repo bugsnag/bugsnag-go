@@ -10,7 +10,6 @@ unless File.exist?(certificate_path)
   abort("Zscaler root certificate not found at #{certificate_path}")
 end
 
-
 folder = '.'
 puts "Copying Zscaler root certificate to #{folder}"
 FileUtils.cp(certificate_path, folder)
