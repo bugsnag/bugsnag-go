@@ -1,6 +1,26 @@
 ARG GO_VERSION
 FROM golang:${GO_VERSION}-alpine
 
+# Only applicable to development environments running Zscaler
+# These Docker commands are ugly but the approach being used across SB
+COPY .zscaler-root-ca.pem /tmp/zscaler-root-ca.crt
+RUN set -eux; \
+    if [ -f /etc/ssl/cert.pem ]; then \
+        cat /tmp/zscaler-root-ca.crt >> /etc/ssl/cert.pem; \
+    elif [ -f /etc/ssl/certs/ca-certificates.crt ]; then \
+        cat /tmp/zscaler-root-ca.crt >> /etc/ssl/certs/ca-certificates.crt; \
+    else \
+        mkdir -p /etc/ssl/certs; \
+        cp /tmp/zscaler-root-ca.crt /etc/ssl/certs/ca-certificates.crt; \
+        ln -sf /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; \
+    fi; \
+    apk add --no-cache ca-certificates; \
+    mkdir -p /usr/local/share/ca-certificates; \
+    cp /tmp/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt; \
+    chmod 644 /usr/local/share/ca-certificates/zscaler-root-ca.crt; \
+    update-ca-certificates; \
+    rm -f /tmp/zscaler-root-ca.crt
+
 RUN apk update && apk upgrade && apk add git bash build-base
 
 ENV GOPATH /app
