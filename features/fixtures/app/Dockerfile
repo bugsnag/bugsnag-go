@@ -3,7 +3,7 @@ FROM golang:${GO_VERSION}-alpine
 
 # Only applicable to development environments running Zscaler
 # These Docker commands are ugly but the approach being used across SB
-COPY .zscaler-root-ca.pem /tmp/zscaler-root-ca.crt
+COPY .zscaler-root-ca.pem* /tmp/zscaler-root-ca.crt
 RUN set -eux; \
     if [ -f /etc/ssl/cert.pem ]; then \
         cat /tmp/zscaler-root-ca.crt >> /etc/ssl/cert.pem; \
