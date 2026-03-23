@@ -1,6 +1,12 @@
-# Ignore maze runner generated files
+# Maze Runner
 maze_output
 vendor
-
-# ignore the gemfile to prevent testing against stale versions
 Gemfile.lock
+maze-runner.log
+
+# Zscaler certificates
+.zscaler-root-ca.pem
+
+# IDE files
+.idea
+bugsnag-go.iml

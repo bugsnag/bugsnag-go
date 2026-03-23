@@ -13,17 +13,25 @@ ASDF_GOLANG_OVERWRITE_ARCH=amd64 asdf install golang 1.11.13
 malformed DWARF TagVariable entry
 ```
 
-## Local testing with maze runner
+## Zscaler environments
 
-* Maze runner tests require
-  * Specyfing `GO_VERSION` env variable to set a golang version for docker container.
+If running e2e tests in an environment with Zscaler, first run copy the root certificate into place using:
+```
+ruby scripts/zscaler_setup.rb
+```
+The script excepts the certificate to be located at `./.zscaler-root-ca.pem`.
+
+## Local testing with Maze Runner
+
+* Maze Runner tests require
+  * Specifying `GO_VERSION` env variable to set a golang version for docker container.
   * Ruby 2.7.
   * Running docker.
 
 * Commands to run tests
 
 ```
-	bundle install
-	bundle exec maze-runner
-  bundle exec maze-runner -c features/<chosen_feature>
+bundle install
+bundle exec maze-runner
+bundle exec maze-runner -c features/<chosen_feature>
 ```
