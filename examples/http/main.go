@@ -44,4 +44,12 @@ func handledError(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		bugsnag.Notify(err, r.Context())
 	}
+
+	// Example: Notify with custom error class and message
+	bugsnag.Notify(
+		fmt.Errorf(""),
+		bugsnag.ErrorClass{Name: "CustomEvent"},
+		bugsnag.Message{String: "Something custom happened"},
+		r.Context(),
+	)
 }

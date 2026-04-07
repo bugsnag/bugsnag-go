@@ -142,6 +142,39 @@ func TestNotify(t *testing.T) {
 	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 105, InProject: true})
 }
 
+func TestNotifyWithCustomMessage(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+	sessionTracker = nil
+	startSessionTracking()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with custom ErrorClass and Message
+	Notify(fmt.Errorf("original error"), config, ErrorClass{Name: "CustomError"}, Message{String: "Custom message text"})
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "CustomError", Message: "Custom message text"}},
+	})
+}
+
 type testPublisher struct {
 	sync bool
 }
