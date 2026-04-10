@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/bugsnag/bugsnag-go/v2"
 )
@@ -49,11 +50,6 @@ func CustomBothScenario(command Command) func() {
 // MultipleCustomFieldsScenario tests notifying multiple errors with different custom field combinations
 func MultipleCustomFieldsScenario(command Command) func() {
 	scenarioFunc := func() {
-		// Configure to send errors synchronously so each Notify() creates a separate request
-		bugsnag.Configure(bugsnag.Configuration{
-			Synchronous: true,
-		})
-
 		// First error with custom ErrorClass and Message
 		if _, err := os.Open("nonexistent_file_1.txt"); err != nil {
 			bugsnag.Notify(
@@ -63,6 +59,9 @@ func MultipleCustomFieldsScenario(command Command) func() {
 			)
 		}
 
+		// Add a small delay to ensure the first error is sent before the second
+		time.Sleep(100 * time.Millisecond)
+
 		// Second error with different custom ErrorClass and Message
 		if _, err := os.Open("nonexistent_file_2.txt"); err != nil {
 			bugsnag.Notify(
@@ -71,6 +70,9 @@ func MultipleCustomFieldsScenario(command Command) func() {
 				bugsnag.Message{String: "Second error custom message"},
 			)
 		}
+
+		// Ensure async delivery completes
+		time.Sleep(100 * time.Millisecond)
 	}
 	return scenarioFunc
 }
