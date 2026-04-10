@@ -9,7 +9,7 @@ import (
 )
 
 // Insert your API key
-const apiKey = "25a5a7d1d5c34d73ad4375797215809a"
+const apiKey = "YOUR_API_KEY_HERE"
 
 func main() {
 	if len(apiKey) != 32 {

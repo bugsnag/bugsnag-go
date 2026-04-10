@@ -74,6 +74,7 @@ func MultipleCustomFieldsScenario(command Command) func() {
 	}
 	return scenarioFunc
 }
+
 // MultipleErrorClassScenario tests notifying an error with multiple ErrorClass objects
 // Expected behavior: the last ErrorClass object should be used
 func MultipleErrorClassScenario(command Command) func() {
