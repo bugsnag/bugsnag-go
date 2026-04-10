@@ -9,7 +9,7 @@ import (
 )
 
 // Insert your API key
-const apiKey = "YOUR-API-KEY-HERE"
+const apiKey = "25a5a7d1d5c34d73ad4375797215809a"
 
 func main() {
 	if len(apiKey) != 32 {
@@ -45,11 +45,6 @@ func handledError(w http.ResponseWriter, r *http.Request) {
 		bugsnag.Notify(err, r.Context())
 	}
 
-	// Example: Notify with custom error class and message
-	bugsnag.Notify(
-		fmt.Errorf(""),
-		bugsnag.ErrorClass{Name: "CustomEvent"},
-		bugsnag.Message{String: "Something custom happened"},
-		r.Context(),
-	)
+	w.WriteHeader(200)
+	w.Write([]byte("OK\n"))
 }

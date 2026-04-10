@@ -28,6 +28,13 @@ var scenariosMap = map[string]func(Command) func(){
 	"AutoconfigHandledScenario":       AutoconfigHandledScenario,
 	"AutoconfigMetadataScenario":      AutoconfigMetadataScenario,
 	"HttpServerScenario":              HttpServerScenario,
+	"CustomErrorClassScenario":        CustomErrorClassScenario,
+	"CustomMessageScenario":           CustomMessageScenario,
+	"CustomBothScenario":              CustomBothScenario,
+	"MultipleCustomFieldsScenario":    MultipleCustomFieldsScenario,
+	"MultipleErrorClassScenario":      MultipleErrorClassScenario,
+	"MultipleMessageScenario":         MultipleMessageScenario,
+	"MultipleOfBothScenario":          MultipleOfBothScenario,
 }
 
 func main() {
