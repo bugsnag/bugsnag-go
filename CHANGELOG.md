@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## 2.6.4 (2026-04-14)
 
 ### Enhancements
 
