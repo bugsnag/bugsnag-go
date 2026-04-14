@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/bugsnag/bugsnag-go/v2/sessions"
 )
 
@@ -139,7 +140,7 @@ func TestNotify(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 105, InProject: true})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 106, InProject: true})
 }
 
 func TestNotifyWithCustomErrorClassAndMessage(t *testing.T) {
@@ -297,6 +298,98 @@ func TestNotifyWithEmptyErrorClassAndMessageFallsBack(t *testing.T) {
 		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "original error message"}},
+	})
+}
+
+func TestNotifyWithErrorsErrorPointer(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with *errors.Error (pointer) - created via errors.Errorf
+	Notify(errors.Errorf("error from errors package"), config)
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		// TypeName() returns the underlying error type, not *errors.Error
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "error from errors package"}},
+	})
+}
+
+func TestNotifyWithErrorsErrorPointerAndCustomOverrides(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with *errors.Error and custom ErrorClass/Message overrides
+	Notify(errors.Errorf("original error"), config, ErrorClass{Name: "CustomClass"}, Message{Text: "Custom message"})
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "CustomClass", Message: "Custom message"}},
+	})
+}
+
+func TestNotifyWithErrorsNew(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with errors.New which returns *errors.Error
+	Notify(errors.New(fmt.Errorf("wrapped standard error"), 0), config)
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		// TypeName() returns the underlying error type, not *errors.Error
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "wrapped standard error"}},
 	})
 }
 
@@ -549,7 +642,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	exception := getIndex(event, "exceptions", 0)
-	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 28})
+	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "crashyHandler", InProject: true, LineNumber: 29})
 }
 
 func TestAutoNotify(t *testing.T) {

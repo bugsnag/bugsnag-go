@@ -154,8 +154,22 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
 
-		case error, errors.Error:
-			err = errors.New(datum.(error), 1)
+		case *errors.Error:
+			// Handle *errors.Error explicitly - it already has stack trace info
+			err = datum
+			event.Error = err
+			// Only assign from error if NOT explicitly set
+			if !hasExplicitErrorClass {
+				event.ErrorClass = err.TypeName()
+			}
+			if !hasExplicitMessage {
+				event.Message = err.Error()
+			}
+			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
+
+		case error:
+			// Handle standard error interface
+			err = errors.New(datum, 1)
 			event.Error = err
 			// Only assign from error if NOT explicitly set
 			if !hasExplicitErrorClass {
