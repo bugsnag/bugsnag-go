@@ -110,3 +110,40 @@ func OnBeforeNotifyScenario(command Command) func() {
 	}
 	return scenarioFunc
 }
+
+func CustomErrorClassAndMessageScenario(command Command) func() {
+	scenarioFunc := func() {
+		// Notify with custom ErrorClass and Message
+		bugsnag.Notify(
+			fmt.Errorf("original error"),
+			bugsnag.ErrorClass{Name: "CustomErrorClass"},
+			bugsnag.Message{Text: "Custom error message"},
+		)
+	}
+	return scenarioFunc
+}
+
+func CustomMessageOnlyScenario(command Command) func() {
+	scenarioFunc := func() {
+		// Notify with custom Message only (ErrorClass from error type)
+		bugsnag.Notify(
+			fmt.Errorf("original error"),
+			bugsnag.Message{Text: "Custom message only"},
+		)
+	}
+	return scenarioFunc
+}
+
+func MultipleErrorClassAndMessageScenario(command Command) func() {
+	scenarioFunc := func() {
+		// Notify with multiple ErrorClass and Message - last one wins
+		bugsnag.Notify(
+			fmt.Errorf("original error"),
+			bugsnag.ErrorClass{Name: "FirstErrorClass"},
+			bugsnag.Message{Text: "First message"},
+			bugsnag.ErrorClass{Name: "LastErrorClass"},
+			bugsnag.Message{Text: "Last message"},
+		)
+	}
+	return scenarioFunc
+}

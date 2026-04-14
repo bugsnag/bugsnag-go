@@ -29,6 +29,12 @@ type ErrorClass struct {
 	Name string
 }
 
+// Message overrides the error message in Bugsnag.
+// This struct enables you to set a custom message for the error.
+type Message struct {
+	Text string
+}
+
 // Sets the severity of the error on Bugsnag. These values can be
 // passed to Notify, Recover or AutoNotify as rawData.
 var (
@@ -128,17 +134,50 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	var err *errors.Error
 	var callbacks []func(*Event)
 
+	// FIRST PASS: Check if ErrorClass or Message are explicitly provided with non-empty values
+	hasExplicitErrorClass := false
+	hasExplicitMessage := false
+	for _, datum := range event.RawData {
+		switch d := datum.(type) {
+		case ErrorClass:
+			if d.Name != "" {
+				hasExplicitErrorClass = true
+			}
+		case Message:
+			if d.Text != "" {
+				hasExplicitMessage = true
+			}
+		}
+	}
+
+	// SECOND PASS: Process all data
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
 
-		case error, errors.Error:
-			err = errors.New(datum.(error), 1)
+		case *errors.Error:
+			// Handle *errors.Error explicitly - it already has stack trace info
+			err = datum
 			event.Error = err
-			// Only assign automatically if not explicitly set through ErrorClass already
-			if event.ErrorClass == "" {
+			// Only assign from error if NOT explicitly set
+			if !hasExplicitErrorClass {
 				event.ErrorClass = err.TypeName()
 			}
-			event.Message = err.Error()
+			if !hasExplicitMessage {
+				event.Message = err.Error()
+			}
+			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
+
+		case error:
+			// Handle standard error interface
+			err = errors.New(datum, 1)
+			event.Error = err
+			// Only assign from error if NOT explicitly set
+			if !hasExplicitErrorClass {
+				event.ErrorClass = err.TypeName()
+			}
+			if !hasExplicitMessage {
+				event.Message = err.Error()
+			}
 			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
 
 		case bool:
@@ -170,7 +209,14 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.User = &datum
 
 		case ErrorClass:
-			event.ErrorClass = datum.Name
+			if datum.Name != "" {
+				event.ErrorClass = datum.Name
+			}
+
+		case Message:
+			if datum.Text != "" {
+				event.Message = datum.Text
+			}
 
 		case HandledState:
 			event.handledState = datum
