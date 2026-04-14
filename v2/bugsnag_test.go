@@ -142,7 +142,7 @@ func TestNotify(t *testing.T) {
 	verifyExistsInStackTrace(t, exception, &StackFrame{File: "bugsnag_test.go", Method: "TestNotify", LineNumber: 105, InProject: true})
 }
 
-func TestNotifyWithCustomMessage(t *testing.T) {
+func TestNotifyWithCustomErrorClassAndMessage(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
 
@@ -266,6 +266,37 @@ func TestNotifyWithOnlyMessage(t *testing.T) {
 		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "custom message only"}},
+	})
+}
+
+func TestNotifyWithEmptyErrorClassAndMessageFallsBack(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with empty ErrorClass and Message - should fallback to error-derived values
+	Notify(fmt.Errorf("original error message"), config, ErrorClass{Name: ""}, Message{String: ""})
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should fallback to error-derived values since empty strings were provided
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "original error message"}},
 	})
 }
 

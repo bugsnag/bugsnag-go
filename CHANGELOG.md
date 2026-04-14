@@ -1,5 +1,11 @@
 # Changelog
 
+## TBD
+
+### Enhancements
+
+* Support custom error class and message overrides in Notify using `ErrorClass` and `Message` types [#279](https://github.com/bugsnag/bugsnag-go/pull/279)
+
 ## 2.6.3 (2025-01-26)
 
 ### Bug fixes

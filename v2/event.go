@@ -134,15 +134,19 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	var err *errors.Error
 	var callbacks []func(*Event)
 
-	// FIRST PASS: Check if ErrorClass or Message are explicitly provided
+	// FIRST PASS: Check if ErrorClass or Message are explicitly provided with non-empty values
 	hasExplicitErrorClass := false
 	hasExplicitMessage := false
 	for _, datum := range event.RawData {
-		switch datum.(type) {
+		switch d := datum.(type) {
 		case ErrorClass:
-			hasExplicitErrorClass = true
+			if d.Name != "" {
+				hasExplicitErrorClass = true
+			}
 		case Message:
-			hasExplicitMessage = true
+			if d.String != "" {
+				hasExplicitMessage = true
+			}
 		}
 	}
 
@@ -191,10 +195,14 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			event.User = &datum
 
 		case ErrorClass:
-			event.ErrorClass = datum.Name
+			if datum.Name != "" {
+				event.ErrorClass = datum.Name
+			}
 
 		case Message:
-			event.Message = datum.String
+			if datum.String != "" {
+				event.Message = datum.String
+			}
 
 		case HandledState:
 			event.handledState = datum
