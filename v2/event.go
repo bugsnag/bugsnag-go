@@ -32,7 +32,7 @@ type ErrorClass struct {
 // Message overrides the error message in Bugsnag.
 // This struct enables you to set a custom message for the error.
 type Message struct {
-	String string
+	Text string
 }
 
 // Sets the severity of the error on Bugsnag. These values can be
@@ -144,7 +144,7 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 				hasExplicitErrorClass = true
 			}
 		case Message:
-			if d.String != "" {
+			if d.Text != "" {
 				hasExplicitMessage = true
 			}
 		}
@@ -200,8 +200,8 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 			}
 
 		case Message:
-			if datum.String != "" {
-				event.Message = datum.String
+			if datum.Text != "" {
+				event.Message = datum.Text
 			}
 
 		case HandledState:

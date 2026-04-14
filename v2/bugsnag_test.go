@@ -151,7 +151,7 @@ func TestNotifyWithCustomErrorClassAndMessage(t *testing.T) {
 	config := generateSampleConfig(ts.URL, ctx)
 
 	// Test with custom ErrorClass and Message
-	Notify(fmt.Errorf("original error"), config, ErrorClass{Name: "CustomError"}, Message{String: "Custom message text"})
+	Notify(fmt.Errorf("original error"), config, ErrorClass{Name: "CustomError"}, Message{Text: "Custom message text"})
 
 	json, err := simplejson.NewJson(<-reports)
 
@@ -185,9 +185,9 @@ func TestNotifyWithMultipleErrorClassAndMessage(t *testing.T) {
 		fmt.Errorf("original error"),
 		config,
 		ErrorClass{Name: "FirstErrorClass"},
-		Message{String: "First message"},
+		Message{Text: "First message"},
 		ErrorClass{Name: "SecondErrorClass"},
-		Message{String: "Second message"},
+		Message{Text: "Second message"},
 	)
 
 	json, err := simplejson.NewJson(<-reports)
@@ -248,7 +248,7 @@ func TestNotifyWithOnlyMessage(t *testing.T) {
 	config := generateSampleConfig(ts.URL, ctx)
 
 	// Test with only custom Message (error class from error type)
-	Notify(fmt.Errorf("original error"), config, Message{String: "custom message only"})
+	Notify(fmt.Errorf("original error"), config, Message{Text: "custom message only"})
 
 	json, err := simplejson.NewJson(<-reports)
 
@@ -278,7 +278,7 @@ func TestNotifyWithEmptyErrorClassAndMessageFallsBack(t *testing.T) {
 	config := generateSampleConfig(ts.URL, ctx)
 
 	// Test with empty ErrorClass and Message - should fallback to error-derived values
-	Notify(fmt.Errorf("original error message"), config, ErrorClass{Name: ""}, Message{String: ""})
+	Notify(fmt.Errorf("original error message"), config, ErrorClass{Name: ""}, Message{Text: ""})
 
 	json, err := simplejson.NewJson(<-reports)
 
