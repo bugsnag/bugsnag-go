@@ -45,7 +45,7 @@ Feature: Configure integration with environment variables
         And the "lineNumber" of stack frame 0 equals 11
         And the "file" of stack frame 1 equals "features/fixtures/app/main.go"
         And the "method" of stack frame 1 equals "main"
-        And the "lineNumber" of stack frame 1 equals 65
+        And the "lineNumber" of stack frame 1 equals 68
 
     Scenario: Configuring source root
         Given I set environment variable "BUGSNAG_SOURCE_ROOT" to "/app/src/features/fixtures/app/"
@@ -58,7 +58,7 @@ Feature: Configure integration with environment variables
         And the "lineNumber" of stack frame 0 equals 11
         And the "file" of stack frame 1 equals "main.go"
         And the "method" of stack frame 1 equals "main"
-        And the "lineNumber" of stack frame 1 equals 65
+        And the "lineNumber" of stack frame 1 equals 68
 
     Scenario: Delivering events filtering through notify release stages
         Given I set environment variable "BUGSNAG_NOTIFY_RELEASE_STAGES" to "prod,beta"

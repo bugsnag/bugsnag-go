@@ -65,3 +65,36 @@ Scenario: Unwrapping the causes of a handled error
   And the event "exceptions.2.message" equals "invalid token"
   And the event "exceptions.2.stacktrace.0.file" equals "utils.go"
   And the event "exceptions.2.stacktrace.0.lineNumber" equals 47
+
+Scenario: A handled error with custom ErrorClass and Message
+  When I start the service "app"
+  And I run "CustomErrorClassAndMessageScenario"
+  And I wait to receive an error
+  And the event "unhandled" is false
+  And the event "severity" equals "warning"
+  And the event "severityReason.type" equals "handledError"
+  And the exception "errorClass" equals "CustomErrorClass"
+  And the exception "message" equals "Custom error message"
+  And the "file" of stack frame 0 equals "handled_scenario.go"
+
+Scenario: A handled error with custom Message only
+  When I start the service "app"
+  And I run "CustomMessageOnlyScenario"
+  And I wait to receive an error
+  And the event "unhandled" is false
+  And the event "severity" equals "warning"
+  And the event "severityReason.type" equals "handledError"
+  And the exception "errorClass" equals "*errors.errorString"
+  And the exception "message" equals "Custom message only"
+  And the "file" of stack frame 0 equals "handled_scenario.go"
+
+Scenario: A handled error with multiple ErrorClass and Message uses the last values
+  When I start the service "app"
+  And I run "MultipleErrorClassAndMessageScenario"
+  And I wait to receive an error
+  And the event "unhandled" is false
+  And the event "severity" equals "warning"
+  And the event "severityReason.type" equals "handledError"
+  And the exception "errorClass" equals "LastErrorClass"
+  And the exception "message" equals "Last message"
+  And the "file" of stack frame 0 equals "handled_scenario.go"

@@ -29,12 +29,6 @@ type ErrorClass struct {
 	Name string
 }
 
-// Message overrides the error message in Bugsnag.
-// This struct enables you to set a custom message for the error.
-type Message struct {
-	String string
-}
-
 // Sets the severity of the error on Bugsnag. These values can be
 // passed to Notify, Recover or AutoNotify as rawData.
 var (
@@ -134,32 +128,17 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 	var err *errors.Error
 	var callbacks []func(*Event)
 
-	// FIRST PASS: Check if ErrorClass or Message are explicitly provided
-	hasExplicitErrorClass := false
-	hasExplicitMessage := false
-	for _, datum := range event.RawData {
-		switch datum.(type) {
-		case ErrorClass:
-			hasExplicitErrorClass = true
-		case Message:
-			hasExplicitMessage = true
-		}
-	}
-
-	// SECOND PASS: Process all data
 	for _, datum := range event.RawData {
 		switch datum := datum.(type) {
 
 		case error, errors.Error:
 			err = errors.New(datum.(error), 1)
 			event.Error = err
-			// Only assign from error if NOT explicitly set
-			if !hasExplicitErrorClass {
+			// Only assign automatically if not explicitly set through ErrorClass already
+			if event.ErrorClass == "" {
 				event.ErrorClass = err.TypeName()
 			}
-			if !hasExplicitMessage {
-				event.Message = err.Error()
-			}
+			event.Message = err.Error()
 			event.Stacktrace = make([]StackFrame, len(err.StackFrames()))
 
 		case bool:
@@ -190,9 +169,6 @@ func newEvent(rawData []interface{}, notifier *Notifier) (*Event, *Configuration
 
 		case ErrorClass:
 			event.ErrorClass = datum.Name
-
-		case Message:
-			event.Message = datum.String
 
 		case HandledState:
 			event.handledState = datum

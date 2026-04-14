@@ -145,8 +145,6 @@ func TestNotify(t *testing.T) {
 func TestNotifyWithCustomMessage(t *testing.T) {
 	ts, reports := setup()
 	defer ts.Close()
-	sessionTracker = nil
-	startSessionTracking()
 
 	ctx, cancel := setupState()
 	defer cancel()
@@ -165,13 +163,109 @@ func TestNotifyWithCustomMessage(t *testing.T) {
 		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
 		Context:        "",
 		Device:         &deviceJSON{Hostname: "web1"},
-		Session:        &sessionJSON{Events: sessions.EventCounts{Handled: 0, Unhandled: 1}},
 		Severity:       "warning",
 		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
 		Unhandled:      false,
 		Request:        &RequestJSON{},
 		User:           &User{},
 		Exceptions:     []exceptionJSON{{ErrorClass: "CustomError", Message: "Custom message text"}},
+	})
+}
+
+func TestNotifyWithMultipleErrorClassAndMessage(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with multiple ErrorClass and Message - last one should win
+	Notify(
+		fmt.Errorf("original error"),
+		config,
+		ErrorClass{Name: "FirstErrorClass"},
+		Message{String: "First message"},
+		ErrorClass{Name: "SecondErrorClass"},
+		Message{String: "Second message"},
+	)
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "SecondErrorClass", Message: "Second message"}},
+	})
+}
+
+func TestNotifyWithOnlyErrorClass(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with only custom ErrorClass (message from error)
+	Notify(fmt.Errorf("error message from error"), config, ErrorClass{Name: "CustomErrorClass"})
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "CustomErrorClass", Message: "error message from error"}},
+	})
+}
+
+func TestNotifyWithOnlyMessage(t *testing.T) {
+	ts, reports := setup()
+	defer ts.Close()
+
+	ctx, cancel := setupState()
+	defer cancel()
+	config := generateSampleConfig(ts.URL, ctx)
+
+	// Test with only custom Message (error class from error type)
+	Notify(fmt.Errorf("original error"), config, Message{String: "custom message only"})
+
+	json, err := simplejson.NewJson(<-reports)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assertPayload(t, json, eventJSON{
+		App:            &appJSON{ReleaseStage: "test", Type: "foo", Version: "1.2.3"},
+		Context:        "",
+		Device:         &deviceJSON{Hostname: "web1"},
+		Severity:       "warning",
+		SeverityReason: &severityReasonJSON{Type: SeverityReasonHandledError},
+		Unhandled:      false,
+		Request:        &RequestJSON{},
+		User:           &User{},
+		Exceptions:     []exceptionJSON{{ErrorClass: "*errors.errorString", Message: "custom message only"}},
 	})
 }
 
